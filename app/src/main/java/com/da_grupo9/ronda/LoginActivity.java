@@ -1,5 +1,6 @@
 package com.da_grupo9.ronda;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.EditText;
@@ -38,8 +39,22 @@ public class LoginActivity extends AppCompatActivity {
 
         });
 
+        Button buttonLoginOtp = findViewById(R.id.buttonLoginOtp);
 
+        buttonLoginOtp.setOnClickListener(view -> {
 
+            String email = editEmail.getText().toString();
+
+            if (email.isEmpty()) {
+                Toast.makeText(this, "Ingresá tu email para recibir el código", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, "Código enviado a " + email, Toast.LENGTH_SHORT).show();
+
+                Intent intent = new Intent(LoginActivity.this, OtpActivity.class);
+                intent.putExtra(OtpActivity.EXTRA_EMAIL, email);
+                startActivity(intent);
+            }
+        });
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());

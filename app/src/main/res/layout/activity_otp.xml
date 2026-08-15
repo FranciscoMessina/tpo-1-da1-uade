@@ -1,40 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout  xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context=".LoginActivity">
+    tools:context=".OtpActivity">
 
-    <EditText
-        android:id="@+id/editEmail"
+    <TextView
+        android:id="@+id/textOtpEmail"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Correo electrónico"
-        android:inputType="textEmailAddress"/>
+        android:text="Ingresá el código enviado a tu email" />
 
     <EditText
-        android:id="@+id/editPassword"
+        android:id="@+id/editOtp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="12dp"
-        android:hint="Contraseña"
-        android:inputType="textPassword"/>
+        android:hint="Código OTP"
+        android:inputType="number"
+        android:maxLength="6" />
 
     <Button
-        android:id="@+id/buttonLogin"
+        android:id="@+id/buttonConfirmOtp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="24dp"
-        android:text="Iniciar sesión"/>
+        android:text="Confirmar" />
 
     <Button
-        android:id="@+id/buttonLoginOtp"
+        android:id="@+id/buttonResendOtp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="12dp"
-        android:text="Ingresar con código OTP"/>
+        android:text="Reenviar código" />
 
 </LinearLayout>
