@@ -26,6 +26,10 @@
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
         <activity
+            android:name=".OtpActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
             android:name=".HomeActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
