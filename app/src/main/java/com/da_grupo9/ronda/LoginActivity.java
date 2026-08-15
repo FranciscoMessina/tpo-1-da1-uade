@@ -56,6 +56,13 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
 
+        Button buttonForgotPassword = findViewById(R.id.buttonForgotPassword);
+
+        buttonForgotPassword.setOnClickListener(view -> {
+            Intent intent = new Intent(LoginActivity.this, ForgotPasswordActivity.class);
+            startActivity(intent);
+        });
+
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
