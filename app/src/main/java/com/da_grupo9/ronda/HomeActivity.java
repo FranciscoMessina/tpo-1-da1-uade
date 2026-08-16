@@ -2,7 +2,6 @@ package com.da_grupo9.ronda;
 
 import android.graphics.Color;
 import android.os.Bundle;
-import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -18,7 +17,6 @@ import androidx.core.view.WindowInsetsCompat;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
 public class HomeActivity extends AppCompatActivity {
@@ -32,10 +30,19 @@ public class HomeActivity extends AppCompatActivity {
     private Spinner spinnerCategoria;
     private Spinner spinnerEstado;
     private Spinner spinnerCercania;
+    private Spinner spinnerOrden;
 
     private Button botonFiltrar;
+    private Button botonAnterior;
+    private Button botonSiguiente;
+
+    private TextView textoPagina;
 
     private List<Publicacion> publicaciones;
+    private List<Publicacion> publicacionesFiltradas;
+
+    private int paginaActual = 1;
+    private final int publicacionesPorPagina = 3;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,8 +71,13 @@ public class HomeActivity extends AppCompatActivity {
         spinnerCategoria = findViewById(R.id.spinnerCategoria);
         spinnerEstado = findViewById(R.id.spinnerEstado);
         spinnerCercania = findViewById(R.id.spinnerCercania);
+        spinnerOrden = findViewById(R.id.spinnerOrden);
 
         botonFiltrar = findViewById(R.id.botonFiltrar);
+        botonAnterior = findViewById(R.id.botonAnterior);
+        botonSiguiente = findViewById(R.id.botonSiguiente);
+
+        textoPagina = findViewById(R.id.textoPagina);
 
         publicacionesContainer = findViewById(R.id.publicacionesContainer);
 
@@ -73,11 +85,18 @@ public class HomeActivity extends AppCompatActivity {
 
         configurarSpinners();
 
-        mostrarPublicaciones(publicaciones);
+        // Al entrar al Home, inicialmente mostramos todas
+        // las publicaciones pero aplicando paginación.
+        publicacionesFiltradas = new ArrayList<>(publicaciones);
+
+        mostrarPagina();
 
         botonFiltrar.setOnClickListener(view -> aplicarFiltros());
-    }
 
+        botonAnterior.setOnClickListener(view -> paginaAnterior());
+
+        botonSiguiente.setOnClickListener(view -> paginaSiguiente());
+    }
 
     private void cargarDatos() {
 
@@ -165,6 +184,12 @@ public class HomeActivity extends AppCompatActivity {
                 "Cerca de mí"
         };
 
+        String[] ordenamientos = {
+                "Más recientes",
+                "Menor precio",
+                "Mayor precio"
+        };
+
         spinnerCategoria.setAdapter(new ArrayAdapter<>(
                 this,
                 android.R.layout.simple_spinner_dropdown_item,
@@ -182,11 +207,20 @@ public class HomeActivity extends AppCompatActivity {
                 android.R.layout.simple_spinner_dropdown_item,
                 cercania
         ));
+
+        spinnerOrden.setAdapter(new ArrayAdapter<>(
+                this,
+                android.R.layout.simple_spinner_dropdown_item,
+                ordenamientos
+        ));
     }
 
     private void aplicarFiltros() {
 
-        String texto = buscador.getText().toString().toLowerCase().trim();
+        String texto = buscador.getText()
+                .toString()
+                .toLowerCase()
+                .trim();
 
         String categoriaSeleccionada =
                 spinnerCategoria.getSelectedItem().toString();
@@ -196,6 +230,9 @@ public class HomeActivity extends AppCompatActivity {
 
         String cercaniaSeleccionada =
                 spinnerCercania.getSelectedItem().toString();
+
+        String ordenSeleccionado =
+                spinnerOrden.getSelectedItem().toString();
 
         String textoPrecioMinimo =
                 precioMinimo.getText().toString().trim();
@@ -218,29 +255,24 @@ public class HomeActivity extends AppCompatActivity {
 
         for (Publicacion publicacion : publicaciones) {
 
-            // Buscar por título o descripción
             boolean coincideTexto =
                     texto.isEmpty()
                             || publicacion.titulo.toLowerCase().contains(texto)
                             || publicacion.descripcion.toLowerCase().contains(texto);
 
-            // Categoría
             boolean coincideCategoria =
                     categoriaSeleccionada.equals("Todas")
                             || publicacion.categoria.equals(categoriaSeleccionada);
 
-            // Estado
             boolean coincideEstado =
                     estadoSeleccionado.equals("Todos")
                             || publicacion.estado.equals(estadoSeleccionado);
 
-            // Precio
             boolean coincidePrecio =
                     publicacion.precio >= precioMin
                             && publicacion.precio <= precioMax;
 
-            // Cercanía
-            // En esta versión simulamos que la zona del usuario es Palermo.
+            // Por ahora simulamos que la zona del usuario es Palermo.
             boolean coincideCercania =
                     cercaniaSeleccionada.equals("Todas las zonas")
                             || publicacion.zona.equals("Palermo");
@@ -255,7 +287,111 @@ public class HomeActivity extends AppCompatActivity {
             }
         }
 
-        mostrarPublicaciones(resultados);
+        // ORDENAMIENTO
+
+        if (ordenSeleccionado.equals("Más recientes")) {
+
+            Collections.sort(resultados, (p1, p2) ->
+                    Integer.compare(p2.fecha, p1.fecha));
+
+        } else if (ordenSeleccionado.equals("Menor precio")) {
+
+            Collections.sort(resultados, (p1, p2) ->
+                    Double.compare(p1.precio, p2.precio));
+
+        } else if (ordenSeleccionado.equals("Mayor precio")) {
+
+            Collections.sort(resultados, (p1, p2) ->
+                    Double.compare(p2.precio, p1.precio));
+        }
+
+        // Guardamos las publicaciones que quedaron
+        // después de buscar, filtrar y ordenar.
+        publicacionesFiltradas = resultados;
+
+        // Cada vez que aplicamos filtros volvemos a la página 1.
+        paginaActual = 1;
+
+        mostrarPagina();
+    }
+
+    private void mostrarPagina() {
+
+        // Si no hay resultados, mostramos directamente
+        // el mensaje de "No se encontraron publicaciones".
+        if (publicacionesFiltradas.isEmpty()) {
+
+            mostrarPublicaciones(publicacionesFiltradas);
+
+            paginaActual = 1;
+
+            textoPagina.setText("Página 1 de 1");
+
+            botonAnterior.setEnabled(false);
+            botonSiguiente.setEnabled(false);
+
+            return;
+        }
+
+        // Calculamos desde qué posición de la lista
+        // empieza la página actual.
+        int inicio =
+                (paginaActual - 1) * publicacionesPorPagina;
+
+        // Calculamos hasta qué posición mostrar.
+        // Math.min evita pasarnos del tamaño de la lista.
+        int fin = Math.min(
+                inicio + publicacionesPorPagina,
+                publicacionesFiltradas.size()
+        );
+
+        // Creamos una lista que contiene solamente
+        // las publicaciones de la página actual.
+        List<Publicacion> publicacionesPagina =
+                publicacionesFiltradas.subList(inicio, fin);
+
+        mostrarPublicaciones(publicacionesPagina);
+
+        // Calculamos cuántas páginas hay en total.
+        int totalPaginas = (int) Math.ceil(
+                (double) publicacionesFiltradas.size()
+                        / publicacionesPorPagina
+        );
+
+        textoPagina.setText(
+                "Página " + paginaActual + " de " + totalPaginas
+        );
+
+        // En la primera página no se puede ir hacia atrás.
+        botonAnterior.setEnabled(paginaActual > 1);
+
+        // En la última página no se puede avanzar.
+        botonSiguiente.setEnabled(paginaActual < totalPaginas);
+    }
+
+    private void paginaAnterior() {
+
+        if (paginaActual > 1) {
+
+            paginaActual--;
+
+            mostrarPagina();
+        }
+    }
+
+    private void paginaSiguiente() {
+
+        int totalPaginas = (int) Math.ceil(
+                (double) publicacionesFiltradas.size()
+                        / publicacionesPorPagina
+        );
+
+        if (paginaActual < totalPaginas) {
+
+            paginaActual++;
+
+            mostrarPagina();
+        }
     }
 
     private void mostrarPublicaciones(List<Publicacion> lista) {
