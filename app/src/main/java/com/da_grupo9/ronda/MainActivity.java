@@ -20,10 +20,16 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         Button buttonLogin = findViewById(R.id.buttonLogin);
+        Button buttonHome = findViewById(R.id.buttonHome);
 
         buttonLogin.setOnClickListener(view -> {
             Intent intent = new Intent(MainActivity.this, LoginActivity.class);
             startActivity(intent);
+        });
+
+        buttonHome.setOnClickListener(view -> {
+            Intent intent2 = new Intent(MainActivity.this, HomeActivity.class);
+            startActivity(intent2);
         });
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
