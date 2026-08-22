@@ -15,7 +15,6 @@ import androidx.navigation.Navigation;
 public class LoginFragment extends Fragment {
 
     public LoginFragment() {
-        // Constructor vacío obligatorio
     }
 
     @Override
@@ -53,8 +52,6 @@ public class LoginFragment extends Fragment {
         Button buttonForgotPassword =
                 view.findViewById(R.id.buttonForgotPassword);
 
-
-        // LOGIN CON EMAIL Y CONTRASEÑA
         buttonLogin.setOnClickListener(v -> {
 
             String email =
@@ -84,9 +81,6 @@ public class LoginFragment extends Fragment {
             }
         });
 
-
-        // LOGIN MEDIANTE OTP
-        // Por ahora sigue utilizando OtpActivity.
         buttonLoginOtp.setOnClickListener(v -> {
 
             String email =
@@ -108,24 +102,21 @@ public class LoginFragment extends Fragment {
                         Toast.LENGTH_SHORT
                 ).show();
 
-                Intent intent =
-                        new Intent(
-                                requireContext(),
-                                OtpActivity.class
-                        );
+                Bundle bundle = new Bundle();
 
-                intent.putExtra(
-                        OtpActivity.EXTRA_EMAIL,
+                bundle.putString(
+                        "email",
                         email
                 );
 
-                startActivity(intent);
+                Navigation.findNavController(v)
+                        .navigate(
+                                R.id.action_loginFragment_to_otpFragment,
+                                bundle
+                        );
             }
         });
 
-
-        // RECUPERAR CONTRASEÑA
-        // Por ahora sigue utilizando ForgotPasswordActivity.
         buttonForgotPassword.setOnClickListener(v -> {
 
             Intent intent =
