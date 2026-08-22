@@ -17,6 +17,27 @@
             app:popUpTo="@id/loginFragment"
             app:popUpToInclusive="true" />
 
+        <action
+            android:id="@+id/action_loginFragment_to_otpFragment"
+            app:destination="@id/otpFragment" />
+
+    </fragment>
+
+    <fragment
+        android:id="@+id/otpFragment"
+        android:name="com.da_grupo9.ronda.OtpFragment"
+        android:label="OTP">
+
+        <argument
+            android:name="email"
+            app:argType="string" />
+
+        <action
+            android:id="@+id/action_otpFragment_to_homeFragment"
+            app:destination="@id/homeFragment"
+            app:popUpTo="@id/loginFragment"
+            app:popUpToInclusive="true" />
+
     </fragment>
 
     <fragment
