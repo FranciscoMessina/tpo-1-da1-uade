@@ -21,6 +21,38 @@
             android:id="@+id/action_loginFragment_to_otpFragment"
             app:destination="@id/otpFragment" />
 
+        <action
+            android:id="@+id/action_loginFragment_to_forgotPasswordFragment"
+            app:destination="@id/forgotPasswordFragment" />
+
+    </fragment>
+
+    <fragment
+        android:id="@+id/forgotPasswordFragment"
+        android:name="com.da_grupo9.ronda.ForgotPasswordFragment"
+        android:label="Recuperar contraseña">
+
+        <action
+            android:id="@+id/action_forgotPasswordFragment_to_resetPasswordFragment"
+            app:destination="@id/resetPasswordFragment" />
+
+    </fragment>
+
+    <fragment
+        android:id="@+id/resetPasswordFragment"
+        android:name="com.da_grupo9.ronda.ResetPasswordFragment"
+        android:label="Restablecer contraseña">
+
+        <argument
+            android:name="email"
+            app:argType="string" />
+
+        <action
+            android:id="@+id/action_resetPasswordFragment_to_loginFragment"
+            app:destination="@id/loginFragment"
+            app:popUpTo="@id/loginFragment"
+            app:popUpToInclusive="true" />
+
     </fragment>
 
     <fragment
