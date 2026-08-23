@@ -1,6 +1,5 @@
 package com.da_grupo9.ronda;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -118,14 +117,8 @@ public class LoginFragment extends Fragment {
         });
 
         buttonForgotPassword.setOnClickListener(v -> {
-
-            Intent intent =
-                    new Intent(
-                            requireContext(),
-                            ForgotPasswordActivity.class
-                    );
-
-            startActivity(intent);
+            Navigation.findNavController(v)
+                    .navigate(R.id.action_loginFragment_to_forgotPasswordFragment);
         });
     }
 }
