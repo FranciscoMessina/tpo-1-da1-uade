@@ -75,6 +75,34 @@
     <fragment
         android:id="@+id/homeFragment"
         android:name="com.da_grupo9.ronda.HomeFragment"
-        android:label="Home" />
+        android:label="Home">
+
+        <argument
+            android:name="email"
+            android:defaultValue=""
+            app:argType="string" />
+
+        <action
+            android:id="@+id/action_homeFragment_to_detailFragment"
+            app:destination="@id/detailFragment" />
+
+    </fragment>
+
+    <fragment
+        android:id="@+id/detailFragment"
+        android:name="com.da_grupo9.ronda.DetailFragment"
+        android:label="Detalle de Publicación">
+
+        <argument
+            android:name="publicacionId"
+            android:defaultValue="1"
+            app:argType="integer" />
+
+        <argument
+            android:name="usuarioActualEmail"
+            android:defaultValue=""
+            app:argType="string" />
+
+    </fragment>
 
 </navigation>

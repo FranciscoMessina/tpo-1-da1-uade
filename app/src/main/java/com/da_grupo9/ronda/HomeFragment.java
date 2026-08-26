@@ -13,6 +13,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 import androidx.fragment.app.Fragment;
+import androidx.navigation.Navigation;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -43,6 +44,8 @@ public class HomeFragment extends Fragment {
     private int paginaActual = 1;
     private final int publicacionesPorPagina = 3;
 
+    private String usuarioActualEmail = "juan@ronda.com"; // Email por defecto o recibido de login
+
     public HomeFragment() {
         // Constructor vacío obligatorio
     }
@@ -66,6 +69,13 @@ public class HomeFragment extends Fragment {
             Bundle savedInstanceState) {
 
         super.onViewCreated(view, savedInstanceState);
+
+        if (getArguments() != null) {
+            String emailArg = getArguments().getString("email", "");
+            if (!emailArg.isEmpty()) {
+                usuarioActualEmail = emailArg;
+            }
+        }
 
         buscador = view.findViewById(R.id.buscador);
         precioMinimo = view.findViewById(R.id.precioMinimo);
@@ -108,68 +118,7 @@ public class HomeFragment extends Fragment {
     }
 
     private void cargarDatos() {
-
-        publicaciones = new ArrayList<>();
-
-        publicaciones.add(new Publicacion(
-                "iPhone 15 128GB",
-                "iPhone 15 en excelente estado, batería al 95%.",
-                850000,
-                "Como nuevo",
-                "Tecnología",
-                "Palermo",
-                5
-        ));
-
-        publicaciones.add(new Publicacion(
-                "Bicicleta Mountain Bike",
-                "Bicicleta rodado 29, ideal para ciudad y montaña.",
-                350000,
-                "Usado",
-                "Deportes",
-                "Belgrano",
-                4
-        ));
-
-        publicaciones.add(new Publicacion(
-                "PlayStation 5",
-                "Consola PS5 con joystick original y poco uso.",
-                900000,
-                "Como nuevo",
-                "Tecnología",
-                "Caballito",
-                3
-        ));
-
-        publicaciones.add(new Publicacion(
-                "Monitor Samsung 24 pulgadas",
-                "Monitor Full HD de 24 pulgadas funcionando perfectamente.",
-                250000,
-                "Usado",
-                "Tecnología",
-                "Recoleta",
-                2
-        ));
-
-        publicaciones.add(new Publicacion(
-                "Teclado mecánico Logitech",
-                "Teclado mecánico RGB para gaming.",
-                120000,
-                "Nuevo",
-                "Tecnología",
-                "Villa Urquiza",
-                1
-        ));
-
-        publicaciones.add(new Publicacion(
-                "Zapatillas Nike",
-                "Zapatillas deportivas nuevas, talle 42.",
-                180000,
-                "Nuevo",
-                "Ropa",
-                "Palermo",
-                6
-        ));
+        publicaciones = PublicacionRepository.getPublicaciones();
     }
 
     private void configurarSpinners() {
@@ -275,31 +224,31 @@ public class HomeFragment extends Fragment {
 
             boolean coincideTexto =
                     texto.isEmpty()
-                            || publicacion.titulo
+                            || publicacion.getTitulo()
                             .toLowerCase()
                             .contains(texto)
-                            || publicacion.descripcion
+                            || publicacion.getDescripcion()
                             .toLowerCase()
                             .contains(texto);
 
             boolean coincideCategoria =
                     categoriaSeleccionada.equals("Todas")
-                            || publicacion.categoria
+                            || publicacion.getCategoria()
                             .equals(categoriaSeleccionada);
 
             boolean coincideEstado =
                     estadoSeleccionado.equals("Todos")
-                            || publicacion.estado
+                            || publicacion.getEstado()
                             .equals(estadoSeleccionado);
 
             boolean coincidePrecio =
-                    publicacion.precio >= precioMin
-                            && publicacion.precio <= precioMax;
+                    publicacion.getPrecio() >= precioMin
+                            && publicacion.getPrecio() <= precioMax;
 
             boolean coincideCercania =
                     cercaniaSeleccionada
                             .equals("Todas las zonas")
-                            || publicacion.zona
+                            || publicacion.getZona()
                             .equals("Palermo");
 
             if (coincideTexto
@@ -318,8 +267,8 @@ public class HomeFragment extends Fragment {
                     resultados,
                     (p1, p2) ->
                             Integer.compare(
-                                    p2.fecha,
-                                    p1.fecha
+                                    p2.getFecha(),
+                                    p1.getFecha()
                             )
             );
 
@@ -329,8 +278,8 @@ public class HomeFragment extends Fragment {
                     resultados,
                     (p1, p2) ->
                             Double.compare(
-                                    p1.precio,
-                                    p2.precio
+                                    p1.getPrecio(),
+                                    p2.getPrecio()
                             )
             );
 
@@ -340,8 +289,8 @@ public class HomeFragment extends Fragment {
                     resultados,
                     (p1, p2) ->
                             Double.compare(
-                                    p2.precio,
-                                    p1.precio
+                                    p2.getPrecio(),
+                                    p1.getPrecio()
                             )
             );
         }
@@ -489,10 +438,10 @@ public class HomeFragment extends Fragment {
         );
 
         tarjeta.setPadding(
-                20,
-                20,
-                20,
-                20
+                24,
+                24,
+                24,
+                24
         );
 
         tarjeta.setBackgroundColor(
@@ -509,7 +458,7 @@ public class HomeFragment extends Fragment {
                 0,
                 0,
                 0,
-                16
+                20
         );
 
         tarjeta.setLayoutParams(parametros);
@@ -517,7 +466,7 @@ public class HomeFragment extends Fragment {
         TextView titulo =
                 new TextView(requireContext());
 
-        titulo.setText(publicacion.titulo);
+        titulo.setText(publicacion.getTitulo());
         titulo.setTextSize(20);
         titulo.setTextColor(Color.BLACK);
 
@@ -525,7 +474,7 @@ public class HomeFragment extends Fragment {
                 new TextView(requireContext());
 
         descripcion.setText(
-                publicacion.descripcion
+                publicacion.getDescripcion()
         );
 
         descripcion.setTextSize(15);
@@ -535,7 +484,7 @@ public class HomeFragment extends Fragment {
                 new TextView(requireContext());
 
         precio.setText(
-                "Precio: $" + publicacion.precio
+                "Precio: $" + String.format("%,.0f", publicacion.getPrecio())
         );
 
         precio.setTextSize(18);
@@ -545,7 +494,7 @@ public class HomeFragment extends Fragment {
                 new TextView(requireContext());
 
         estado.setText(
-                "Estado: " + publicacion.estado
+                "Estado: " + publicacion.getEstado()
         );
 
         estado.setTextSize(16);
@@ -556,7 +505,7 @@ public class HomeFragment extends Fragment {
 
         categoria.setText(
                 "Categoría: "
-                        + publicacion.categoria
+                        + publicacion.getCategoria()
         );
 
         categoria.setTextSize(16);
@@ -566,11 +515,32 @@ public class HomeFragment extends Fragment {
                 new TextView(requireContext());
 
         zona.setText(
-                "Zona: " + publicacion.zona
+                "Zona: " + publicacion.getZona()
         );
 
         zona.setTextSize(16);
         zona.setTextColor(Color.DKGRAY);
+
+        Button botonVerDetalle =
+                new Button(requireContext());
+
+        botonVerDetalle.setText("Ver Detalle y Fotos ▶");
+
+        // Navegación al Detalle pasando argumentos
+        View.OnClickListener abrirDetalleListener = v -> {
+            Bundle bundle = new Bundle();
+            bundle.putInt("publicacionId", publicacion.getId());
+            bundle.putString("usuarioActualEmail", usuarioActualEmail);
+
+            Navigation.findNavController(v)
+                    .navigate(
+                            R.id.action_homeFragment_to_detailFragment,
+                            bundle
+                    );
+        };
+
+        botonVerDetalle.setOnClickListener(abrirDetalleListener);
+        tarjeta.setOnClickListener(abrirDetalleListener);
 
         tarjeta.addView(titulo);
         tarjeta.addView(descripcion);
@@ -578,38 +548,10 @@ public class HomeFragment extends Fragment {
         tarjeta.addView(estado);
         tarjeta.addView(categoria);
         tarjeta.addView(zona);
+        tarjeta.addView(botonVerDetalle);
 
         publicacionesContainer.addView(
                 tarjeta
         );
-    }
-
-    private static class Publicacion {
-
-        String titulo;
-        String descripcion;
-        double precio;
-        String estado;
-        String categoria;
-        String zona;
-        int fecha;
-
-        public Publicacion(
-                String titulo,
-                String descripcion,
-                double precio,
-                String estado,
-                String categoria,
-                String zona,
-                int fecha) {
-
-            this.titulo = titulo;
-            this.descripcion = descripcion;
-            this.precio = precio;
-            this.estado = estado;
-            this.categoria = categoria;
-            this.zona = zona;
-            this.fecha = fecha;
-        }
     }
 }
