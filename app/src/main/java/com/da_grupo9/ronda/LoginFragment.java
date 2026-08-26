@@ -75,8 +75,11 @@ public class LoginFragment extends Fragment {
                         Toast.LENGTH_LONG
                 ).show();
 
+                Bundle bundle = new Bundle();
+                bundle.putString("email", email);
+
                 Navigation.findNavController(v)
-                        .navigate(R.id.action_loginFragment_to_homeFragment);
+                        .navigate(R.id.action_loginFragment_to_homeFragment, bundle);
             }
         });
 

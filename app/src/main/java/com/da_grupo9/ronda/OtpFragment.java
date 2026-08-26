@@ -83,8 +83,11 @@ public class OtpFragment extends Fragment {
                         Toast.LENGTH_LONG
                 ).show();
 
+                Bundle bundle = new Bundle();
+                bundle.putString("email", finalEmail);
+
                 Navigation.findNavController(v)
-                        .navigate(R.id.action_otpFragment_to_homeFragment);
+                        .navigate(R.id.action_otpFragment_to_homeFragment, bundle);
             }
         });
 
