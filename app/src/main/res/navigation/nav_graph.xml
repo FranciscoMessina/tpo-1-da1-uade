@@ -73,6 +73,11 @@
     </fragment>
 
     <fragment
+        android:id="@+id/profileFragment"
+        android:name="com.da_grupo9.ronda.ProfileFragment"
+        android:label="Perfil" />
+
+    <fragment
         android:id="@+id/homeFragment"
         android:name="com.da_grupo9.ronda.HomeFragment"
         android:label="Home">
@@ -85,6 +90,10 @@
         <action
             android:id="@+id/action_homeFragment_to_detailFragment"
             app:destination="@id/detailFragment" />
+
+        <action
+            android:id="@+id/action_homeFragment_to_profileFragment"
+            app:destination="@id/profileFragment" />
 
     </fragment>
 
