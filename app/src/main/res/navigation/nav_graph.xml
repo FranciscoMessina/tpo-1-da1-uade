@@ -95,6 +95,38 @@
             android:id="@+id/action_homeFragment_to_profileFragment"
             app:destination="@id/profileFragment" />
 
+        <action
+            android:id="@+id/action_homeFragment_to_publicarArticuloFragment"
+            app:destination="@id/publicarArticuloFragment" />
+
+        <action
+            android:id="@+id/action_homeFragment_to_misPublicacionesFragment"
+            app:destination="@id/misPublicacionesFragment" />
+
+    </fragment>
+
+    <fragment
+        android:id="@+id/publicarArticuloFragment"
+        android:name="com.da_grupo9.ronda.PublicarArticuloFragment"
+        android:label="Publicar artículo">
+
+        <argument
+            android:name="email"
+            android:defaultValue=""
+            app:argType="string" />
+
+    </fragment>
+
+    <fragment
+        android:id="@+id/misPublicacionesFragment"
+        android:name="com.da_grupo9.ronda.MisPublicacionesFragment"
+        android:label="Mis publicaciones">
+
+        <argument
+            android:name="email"
+            android:defaultValue=""
+            app:argType="string" />
+
     </fragment>
 
     <fragment

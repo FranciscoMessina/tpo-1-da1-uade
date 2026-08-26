@@ -24,6 +24,42 @@ public class PublicacionRepository {
         return null;
     }
 
+    public static void agregarPublicacion(Publicacion publicacion) {
+        getPublicaciones().add(0, publicacion);
+    }
+
+    public static int getProximoId() {
+        int idMaximo = 0;
+
+        for (Publicacion publicacion : getPublicaciones()) {
+            if (publicacion.getId() > idMaximo) {
+                idMaximo = publicacion.getId();
+            }
+        }
+
+        return idMaximo + 1;
+    }
+
+    public static List<Publicacion> getPublicacionesPorVendedor(String email) {
+        List<Publicacion> publicacionesDelVendedor = new ArrayList<>();
+
+        for (Publicacion publicacion : getPublicaciones()) {
+            if (publicacion.getVendedorEmail().equalsIgnoreCase(email)) {
+                publicacionesDelVendedor.add(publicacion);
+            }
+        }
+
+        return publicacionesDelVendedor;
+    }
+
+    public static void cambiarEstadoPublicacion(int id, String nuevoEstado) {
+        Publicacion publicacion = getPublicacionById(id);
+
+        if (publicacion != null) {
+            publicacion.setEstadoPublicacion(nuevoEstado);
+        }
+    }
+
     private static void inicializarDatos() {
         publicaciones = new ArrayList<>();
 

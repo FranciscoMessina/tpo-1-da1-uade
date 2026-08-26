@@ -19,6 +19,7 @@ public class Publicacion implements Serializable {
     private String vendedorEmail;
     private String vendedorReputacion;
     private List<String> imagenes;
+    private String estadoPublicacion;
 
     public Publicacion(
             int id,
@@ -48,6 +49,7 @@ public class Publicacion implements Serializable {
         this.vendedorEmail = vendedorEmail;
         this.vendedorReputacion = vendedorReputacion;
         this.imagenes = imagenes != null ? imagenes : new ArrayList<>();
+        this.estadoPublicacion = "Activa";
     }
 
     public int getId() {
@@ -100,5 +102,13 @@ public class Publicacion implements Serializable {
 
     public List<String> getImagenes() {
         return imagenes;
+    }
+
+    public String getEstadoPublicacion() {
+        return estadoPublicacion;
+    }
+
+    public void setEstadoPublicacion(String estadoPublicacion) {
+        this.estadoPublicacion = estadoPublicacion;
     }
 }
