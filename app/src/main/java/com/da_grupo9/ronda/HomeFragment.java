@@ -44,10 +44,9 @@ public class HomeFragment extends Fragment {
     private int paginaActual = 1;
     private final int publicacionesPorPagina = 3;
 
-    private String usuarioActualEmail = "juan@ronda.com"; // Email por defecto o recibido de login
+    private String usuarioActualEmail = "";
 
     public HomeFragment() {
-        // Constructor vacío obligatorio
     }
 
     @Override
@@ -70,13 +69,6 @@ public class HomeFragment extends Fragment {
 
         super.onViewCreated(view, savedInstanceState);
 
-        if (getArguments() != null) {
-            String emailArg = getArguments().getString("email", "");
-            if (!emailArg.isEmpty()) {
-                usuarioActualEmail = emailArg;
-            }
-        }
-
         buscador = view.findViewById(R.id.buscador);
         precioMinimo = view.findViewById(R.id.precioMinimo);
         precioMaximo = view.findViewById(R.id.precioMaximo);
@@ -90,10 +82,18 @@ public class HomeFragment extends Fragment {
         botonAnterior = view.findViewById(R.id.botonAnterior);
         botonSiguiente = view.findViewById(R.id.botonSiguiente);
 
+        Button buttonPerfil =
+                view.findViewById(R.id.buttonPerfil);
+
         textoPagina = view.findViewById(R.id.textoPagina);
 
         publicacionesContainer =
                 view.findViewById(R.id.publicacionesContainer);
+
+        if (getArguments() != null) {
+            usuarioActualEmail =
+                    getArguments().getString("email", "");
+        }
 
         cargarDatos();
 
@@ -115,10 +115,21 @@ public class HomeFragment extends Fragment {
         botonSiguiente.setOnClickListener(
                 v -> paginaSiguiente()
         );
+
+        buttonPerfil.setOnClickListener(v ->
+                Navigation.findNavController(v)
+                        .navigate(
+                                R.id.action_homeFragment_to_profileFragment
+                        )
+        );
     }
 
     private void cargarDatos() {
-        publicaciones = PublicacionRepository.getPublicaciones();
+
+        publicaciones =
+                new ArrayList<>(
+                        PublicacionRepository.getPublicaciones()
+                );
     }
 
     private void configurarSpinners() {
@@ -183,10 +194,11 @@ public class HomeFragment extends Fragment {
 
     private void aplicarFiltros() {
 
-        String texto = buscador.getText()
-                .toString()
-                .toLowerCase()
-                .trim();
+        String texto =
+                buscador.getText()
+                        .toString()
+                        .toLowerCase()
+                        .trim();
 
         String categoriaSeleccionada =
                 spinnerCategoria.getSelectedItem().toString();
@@ -210,11 +222,13 @@ public class HomeFragment extends Fragment {
         double precioMax = Double.MAX_VALUE;
 
         if (!textoPrecioMinimo.isEmpty()) {
-            precioMin = Double.parseDouble(textoPrecioMinimo);
+            precioMin =
+                    Double.parseDouble(textoPrecioMinimo);
         }
 
         if (!textoPrecioMaximo.isEmpty()) {
-            precioMax = Double.parseDouble(textoPrecioMaximo);
+            precioMax =
+                    Double.parseDouble(textoPrecioMaximo);
         }
 
         List<Publicacion> resultados =
@@ -326,10 +340,11 @@ public class HomeFragment extends Fragment {
                 (paginaActual - 1)
                         * publicacionesPorPagina;
 
-        int fin = Math.min(
-                inicio + publicacionesPorPagina,
-                publicacionesFiltradas.size()
-        );
+        int fin =
+                Math.min(
+                        inicio + publicacionesPorPagina,
+                        publicacionesFiltradas.size()
+                );
 
         List<Publicacion> publicacionesPagina =
                 publicacionesFiltradas.subList(
@@ -438,10 +453,10 @@ public class HomeFragment extends Fragment {
         );
 
         tarjeta.setPadding(
-                24,
-                24,
-                24,
-                24
+                20,
+                20,
+                20,
+                20
         );
 
         tarjeta.setBackgroundColor(
@@ -458,7 +473,7 @@ public class HomeFragment extends Fragment {
                 0,
                 0,
                 0,
-                20
+                16
         );
 
         tarjeta.setLayoutParams(parametros);
@@ -466,7 +481,10 @@ public class HomeFragment extends Fragment {
         TextView titulo =
                 new TextView(requireContext());
 
-        titulo.setText(publicacion.getTitulo());
+        titulo.setText(
+                publicacion.getTitulo()
+        );
+
         titulo.setTextSize(20);
         titulo.setTextColor(Color.BLACK);
 
@@ -484,7 +502,8 @@ public class HomeFragment extends Fragment {
                 new TextView(requireContext());
 
         precio.setText(
-                "Precio: $" + String.format("%,.0f", publicacion.getPrecio())
+                "Precio: $"
+                        + publicacion.getPrecio()
         );
 
         precio.setTextSize(18);
@@ -494,7 +513,8 @@ public class HomeFragment extends Fragment {
                 new TextView(requireContext());
 
         estado.setText(
-                "Estado: " + publicacion.getEstado()
+                "Estado: "
+                        + publicacion.getEstado()
         );
 
         estado.setTextSize(16);
@@ -515,32 +535,27 @@ public class HomeFragment extends Fragment {
                 new TextView(requireContext());
 
         zona.setText(
-                "Zona: " + publicacion.getZona()
+                "Zona: "
+                        + publicacion.getZona()
         );
 
         zona.setTextSize(16);
         zona.setTextColor(Color.DKGRAY);
 
-        Button botonVerDetalle =
-                new Button(requireContext());
+        TextView verDetalle =
+                new TextView(requireContext());
 
-        botonVerDetalle.setText("Ver Detalle y Fotos ▶");
+        verDetalle.setText(
+                "Ver detalle"
+        );
 
-        // Navegación al Detalle pasando argumentos
-        View.OnClickListener abrirDetalleListener = v -> {
-            Bundle bundle = new Bundle();
-            bundle.putInt("publicacionId", publicacion.getId());
-            bundle.putString("usuarioActualEmail", usuarioActualEmail);
-
-            Navigation.findNavController(v)
-                    .navigate(
-                            R.id.action_homeFragment_to_detailFragment,
-                            bundle
-                    );
-        };
-
-        botonVerDetalle.setOnClickListener(abrirDetalleListener);
-        tarjeta.setOnClickListener(abrirDetalleListener);
+        verDetalle.setTextSize(16);
+        verDetalle.setPadding(
+                0,
+                12,
+                0,
+                0
+        );
 
         tarjeta.addView(titulo);
         tarjeta.addView(descripcion);
@@ -548,7 +563,29 @@ public class HomeFragment extends Fragment {
         tarjeta.addView(estado);
         tarjeta.addView(categoria);
         tarjeta.addView(zona);
-        tarjeta.addView(botonVerDetalle);
+        tarjeta.addView(verDetalle);
+
+        tarjeta.setOnClickListener(v -> {
+
+            Bundle bundle =
+                    new Bundle();
+
+            bundle.putInt(
+                    "publicacionId",
+                    publicacion.getId()
+            );
+
+            bundle.putString(
+                    "usuarioActualEmail",
+                    usuarioActualEmail
+            );
+
+            Navigation.findNavController(v)
+                    .navigate(
+                            R.id.action_homeFragment_to_detailFragment,
+                            bundle
+                    );
+        });
 
         publicacionesContainer.addView(
                 tarjeta
