@@ -85,6 +85,12 @@ public class HomeFragment extends Fragment {
         Button buttonPerfil =
                 view.findViewById(R.id.buttonPerfil);
 
+        Button buttonPublicarArticulo =
+                view.findViewById(R.id.buttonPublicarArticulo);
+
+        Button buttonMisPublicaciones =
+                view.findViewById(R.id.buttonMisPublicaciones);
+
         textoPagina = view.findViewById(R.id.textoPagina);
 
         publicacionesContainer =
@@ -122,14 +128,43 @@ public class HomeFragment extends Fragment {
                                 R.id.action_homeFragment_to_profileFragment
                         )
         );
+
+        buttonPublicarArticulo.setOnClickListener(v -> {
+            Bundle bundle = new Bundle();
+            bundle.putString("email", usuarioActualEmail);
+
+            Navigation.findNavController(v)
+                    .navigate(
+                            R.id.action_homeFragment_to_publicarArticuloFragment,
+                            bundle
+                    );
+        });
+
+        buttonMisPublicaciones.setOnClickListener(v -> {
+            Bundle bundle = new Bundle();
+            bundle.putString("email", usuarioActualEmail);
+
+            Navigation.findNavController(v)
+                    .navigate(
+                            R.id.action_homeFragment_to_misPublicacionesFragment,
+                            bundle
+                    );
+        });
     }
 
     private void cargarDatos() {
 
-        publicaciones =
-                new ArrayList<>(
-                        PublicacionRepository.getPublicaciones()
-                );
+        publicaciones = new ArrayList<>();
+
+        for (Publicacion publicacion :
+                PublicacionRepository.getPublicaciones()) {
+
+            if (publicacion.getEstadoPublicacion()
+                    .equals("Activa")) {
+
+                publicaciones.add(publicacion);
+            }
+        }
     }
 
     private void configurarSpinners() {

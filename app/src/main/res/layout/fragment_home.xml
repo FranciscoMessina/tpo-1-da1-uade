@@ -22,6 +22,20 @@
         android:text="Mi perfil"
         android:layout_marginBottom="12dp" />
 
+    <Button
+        android:id="@+id/buttonPublicarArticulo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Publicar artículo"
+        android:layout_marginBottom="8dp" />
+
+    <Button
+        android:id="@+id/buttonMisPublicaciones"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Mis publicaciones"
+        android:layout_marginBottom="12dp" />
+
     <EditText
         android:id="@+id/buscador"
         android:layout_width="match_parent"
