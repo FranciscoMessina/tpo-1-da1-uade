@@ -154,10 +154,17 @@ public class HomeFragment extends Fragment {
 
     private void cargarDatos() {
 
-        publicaciones =
-                new ArrayList<>(
-                        PublicacionRepository.getPublicaciones()
-                );
+        publicaciones = new ArrayList<>();
+
+        for (Publicacion publicacion :
+                PublicacionRepository.getPublicaciones()) {
+
+            if (publicacion.getEstadoPublicacion()
+                    .equals("Activa")) {
+
+                publicaciones.add(publicacion);
+            }
+        }
     }
 
     private void configurarSpinners() {
