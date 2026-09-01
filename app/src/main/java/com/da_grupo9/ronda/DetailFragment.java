@@ -166,13 +166,31 @@ public class DetailFragment extends Fragment {
                 ).show()
         );
 
-        buttonVerPerfilVendedor.setOnClickListener(v ->
-                Toast.makeText(
-                        requireContext(),
-                        "Perfil público de " + publicacion.getVendedorNombre() + " - " + publicacion.getVendedorReputacion(),
-                        Toast.LENGTH_LONG
-                ).show()
-        );
+        buttonVerPerfilVendedor.setOnClickListener(v -> {
+
+            Bundle bundle = new Bundle();
+
+            bundle.putString(
+                    "vendedorNombre",
+                    publicacion.getVendedorNombre()
+            );
+
+            bundle.putString(
+                    "vendedorEmail",
+                    publicacion.getVendedorEmail()
+            );
+
+            bundle.putString(
+                    "vendedorReputacion",
+                    publicacion.getVendedorReputacion()
+            );
+
+            Navigation.findNavController(v)
+                    .navigate(
+                            R.id.action_detailFragment_to_publicProfileFragment,
+                            bundle
+                    );
+        });
 
         // Listeners para Vendedor
         buttonModificar.setOnClickListener(v ->
