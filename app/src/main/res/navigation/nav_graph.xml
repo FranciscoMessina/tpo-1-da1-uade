@@ -144,6 +144,32 @@
             android:defaultValue=""
             app:argType="string" />
 
+        <action
+            android:id="@+id/action_detailFragment_to_publicProfileFragment"
+            app:destination="@id/publicProfileFragment" />
+
+    </fragment>
+
+    <fragment
+        android:id="@+id/publicProfileFragment"
+        android:name="com.da_grupo9.ronda.PublicProfileFragment"
+        android:label="Perfil público">
+
+        <argument
+            android:name="vendedorNombre"
+            android:defaultValue=""
+            app:argType="string" />
+
+        <argument
+            android:name="vendedorEmail"
+            android:defaultValue=""
+            app:argType="string" />
+
+        <argument
+            android:name="vendedorReputacion"
+            android:defaultValue=""
+            app:argType="string" />
+
     </fragment>
 
 </navigation>
