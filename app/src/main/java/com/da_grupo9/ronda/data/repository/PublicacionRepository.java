@@ -1,6 +1,7 @@
 package com.da_grupo9.ronda.data.repository;
 
 import com.da_grupo9.ronda.data.model.Publicacion;
+import com.da_grupo9.ronda.data.model.PublicacionesResponse;
 import com.da_grupo9.ronda.data.remote.PublicacionApi;
 import java.io.IOException;
 import java.util.Collections;
@@ -27,7 +28,15 @@ public class PublicacionRepository {
     }
 
     public void getPublicaciones(Resultado<List<Publicacion>> resultado) {
-        ejecutar(api.getPublicaciones(), resultado);
+        api.getPublicaciones().enqueue(new Callback<PublicacionesResponse>() {
+            @Override public void onResponse(Call<PublicacionesResponse> call, Response<PublicacionesResponse> response) {
+                if (response.isSuccessful() && response.body() != null) resultado.onSuccess(response.body().getItems());
+                else resultado.onError("El servidor respondió con código " + response.code());
+            }
+            @Override public void onFailure(Call<PublicacionesResponse> call, Throwable error) {
+                resultado.onError(error instanceof IOException ? "No se pudo conectar con el servidor" : "No se pudo procesar la respuesta del servidor");
+            }
+        });
     }
 
     public void getPublicacionById(int id, Resultado<Publicacion> resultado) {
@@ -35,19 +44,19 @@ public class PublicacionRepository {
     }
 
     public void getPublicacionesPorVendedor(String email, Resultado<List<Publicacion>> resultado) {
-        api.getPublicaciones().enqueue(new Callback<List<Publicacion>>() {
-            @Override public void onResponse(Call<List<Publicacion>> call, Response<List<Publicacion>> response) {
+        api.getPublicaciones().enqueue(new Callback<PublicacionesResponse>() {
+            @Override public void onResponse(Call<PublicacionesResponse> call, Response<PublicacionesResponse> response) {
                 if (!response.isSuccessful() || response.body() == null) {
                     resultado.onError("El servidor respondió con código " + response.code());
                     return;
                 }
                 List<Publicacion> filtradas = new ArrayList<>();
-                for (Publicacion item : response.body()) {
+                for (Publicacion item : response.body().getItems()) {
                     if (item.getVendedorEmail() != null && item.getVendedorEmail().equalsIgnoreCase(email)) filtradas.add(item);
                 }
                 resultado.onSuccess(filtradas);
             }
-            @Override public void onFailure(Call<List<Publicacion>> call, Throwable error) {
+            @Override public void onFailure(Call<PublicacionesResponse> call, Throwable error) {
                 resultado.onError("No se pudo conectar con el servidor");
             }
         });
