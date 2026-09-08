@@ -115,6 +115,11 @@
             android:defaultValue=""
             app:argType="string" />
 
+        <argument
+            android:name="publicacionId"
+            android:defaultValue="-1"
+            app:argType="integer" />
+
     </fragment>
 
     <fragment
@@ -147,6 +152,10 @@
         <action
             android:id="@+id/action_detailFragment_to_publicProfileFragment"
             app:destination="@id/publicProfileFragment" />
+
+        <action
+            android:id="@+id/action_detailFragment_to_publicarArticuloFragment"
+            app:destination="@id/publicarArticuloFragment" />
 
     </fragment>
 

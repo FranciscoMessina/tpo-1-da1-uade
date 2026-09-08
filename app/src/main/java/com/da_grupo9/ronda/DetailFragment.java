@@ -5,12 +5,15 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
+
+import com.bumptech.glide.Glide;
 
 import java.util.List;
 
@@ -47,7 +50,7 @@ public class DetailFragment extends Fragment {
         Button buttonBack = view.findViewById(R.id.buttonBack);
 
         // Vistas de la galería
-        TextView textFotoViewer = view.findViewById(R.id.textFotoViewer);
+        ImageView imageFotoViewer = view.findViewById(R.id.imageFotoViewer);
         TextView textFotoIndicador = view.findViewById(R.id.textFotoIndicador);
         Button buttonFotoAnterior = view.findViewById(R.id.buttonFotoAnterior);
         Button buttonFotoSiguiente = view.findViewById(R.id.buttonFotoSiguiente);
@@ -80,13 +83,12 @@ public class DetailFragment extends Fragment {
         Button buttonPausar = view.findViewById(R.id.buttonPausar);
 
         // Obtener argumentos pasados por Navigation Component
-        int publicacionId = 1;
-        String usuarioActualEmail = "";
-
-        if (getArguments() != null) {
-            publicacionId = getArguments().getInt("publicacionId", 1);
-            usuarioActualEmail = getArguments().getString("usuarioActualEmail", "");
-        }
+        final int publicacionId = (getArguments() != null)
+                ? getArguments().getInt("publicacionId", 1)
+                : 1;
+        final String usuarioActualEmail = (getArguments() != null)
+                ? getArguments().getString("usuarioActualEmail", "")
+                : "";
 
         // Buscar publicación en el repositorio
         Publicacion publicacion = PublicacionRepository.getPublicacionById(publicacionId);
@@ -112,19 +114,19 @@ public class DetailFragment extends Fragment {
 
         // Configurar galería de fotos
         listaFotos = publicacion.getImagenes();
-        actualizarGaleria(textFotoViewer, textFotoIndicador, buttonFotoAnterior, buttonFotoSiguiente);
+        actualizarGaleria(imageFotoViewer, textFotoIndicador, buttonFotoAnterior, buttonFotoSiguiente);
 
         buttonFotoAnterior.setOnClickListener(v -> {
             if (fotoActualIndex > 0) {
                 fotoActualIndex--;
-                actualizarGaleria(textFotoViewer, textFotoIndicador, buttonFotoAnterior, buttonFotoSiguiente);
+                actualizarGaleria(imageFotoViewer, textFotoIndicador, buttonFotoAnterior, buttonFotoSiguiente);
             }
         });
 
         buttonFotoSiguiente.setOnClickListener(v -> {
             if (fotoActualIndex < listaFotos.size() - 1) {
                 fotoActualIndex++;
-                actualizarGaleria(textFotoViewer, textFotoIndicador, buttonFotoAnterior, buttonFotoSiguiente);
+                actualizarGaleria(imageFotoViewer, textFotoIndicador, buttonFotoAnterior, buttonFotoSiguiente);
             }
         });
 
@@ -193,21 +195,35 @@ public class DetailFragment extends Fragment {
         });
 
         // Listeners para Vendedor
-        buttonModificar.setOnClickListener(v ->
-                Toast.makeText(
-                        requireContext(),
-                        "Abriendo editor para: " + publicacion.getTitulo(),
-                        Toast.LENGTH_SHORT
-                ).show()
-        );
+        buttonModificar.setOnClickListener(v -> {
+            Bundle bundle = new Bundle();
+            bundle.putString("email", usuarioActualEmail);
+            bundle.putInt("publicacionId", publicacion.getId());
 
-        buttonPausar.setOnClickListener(v ->
-                Toast.makeText(
-                        requireContext(),
-                        "La publicación ha sido pausada",
-                        Toast.LENGTH_SHORT
-                ).show()
-        );
+            Navigation.findNavController(v)
+                    .navigate(
+                            R.id.action_detailFragment_to_publicarArticuloFragment,
+                            bundle
+                    );
+        });
+
+        if ("Pausada".equalsIgnoreCase(publicacion.getEstadoPublicacion())) {
+            buttonPausar.setText("▶️ Reanudar publicación");
+        } else {
+            buttonPausar.setText("⏸️ Pausar publicación");
+        }
+
+        buttonPausar.setOnClickListener(v -> {
+            boolean estaPausada = "Pausada".equalsIgnoreCase(publicacion.getEstadoPublicacion());
+            String nuevoEstado = estaPausada ? "Activa" : "Pausada";
+            PublicacionRepository.cambiarEstadoPublicacion(publicacion.getId(), nuevoEstado);
+            buttonPausar.setText(estaPausada ? "⏸️ Pausar publicación" : "▶️ Reanudar publicación");
+            Toast.makeText(
+                    requireContext(),
+                    "La publicación ahora está " + nuevoEstado.toLowerCase(),
+                    Toast.LENGTH_SHORT
+            ).show();
+        });
 
         // Botón Volver con Navigation Component
         buttonBack.setOnClickListener(v ->
@@ -216,20 +232,24 @@ public class DetailFragment extends Fragment {
     }
 
     private void actualizarGaleria(
-            TextView textFotoViewer,
+            ImageView imageFotoViewer,
             TextView textFotoIndicador,
             Button buttonFotoAnterior,
             Button buttonFotoSiguiente) {
 
         if (listaFotos == null || listaFotos.isEmpty()) {
-            textFotoViewer.setText("📷 Sin fotos disponibles");
+            imageFotoViewer.setImageDrawable(null);
             textFotoIndicador.setText("Foto 0 de 0");
             buttonFotoAnterior.setEnabled(false);
             buttonFotoSiguiente.setEnabled(false);
             return;
         }
 
-        textFotoViewer.setText(listaFotos.get(fotoActualIndex));
+        Glide.with(this)
+                .load(listaFotos.get(fotoActualIndex))
+                .centerCrop()
+                .into(imageFotoViewer);
+
         textFotoIndicador.setText("Foto " + (fotoActualIndex + 1) + " de " + listaFotos.size());
 
         buttonFotoAnterior.setEnabled(fotoActualIndex > 0);

@@ -108,6 +108,30 @@ public class Publicacion implements Serializable {
         return estadoPublicacion;
     }
 
+    public void setTitulo(String titulo) {
+        this.titulo = titulo;
+    }
+
+    public void setDescripcion(String descripcion) {
+        this.descripcion = descripcion;
+    }
+
+    public void setPrecio(double precio) {
+        this.precio = precio;
+    }
+
+    public void setEstado(String estado) {
+        this.estado = estado;
+    }
+
+    public void setCategoria(String categoria) {
+        this.categoria = categoria;
+    }
+
+    public void setZona(String zona) {
+        this.zona = zona;
+    }
+
     public void setEstadoPublicacion(String estadoPublicacion) {
         this.estadoPublicacion = estadoPublicacion;
     }
