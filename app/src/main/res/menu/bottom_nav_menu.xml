@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/homeFragment"
+        android:icon="@drawable/ic_nav_home"
+        android:title="@string/nav_home" />
+
+    <item
+        android:id="@+id/misPublicacionesFragment"
+        android:icon="@drawable/ic_nav_publicaciones"
+        android:title="@string/nav_mis_publicaciones" />
+
+    <item
+        android:id="@+id/publicarArticuloFragment"
+        android:icon="@drawable/ic_nav_publicar"
+        android:title="@string/nav_publicar" />
+
+    <item
+        android:id="@+id/profileFragment"
+        android:icon="@drawable/ic_nav_perfil"
+        android:title="@string/nav_perfil" />
+
+</menu>
