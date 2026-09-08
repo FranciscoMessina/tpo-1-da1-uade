@@ -1,4 +1,4 @@
-package com.da_grupo9.ronda;
+package com.da_grupo9.ronda.data.model;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -105,7 +105,7 @@ public class Publicacion implements Serializable {
     }
 
     public String getEstadoPublicacion() {
-        return estadoPublicacion;
+        return estadoPublicacion != null ? estadoPublicacion : "Activa";
     }
 
     public void setEstadoPublicacion(String estadoPublicacion) {

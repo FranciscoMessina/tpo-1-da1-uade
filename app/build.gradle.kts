@@ -6,6 +6,7 @@ plugins {
 val apiBaseUrl = providers.gradleProperty("API_BASE_URL")
     .orElse("https://example.com/")
     .get()
+    .let { if (it.endsWith("/")) it else "$it/" }
 
 android {
     namespace = "com.da_grupo9.ronda"

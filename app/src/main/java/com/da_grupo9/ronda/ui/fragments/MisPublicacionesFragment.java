@@ -1,4 +1,8 @@
-package com.da_grupo9.ronda;
+package com.da_grupo9.ronda.ui.fragments;
+
+import com.da_grupo9.ronda.R;
+import com.da_grupo9.ronda.data.model.Publicacion;
+import com.da_grupo9.ronda.data.repository.PublicacionRepository;
 
 import android.graphics.Color;
 import android.os.Bundle;
@@ -11,9 +15,15 @@ import android.widget.TextView;
 
 import androidx.fragment.app.Fragment;
 
+import javax.inject.Inject;
+import dagger.hilt.android.AndroidEntryPoint;
+
 import java.util.List;
 
+@AndroidEntryPoint
 public class MisPublicacionesFragment extends Fragment {
+
+    @Inject PublicacionRepository publicacionRepository;
 
     private LinearLayout publicacionesContainer;
     private String email = "";
@@ -54,9 +64,22 @@ public class MisPublicacionesFragment extends Fragment {
     private void mostrarPublicaciones() {
         publicacionesContainer.removeAllViews();
 
-        List<Publicacion> publicaciones =
-                PublicacionRepository.getPublicacionesPorVendedor(email);
+        publicacionRepository.getMisPublicaciones(new PublicacionRepository.Resultado<List<Publicacion>>() {
+            @Override public void onSuccess(List<Publicacion> publicaciones) {
+                if (!isAdded()) return;
+                renderizarPublicaciones(publicaciones);
+            }
+            @Override public void onError(String mensaje) {
+                if (!isAdded()) return;
+                TextView error = new TextView(requireContext());
+                error.setText(mensaje);
+                publicacionesContainer.addView(error);
+            }
+        });
+    }
 
+    private void renderizarPublicaciones(List<Publicacion> publicaciones) {
+        publicacionesContainer.removeAllViews();
         if (publicaciones.isEmpty()) {
             TextView mensaje = new TextView(requireContext());
             mensaje.setText("Todavía no tenés publicaciones.");
@@ -108,26 +131,35 @@ public class MisPublicacionesFragment extends Fragment {
             Button buttonPausar = new Button(requireContext());
             buttonPausar.setText("Pausar");
             buttonPausar.setOnClickListener(v -> {
-                PublicacionRepository.cambiarEstadoPublicacion(
+                publicacionRepository.cambiarEstadoPublicacion(
                         publicacion.getId(),
-                        "Pausada"
+                        "Pausada",
+                        recargarAlFinalizar()
                 );
-                mostrarPublicaciones();
             });
             tarjeta.addView(buttonPausar);
         } else if (publicacion.getEstadoPublicacion().equals("Pausada")) {
             Button buttonReactivar = new Button(requireContext());
             buttonReactivar.setText("Reactivar");
             buttonReactivar.setOnClickListener(v -> {
-                PublicacionRepository.cambiarEstadoPublicacion(
+                publicacionRepository.cambiarEstadoPublicacion(
                         publicacion.getId(),
-                        "Activa"
+                        "Activa",
+                        recargarAlFinalizar()
                 );
-                mostrarPublicaciones();
             });
             tarjeta.addView(buttonReactivar);
         }
 
         publicacionesContainer.addView(tarjeta);
+    }
+
+    private PublicacionRepository.Resultado<Publicacion> recargarAlFinalizar() {
+        return new PublicacionRepository.Resultado<Publicacion>() {
+            @Override public void onSuccess(Publicacion data) { mostrarPublicaciones(); }
+            @Override public void onError(String mensaje) {
+                if (isAdded()) android.widget.Toast.makeText(requireContext(), mensaje, android.widget.Toast.LENGTH_LONG).show();
+            }
+        };
     }
 }

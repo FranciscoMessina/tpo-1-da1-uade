@@ -8,7 +8,7 @@
 
     <fragment
         android:id="@+id/loginFragment"
-        android:name="com.da_grupo9.ronda.LoginFragment"
+        android:name="com.da_grupo9.ronda.ui.fragments.LoginFragment"
         android:label="Login">
 
         <action
@@ -29,7 +29,7 @@
 
     <fragment
         android:id="@+id/forgotPasswordFragment"
-        android:name="com.da_grupo9.ronda.ForgotPasswordFragment"
+        android:name="com.da_grupo9.ronda.ui.fragments.ForgotPasswordFragment"
         android:label="Recuperar contraseña">
 
         <action
@@ -40,7 +40,7 @@
 
     <fragment
         android:id="@+id/resetPasswordFragment"
-        android:name="com.da_grupo9.ronda.ResetPasswordFragment"
+        android:name="com.da_grupo9.ronda.ui.fragments.ResetPasswordFragment"
         android:label="Restablecer contraseña">
 
         <argument
@@ -57,7 +57,7 @@
 
     <fragment
         android:id="@+id/otpFragment"
-        android:name="com.da_grupo9.ronda.OtpFragment"
+        android:name="com.da_grupo9.ronda.ui.fragments.OtpFragment"
         android:label="OTP">
 
         <argument
@@ -74,12 +74,12 @@
 
     <fragment
         android:id="@+id/profileFragment"
-        android:name="com.da_grupo9.ronda.ProfileFragment"
+        android:name="com.da_grupo9.ronda.ui.fragments.ProfileFragment"
         android:label="Perfil" />
 
     <fragment
         android:id="@+id/homeFragment"
-        android:name="com.da_grupo9.ronda.HomeFragment"
+        android:name="com.da_grupo9.ronda.ui.fragments.HomeFragment"
         android:label="Home">
 
         <argument
@@ -107,7 +107,7 @@
 
     <fragment
         android:id="@+id/publicarArticuloFragment"
-        android:name="com.da_grupo9.ronda.PublicarArticuloFragment"
+        android:name="com.da_grupo9.ronda.ui.fragments.PublicarArticuloFragment"
         android:label="Publicar artículo">
 
         <argument
@@ -119,7 +119,7 @@
 
     <fragment
         android:id="@+id/misPublicacionesFragment"
-        android:name="com.da_grupo9.ronda.MisPublicacionesFragment"
+        android:name="com.da_grupo9.ronda.ui.fragments.MisPublicacionesFragment"
         android:label="Mis publicaciones">
 
         <argument
@@ -131,7 +131,7 @@
 
     <fragment
         android:id="@+id/detailFragment"
-        android:name="com.da_grupo9.ronda.DetailFragment"
+        android:name="com.da_grupo9.ronda.ui.fragments.DetailFragment"
         android:label="Detalle de Publicación">
 
         <argument
@@ -152,7 +152,7 @@
 
     <fragment
         android:id="@+id/publicProfileFragment"
-        android:name="com.da_grupo9.ronda.PublicProfileFragment"
+        android:name="com.da_grupo9.ronda.ui.fragments.PublicProfileFragment"
         android:label="Perfil público">
 
         <argument

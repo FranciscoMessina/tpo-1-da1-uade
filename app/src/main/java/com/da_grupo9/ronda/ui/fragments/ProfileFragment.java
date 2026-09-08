@@ -1,4 +1,8 @@
-package com.da_grupo9.ronda;
+package com.da_grupo9.ronda.ui.fragments;
+
+import com.da_grupo9.ronda.R;
+import com.da_grupo9.ronda.data.repository.ProfileRepository;
+import com.da_grupo9.ronda.data.repository.PublicacionRepository;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -9,8 +13,13 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import androidx.fragment.app.Fragment;
+import com.da_grupo9.ronda.data.model.Perfil;
+import javax.inject.Inject;
+import dagger.hilt.android.AndroidEntryPoint;
 
+@AndroidEntryPoint
 public class ProfileFragment extends Fragment {
+    @Inject ProfileRepository profileRepository;
 
     public ProfileFragment() {
     }
@@ -50,10 +59,16 @@ public class ProfileFragment extends Fragment {
         Button buttonGuardar =
                 view.findViewById(R.id.buttonGuardarPerfil);
 
-        editNombre.setText("Federico");
-        editEmail.setText("federico@email.com");
-        editTelefono.setText("11 5555 5555");
-        editZona.setText("Palermo");
+        profileRepository.getMe(new PublicacionRepository.Resultado<Perfil>() {
+            @Override public void onSuccess(Perfil perfil) {
+                if (!isAdded()) return;
+                editNombre.setText(perfil.getNombre());
+                editEmail.setText(perfil.getEmail());
+                editTelefono.setText(perfil.getTelefono());
+                editZona.setText(perfil.getZona());
+            }
+            @Override public void onError(String mensaje) { mostrarError(mensaje); }
+        });
 
         buttonGuardar.setOnClickListener(v -> {
 
@@ -82,12 +97,18 @@ public class ProfileFragment extends Fragment {
 
             } else {
 
-                Toast.makeText(
-                        requireContext(),
-                        "Perfil actualizado",
-                        Toast.LENGTH_SHORT
-                ).show();
+                Perfil perfil = new Perfil(nombre, email, telefono, zona);
+                profileRepository.updateMe(perfil, new PublicacionRepository.Resultado<Perfil>() {
+                    @Override public void onSuccess(Perfil data) {
+                        if (isAdded()) Toast.makeText(requireContext(), "Perfil actualizado", Toast.LENGTH_SHORT).show();
+                    }
+                    @Override public void onError(String mensaje) { mostrarError(mensaje); }
+                });
             }
         });
+    }
+
+    private void mostrarError(String mensaje) {
+        if (isAdded()) Toast.makeText(requireContext(), mensaje, Toast.LENGTH_LONG).show();
     }
 }

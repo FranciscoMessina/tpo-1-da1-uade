@@ -1,4 +1,8 @@
-package com.da_grupo9.ronda;
+package com.da_grupo9.ronda.ui.fragments;
+
+import com.da_grupo9.ronda.R;
+import com.da_grupo9.ronda.data.model.Publicacion;
+import com.da_grupo9.ronda.data.repository.PublicacionRepository;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -15,13 +19,19 @@ import android.widget.Toast;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 
+import javax.inject.Inject;
+import dagger.hilt.android.AndroidEntryPoint;
+
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
+@AndroidEntryPoint
 public class PublicarArticuloFragment extends Fragment {
+
+    @Inject PublicacionRepository publicacionRepository;
 
     private LinearLayout containerPaso1;
     private LinearLayout containerPaso2;
@@ -246,14 +256,14 @@ public class PublicarArticuloFragment extends Fragment {
         }
 
         Publicacion publicacion = new Publicacion(
-                PublicacionRepository.getProximoId(),
+                0,
                 editTitulo.getText().toString().trim(),
                 editDescripcion.getText().toString().trim(),
                 Double.parseDouble(editPrecio.getText().toString().trim()),
                 spinnerEstado.getSelectedItem().toString(),
                 spinnerCategoria.getSelectedItem().toString(),
                 editZona.getText().toString().trim(),
-                obtenerProximaFechaOrden(),
+                Integer.parseInt(new SimpleDateFormat("yyyyMMdd", Locale.US).format(new Date())),
                 new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(new Date()),
                 "Usuario",
                 email.trim(),
@@ -261,27 +271,15 @@ public class PublicarArticuloFragment extends Fragment {
                 new ArrayList<>()
         );
 
-        PublicacionRepository.agregarPublicacion(publicacion);
-
-        Toast.makeText(
-                requireContext(),
-                "Publicación creada",
-                Toast.LENGTH_SHORT
-        ).show();
-
-        Navigation.findNavController(view).popBackStack();
-    }
-
-    private int obtenerProximaFechaOrden() {
-        int fechaMaxima = 0;
-        List<Publicacion> publicaciones = PublicacionRepository.getPublicaciones();
-
-        for (Publicacion publicacion : publicaciones) {
-            if (publicacion.getFecha() > fechaMaxima) {
-                fechaMaxima = publicacion.getFecha();
+        publicacionRepository.agregarPublicacion(publicacion, new PublicacionRepository.Resultado<Publicacion>() {
+            @Override public void onSuccess(Publicacion data) {
+                if (!isAdded()) return;
+                Toast.makeText(requireContext(), "Publicación creada", Toast.LENGTH_SHORT).show();
+                Navigation.findNavController(view).popBackStack();
             }
-        }
-
-        return fechaMaxima + 1;
+            @Override public void onError(String mensaje) {
+                if (isAdded()) Toast.makeText(requireContext(), mensaje, Toast.LENGTH_LONG).show();
+            }
+        });
     }
 }

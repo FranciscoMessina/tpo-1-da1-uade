@@ -1,4 +1,8 @@
-package com.da_grupo9.ronda;
+package com.da_grupo9.ronda.ui.fragments;
+
+import com.da_grupo9.ronda.R;
+import com.da_grupo9.ronda.data.model.Publicacion;
+import com.da_grupo9.ronda.data.repository.PublicacionRepository;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -12,9 +16,16 @@ import android.widget.Toast;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 
+import javax.inject.Inject;
+import dagger.hilt.android.AndroidEntryPoint;
+
 import java.util.List;
 
+@AndroidEntryPoint
 public class DetailFragment extends Fragment {
+
+    @Inject PublicacionRepository publicacionRepository;
+    private Publicacion publicacionCargada;
 
     private int fotoActualIndex = 0;
     private List<String> listaFotos;
@@ -88,14 +99,22 @@ public class DetailFragment extends Fragment {
             usuarioActualEmail = getArguments().getString("usuarioActualEmail", "");
         }
 
-        // Buscar publicación en el repositorio
-        Publicacion publicacion = PublicacionRepository.getPublicacionById(publicacionId);
-
-        if (publicacion == null) {
-            Toast.makeText(requireContext(), "No se encontró la publicación", Toast.LENGTH_SHORT).show();
-            Navigation.findNavController(view).popBackStack();
+        if (publicacionCargada == null) {
+            publicacionRepository.getPublicacionById(publicacionId, new PublicacionRepository.Resultado<Publicacion>() {
+                @Override public void onSuccess(Publicacion data) {
+                    if (!isAdded()) return;
+                    publicacionCargada = data;
+                    onViewCreated(view, savedInstanceState);
+                }
+                @Override public void onError(String mensaje) {
+                    if (!isAdded()) return;
+                    Toast.makeText(requireContext(), mensaje, Toast.LENGTH_LONG).show();
+                    Navigation.findNavController(view).popBackStack();
+                }
+            });
             return;
         }
+        Publicacion publicacion = publicacionCargada;
 
         // Cargar datos en la UI
         textDetailTitulo.setText(publicacion.getTitulo());

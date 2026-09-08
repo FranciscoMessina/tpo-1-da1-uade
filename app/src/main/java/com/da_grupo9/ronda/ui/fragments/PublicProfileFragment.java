@@ -1,4 +1,8 @@
-package com.da_grupo9.ronda;
+package com.da_grupo9.ronda.ui.fragments;
+
+import com.da_grupo9.ronda.R;
+import com.da_grupo9.ronda.data.model.Publicacion;
+import com.da_grupo9.ronda.data.repository.PublicacionRepository;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -11,9 +15,15 @@ import android.widget.TextView;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 
+import javax.inject.Inject;
+import dagger.hilt.android.AndroidEntryPoint;
+
 import java.util.List;
 
+@AndroidEntryPoint
 public class PublicProfileFragment extends Fragment {
+
+    @Inject PublicacionRepository publicacionRepository;
 
     public PublicProfileFragment() {
     }
@@ -76,22 +86,29 @@ public class PublicProfileFragment extends Fragment {
             String vendedorEmail,
             LinearLayout container) {
 
-        List<Publicacion> publicaciones =
-                PublicacionRepository.getPublicaciones();
+        publicacionRepository.getPublicacionesPorVendedor(vendedorEmail, new PublicacionRepository.Resultado<List<Publicacion>>() {
+            @Override public void onSuccess(List<Publicacion> publicaciones) {
+                if (isAdded()) renderizarPublicacionesActivas(publicaciones, container);
+            }
+            @Override public void onError(String mensaje) {
+                if (!isAdded()) return;
+                TextView error = new TextView(requireContext());
+                error.setText(mensaje);
+                container.addView(error);
+            }
+        });
+    }
 
+    private void renderizarPublicacionesActivas(List<Publicacion> publicaciones, LinearLayout container) {
         int cantidad = 0;
 
         for (Publicacion publicacion : publicaciones) {
-
-            boolean mismoVendedor =
-                    publicacion.getVendedorEmail()
-                            .equalsIgnoreCase(vendedorEmail);
 
             boolean estaActiva =
                     publicacion.getEstadoPublicacion()
                             .equalsIgnoreCase("Activa");
 
-            if (mismoVendedor && estaActiva) {
+            if (estaActiva) {
 
                 TextView publicacionView =
                         new TextView(requireContext());

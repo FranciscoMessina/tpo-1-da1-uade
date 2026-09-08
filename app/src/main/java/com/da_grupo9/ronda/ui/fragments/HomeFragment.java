@@ -1,4 +1,8 @@
-package com.da_grupo9.ronda;
+package com.da_grupo9.ronda.ui.fragments;
+
+import com.da_grupo9.ronda.R;
+import com.da_grupo9.ronda.data.model.Publicacion;
+import com.da_grupo9.ronda.data.repository.PublicacionRepository;
 
 import android.graphics.Color;
 import android.os.Bundle;
@@ -15,11 +19,17 @@ import android.widget.TextView;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 
+import javax.inject.Inject;
+import dagger.hilt.android.AndroidEntryPoint;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+@AndroidEntryPoint
 public class HomeFragment extends Fragment {
+
+    @Inject PublicacionRepository publicacionRepository;
 
     private LinearLayout publicacionesContainer;
 
@@ -101,14 +111,10 @@ public class HomeFragment extends Fragment {
                     getArguments().getString("email", "");
         }
 
-        cargarDatos();
-
         configurarSpinners();
-
-        publicacionesFiltradas =
-                new ArrayList<>(publicaciones);
-
-        mostrarPagina();
+        publicaciones = new ArrayList<>();
+        publicacionesFiltradas = new ArrayList<>();
+        cargarDatos();
 
         botonFiltrar.setOnClickListener(
                 v -> aplicarFiltros()
@@ -153,18 +159,26 @@ public class HomeFragment extends Fragment {
     }
 
     private void cargarDatos() {
-
-        publicaciones = new ArrayList<>();
-
-        for (Publicacion publicacion :
-                PublicacionRepository.getPublicaciones()) {
-
-            if (publicacion.getEstadoPublicacion()
-                    .equals("Activa")) {
-
-                publicaciones.add(publicacion);
+        publicacionRepository.getPublicaciones(new PublicacionRepository.Resultado<List<Publicacion>>() {
+            @Override
+            public void onSuccess(List<Publicacion> data) {
+                if (!isAdded()) return;
+                publicaciones.clear();
+                for (Publicacion publicacion : data) {
+                    if (publicacion.getEstadoPublicacion().equalsIgnoreCase("Activa")) {
+                        publicaciones.add(publicacion);
+                    }
+                }
+                publicacionesFiltradas = new ArrayList<>(publicaciones);
+                paginaActual = 1;
+                mostrarPagina();
             }
-        }
+
+            @Override
+            public void onError(String mensaje) {
+                if (isAdded()) android.widget.Toast.makeText(requireContext(), mensaje, android.widget.Toast.LENGTH_LONG).show();
+            }
+        });
     }
 
     private void configurarSpinners() {
