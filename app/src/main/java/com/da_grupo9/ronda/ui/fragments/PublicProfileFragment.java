@@ -2,6 +2,7 @@ package com.da_grupo9.ronda.ui.fragments;
 
 import com.da_grupo9.ronda.R;
 import com.da_grupo9.ronda.data.model.Publicacion;
+import com.da_grupo9.ronda.data.model.PublicUser;
 import com.da_grupo9.ronda.data.repository.PublicacionRepository;
 
 import android.os.Bundle;
@@ -60,35 +61,37 @@ public class PublicProfileFragment extends Fragment {
                 view.findViewById(R.id.buttonVolverPerfilPublico);
 
         String vendedorNombre = "";
-        String vendedorEmail = "";
+        String vendedorId = "";
         String vendedorReputacion = "";
 
         if (getArguments() != null) {
             vendedorNombre = getArguments().getString("vendedorNombre", "");
-            vendedorEmail = getArguments().getString("vendedorEmail", "");
+            vendedorId = getArguments().getString("vendedorEmail", "");
             vendedorReputacion = getArguments().getString("vendedorReputacion", "");
         }
 
         textNombre.setText(vendedorNombre);
-        textEmail.setText(vendedorEmail);
+        textEmail.setText("");
         textReputacion.setText("Reputación: " + vendedorReputacion);
 
         textAntiguedad.setText("Antigüedad en la plataforma: 2 años");
 
-        cargarPublicacionesActivas(vendedorEmail, containerPublicaciones);
+        cargarPerfil(vendedorId, textNombre, textReputacion, textAntiguedad, containerPublicaciones);
 
         buttonVolver.setOnClickListener(v ->
                 Navigation.findNavController(v).popBackStack()
         );
     }
 
-    private void cargarPublicacionesActivas(
-            String vendedorEmail,
-            LinearLayout container) {
-
-        publicacionRepository.getPublicacionesPorVendedor(vendedorEmail, new PublicacionRepository.Resultado<List<Publicacion>>() {
-            @Override public void onSuccess(List<Publicacion> publicaciones) {
-                if (isAdded()) renderizarPublicacionesActivas(publicaciones, container);
+    private void cargarPerfil(String vendedorId, TextView nombre, TextView reputacion,
+                              TextView antiguedad, LinearLayout container) {
+        publicacionRepository.getUsuario(vendedorId, new PublicacionRepository.Resultado<PublicUser>() {
+            @Override public void onSuccess(PublicUser usuario) {
+                if (!isAdded()) return;
+                nombre.setText(usuario.getName());
+                reputacion.setText("Reputación: " + String.format("%.1f (%d)", usuario.getRatingAverage(), usuario.getRatingCount()));
+                antiguedad.setText("Miembro desde: " + usuario.getMemberSince());
+                renderizarPublicacionesActivas(usuario.getActivePublications(), container);
             }
             @Override public void onError(String mensaje) {
                 if (!isAdded()) return;
@@ -104,11 +107,7 @@ public class PublicProfileFragment extends Fragment {
 
         for (Publicacion publicacion : publicaciones) {
 
-            boolean estaActiva =
-                    publicacion.getEstadoPublicacion()
-                            .equalsIgnoreCase("Activa");
-
-            if (estaActiva) {
+            {
 
                 TextView publicacionView =
                         new TextView(requireContext());

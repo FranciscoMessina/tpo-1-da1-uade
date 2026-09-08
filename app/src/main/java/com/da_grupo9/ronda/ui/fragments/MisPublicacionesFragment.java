@@ -119,7 +119,7 @@ public class MisPublicacionesFragment extends Fragment {
         precio.setTextColor(Color.DKGRAY);
 
         TextView estado = new TextView(requireContext());
-        estado.setText("Estado de publicación: " + publicacion.getEstadoPublicacion());
+        estado.setText("Estado de publicación: " + publicacion.getEstadoPublicacionVisible());
         estado.setTextSize(16);
         estado.setTextColor(Color.DKGRAY);
 
@@ -127,24 +127,24 @@ public class MisPublicacionesFragment extends Fragment {
         tarjeta.addView(precio);
         tarjeta.addView(estado);
 
-        if (publicacion.getEstadoPublicacion().equals("Activa")) {
+        if ("active".equals(publicacion.getEstadoPublicacion())) {
             Button buttonPausar = new Button(requireContext());
             buttonPausar.setText("Pausar");
             buttonPausar.setOnClickListener(v -> {
                 publicacionRepository.cambiarEstadoPublicacion(
                         publicacion.getId(),
-                        "Pausada",
+                        "paused",
                         recargarAlFinalizar()
                 );
             });
             tarjeta.addView(buttonPausar);
-        } else if (publicacion.getEstadoPublicacion().equals("Pausada")) {
+        } else if ("paused".equals(publicacion.getEstadoPublicacion())) {
             Button buttonReactivar = new Button(requireContext());
             buttonReactivar.setText("Reactivar");
             buttonReactivar.setOnClickListener(v -> {
                 publicacionRepository.cambiarEstadoPublicacion(
                         publicacion.getId(),
-                        "Activa",
+                        "active",
                         recargarAlFinalizar()
                 );
             });

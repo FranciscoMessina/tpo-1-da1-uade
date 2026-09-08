@@ -91,12 +91,10 @@ public class DetailFragment extends Fragment {
         Button buttonPausar = view.findViewById(R.id.buttonPausar);
 
         // Obtener argumentos pasados por Navigation Component
-        int publicacionId = 1;
-        String usuarioActualEmail = "";
+        String publicacionId = "";
 
         if (getArguments() != null) {
-            publicacionId = getArguments().getInt("publicacionId", 1);
-            usuarioActualEmail = getArguments().getString("usuarioActualEmail", "");
+            publicacionId = getArguments().getString("publicacionId", "");
         }
 
         if (publicacionCargada == null) {
@@ -126,7 +124,7 @@ public class DetailFragment extends Fragment {
         textDetailDescripcion.setText(publicacion.getDescripcion());
 
         // Datos del vendedor
-        textVendedorNombre.setText("Vendedor: " + publicacion.getVendedorNombre() + " (" + publicacion.getVendedorEmail() + ")");
+        textVendedorNombre.setText("Vendedor: " + publicacion.getVendedorNombre());
         textVendedorReputacion.setText("Reputación: " + publicacion.getVendedorReputacion());
 
         // Configurar galería de fotos
@@ -148,9 +146,7 @@ public class DetailFragment extends Fragment {
         });
 
         // Determinar si el usuario actual es el vendedor o un comprador interesado
-        boolean esVendedor = usuarioActualEmail != null
-                && !usuarioActualEmail.trim().isEmpty()
-                && usuarioActualEmail.trim().equalsIgnoreCase(publicacion.getVendedorEmail().trim());
+        boolean esVendedor = publicacion.getActions() != null && publicacion.getActions().canManage();
 
         if (esVendedor) {
             containerAccionesComprador.setVisibility(View.GONE);
@@ -196,7 +192,7 @@ public class DetailFragment extends Fragment {
 
             bundle.putString(
                     "vendedorEmail",
-                    publicacion.getVendedorEmail()
+                    publicacion.getSeller() != null ? publicacion.getSeller().getId() : ""
             );
 
             bundle.putString(

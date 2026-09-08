@@ -117,8 +117,13 @@ public class PublicarArticuloFragment extends Fragment {
     private void configurarSpinners() {
         String[] categorias = {
                 "Tecnología",
+                "Hogar",
                 "Deportes",
-                "Ropa"
+                "Ropa y moda",
+                "Vehículos",
+                "Libros",
+                "Juguetes",
+                "Otros"
         };
 
         String[] estados = {
@@ -256,19 +261,13 @@ public class PublicarArticuloFragment extends Fragment {
         }
 
         Publicacion publicacion = new Publicacion(
-                0,
                 editTitulo.getText().toString().trim(),
                 editDescripcion.getText().toString().trim(),
-                Double.parseDouble(editPrecio.getText().toString().trim()),
-                spinnerEstado.getSelectedItem().toString(),
-                spinnerCategoria.getSelectedItem().toString(),
+                (int) Math.round(Double.parseDouble(editPrecio.getText().toString().trim()) * 100),
+                conditionApiValue(spinnerEstado.getSelectedItemPosition()),
+                categoryApiValue(spinnerCategoria.getSelectedItemPosition()),
                 editZona.getText().toString().trim(),
-                Integer.parseInt(new SimpleDateFormat("yyyyMMdd", Locale.US).format(new Date())),
-                new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(new Date()),
-                "Usuario",
-                email.trim(),
-                "Sin calificaciones",
-                new ArrayList<>()
+                3
         );
 
         publicacionRepository.agregarPublicacion(publicacion, new PublicacionRepository.Resultado<Publicacion>() {
@@ -281,5 +280,13 @@ public class PublicarArticuloFragment extends Fragment {
                 if (isAdded()) Toast.makeText(requireContext(), mensaje, Toast.LENGTH_LONG).show();
             }
         });
+    }
+
+    private String conditionApiValue(int position) {
+        return new String[]{"new", "like_new", "used"}[position];
+    }
+
+    private String categoryApiValue(int position) {
+        return new String[]{"electronics", "home", "sports", "fashion", "vehicles", "books", "toys", "other"}[position];
     }
 }

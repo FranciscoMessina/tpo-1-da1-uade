@@ -2,6 +2,7 @@ package com.da_grupo9.ronda.data.repository;
 
 import com.da_grupo9.ronda.data.model.Publicacion;
 import com.da_grupo9.ronda.data.model.PublicacionesResponse;
+import com.da_grupo9.ronda.data.model.PublicUser;
 import com.da_grupo9.ronda.data.remote.PublicacionApi;
 import java.io.IOException;
 import java.util.Collections;
@@ -39,41 +40,43 @@ public class PublicacionRepository {
         });
     }
 
-    public void getPublicacionById(int id, Resultado<Publicacion> resultado) {
+    public void getPublicacionById(String id, Resultado<Publicacion> resultado) {
         ejecutar(api.getPublicacion(id), resultado);
     }
 
-    public void getPublicacionesPorVendedor(String email, Resultado<List<Publicacion>> resultado) {
-        api.getPublicaciones().enqueue(new Callback<PublicacionesResponse>() {
+    public void getUsuario(String id, Resultado<PublicUser> resultado) {
+        ejecutar(api.getUsuario(id), resultado);
+    }
+
+    public void getMisPublicaciones(Resultado<List<Publicacion>> resultado) {
+        api.getPublicacionesPropias().enqueue(new Callback<PublicacionesResponse>() {
             @Override public void onResponse(Call<PublicacionesResponse> call, Response<PublicacionesResponse> response) {
-                if (!response.isSuccessful() || response.body() == null) {
-                    resultado.onError("El servidor respondió con código " + response.code());
-                    return;
-                }
-                List<Publicacion> filtradas = new ArrayList<>();
-                for (Publicacion item : response.body().getItems()) {
-                    if (item.getVendedorEmail() != null && item.getVendedorEmail().equalsIgnoreCase(email)) filtradas.add(item);
-                }
-                resultado.onSuccess(filtradas);
+                if (response.isSuccessful() && response.body() != null) resultado.onSuccess(response.body().getItems());
+                else resultado.onError("El servidor respondió con código " + response.code());
             }
             @Override public void onFailure(Call<PublicacionesResponse> call, Throwable error) {
-                resultado.onError("No se pudo conectar con el servidor");
+                resultado.onError(error instanceof IOException ? "No se pudo conectar con el servidor" : "No se pudo procesar la respuesta del servidor");
             }
         });
     }
 
-    public void getMisPublicaciones(Resultado<List<Publicacion>> resultado) {
-        ejecutar(api.getPublicacionesPropias(), resultado);
-    }
-
     public void agregarPublicacion(Publicacion publicacion, Resultado<Publicacion> resultado) {
-        api.crearBorrador(publicacion).enqueue(new Callback<Publicacion>() {
+        api.crearBorrador().enqueue(new Callback<Publicacion>() {
             @Override public void onResponse(Call<Publicacion> call, Response<Publicacion> response) {
                 if (!response.isSuccessful() || response.body() == null) {
                     resultado.onError("No se pudo crear el borrador (código " + response.code() + ")");
                     return;
                 }
-                ejecutar(api.publicar(response.body().getId()), resultado);
+                String id = response.body().getId();
+                api.actualizarBorrador(id, publicacion).enqueue(new Callback<Publicacion>() {
+                    @Override public void onResponse(Call<Publicacion> call, Response<Publicacion> updateResponse) {
+                        if (updateResponse.isSuccessful()) ejecutar(api.publicar(id), resultado);
+                        else resultado.onError("No se pudo completar el borrador (código " + updateResponse.code() + ")");
+                    }
+                    @Override public void onFailure(Call<Publicacion> call, Throwable error) {
+                        resultado.onError("No se pudo conectar con el servidor");
+                    }
+                });
             }
             @Override public void onFailure(Call<Publicacion> call, Throwable error) {
                 resultado.onError("No se pudo conectar con el servidor");
@@ -81,8 +84,8 @@ public class PublicacionRepository {
         });
     }
 
-    public void cambiarEstadoPublicacion(int id, String estado, Resultado<Publicacion> resultado) {
-        ejecutar(api.cambiarEstado(id, Collections.singletonMap("estadoPublicacion", estado)), resultado);
+    public void cambiarEstadoPublicacion(String id, String estado, Resultado<Publicacion> resultado) {
+        ejecutar(api.cambiarEstado(id, Collections.singletonMap("status", estado)), resultado);
     }
 
     private <T> void ejecutar(Call<T> call, Resultado<T> resultado) {

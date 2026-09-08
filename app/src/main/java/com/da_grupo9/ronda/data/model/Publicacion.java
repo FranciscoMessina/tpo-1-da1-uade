@@ -1,114 +1,126 @@
 package com.da_grupo9.ronda.data.model;
 
 import java.io.Serializable;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
+/** DTO compartido por el listado, el detalle y las publicaciones propias. */
 public class Publicacion implements Serializable {
+    private String id;
+    private String sellerId;
+    private String title;
+    private String description;
+    private String category;
+    private Integer priceCents;
+    private Double price;
+    private String itemCondition;
+    private String zone;
+    private String status;
+    private int draftStep;
+    private String publishedAt;
+    private String createdAt;
+    private String updatedAt;
+    private String sellerName;
+    private String coverImage;
+    private List<PublicationImage> images;
+    private PublicUser seller;
+    private List<Question> questions;
+    private Boolean isFavorite;
+    private Actions actions;
 
-    private int id;
-    private String titulo;
-    private String descripcion;
-    private double precio;
-    private String estado;
-    private String categoria;
-    private String zona;
-    private int fecha; // orden numérico
-    private String fechaPublicacion; // texto visible, ej: "15/08/2026"
-    private String vendedorNombre;
-    private String vendedorEmail;
-    private String vendedorReputacion;
-    private List<String> imagenes;
-    private String estadoPublicacion;
-
-    public Publicacion(
-            int id,
-            String titulo,
-            String descripcion,
-            double precio,
-            String estado,
-            String categoria,
-            String zona,
-            int fecha,
-            String fechaPublicacion,
-            String vendedorNombre,
-            String vendedorEmail,
-            String vendedorReputacion,
-            List<String> imagenes) {
-
-        this.id = id;
-        this.titulo = titulo;
-        this.descripcion = descripcion;
-        this.precio = precio;
-        this.estado = estado;
-        this.categoria = categoria;
-        this.zona = zona;
-        this.fecha = fecha;
-        this.fechaPublicacion = fechaPublicacion;
-        this.vendedorNombre = vendedorNombre;
-        this.vendedorEmail = vendedorEmail;
-        this.vendedorReputacion = vendedorReputacion;
-        this.imagenes = imagenes != null ? imagenes : new ArrayList<>();
-        this.estadoPublicacion = "Activa";
+    public Publicacion(String title, String description, int priceCents,
+                       String itemCondition, String category, String zone, int draftStep) {
+        this.title = title;
+        this.description = description;
+        this.priceCents = priceCents;
+        this.itemCondition = itemCondition;
+        this.category = category;
+        this.zone = zone;
+        this.draftStep = draftStep;
     }
 
-    public int getId() {
-        return id;
-    }
-
-    public String getTitulo() {
-        return titulo;
-    }
-
-    public String getDescripcion() {
-        return descripcion;
-    }
-
-    public double getPrecio() {
-        return precio;
-    }
-
-    public String getEstado() {
-        return estado;
-    }
-
+    public String getId() { return id; }
+    public String getSellerId() { return sellerId; }
+    public String getTitulo() { return title; }
+    public String getDescripcion() { return description; }
     public String getCategoria() {
-        return categoria;
+        if (category == null) return "Sin categoría";
+        switch (category) {
+            case "electronics": return "Tecnología";
+            case "home": return "Hogar";
+            case "fashion": return "Ropa y moda";
+            case "sports": return "Deportes";
+            case "vehicles": return "Vehículos";
+            case "books": return "Libros";
+            case "toys": return "Juguetes";
+            case "other": return "Otros";
+            default: return category;
+        }
     }
-
-    public String getZona() {
-        return zona;
+    public String getEstado() {
+        if (itemCondition == null) return "Sin especificar";
+        switch (itemCondition) {
+            case "new": return "Nuevo";
+            case "like_new": return "Como nuevo";
+            case "used": return "Usado";
+            default: return itemCondition;
+        }
     }
-
+    public String getZona() { return zone; }
+    public String getEstadoPublicacion() { return status; }
+    public String getEstadoPublicacionVisible() {
+        if (status == null) return "Sin estado";
+        switch (status) {
+            case "draft": return "Borrador";
+            case "active": return "Activa";
+            case "paused": return "Pausada";
+            case "sold": return "Vendida";
+            default: return status;
+        }
+    }
+    public String getFechaPublicacion() { return publishedAt; }
+    public String getCoverImage() { return coverImage; }
+    public int getDraftStep() { return draftStep; }
+    public double getPrecio() { return price != null ? price : priceCents != null ? priceCents / 100.0 : 0; }
     public int getFecha() {
-        return fecha;
+        if (publishedAt == null) return 0;
+        try { return (int) (OffsetDateTime.parse(publishedAt).toEpochSecond() / 86400); }
+        catch (RuntimeException ignored) { return 0; }
     }
-
-    public String getFechaPublicacion() {
-        return fechaPublicacion;
-    }
-
-    public String getVendedorNombre() {
-        return vendedorNombre;
-    }
-
-    public String getVendedorEmail() {
-        return vendedorEmail;
-    }
-
+    public String getVendedorNombre() { return seller != null ? seller.getName() : sellerName; }
     public String getVendedorReputacion() {
-        return vendedorReputacion;
+        if (seller == null) return "Sin calificaciones";
+        return String.format("%.1f (%d)", seller.getRatingAverage(), seller.getRatingCount());
     }
-
+    public PublicUser getSeller() { return seller; }
     public List<String> getImagenes() {
-        return imagenes;
+        if (images == null) return Collections.emptyList();
+        List<String> urls = new ArrayList<>();
+        for (PublicationImage image : images) urls.add(image.getUrl());
+        return urls;
+    }
+    public List<Question> getQuestions() { return questions != null ? questions : Collections.emptyList(); }
+    public boolean isFavorite() { return Boolean.TRUE.equals(isFavorite); }
+    public Actions getActions() { return actions; }
+
+    public static class Question implements Serializable {
+        private String id, text, answer, createdAt, answeredAt, askerId, askerName;
+        public String getId() { return id; }
+        public String getText() { return text; }
+        public String getAnswer() { return answer; }
+        public String getCreatedAt() { return createdAt; }
+        public String getAnsweredAt() { return answeredAt; }
+        public String getAskerId() { return askerId; }
+        public String getAskerName() { return askerName; }
     }
 
-    public String getEstadoPublicacion() {
-        return estadoPublicacion != null ? estadoPublicacion : "Activa";
-    }
-
-    public void setEstadoPublicacion(String estadoPublicacion) {
-        this.estadoPublicacion = estadoPublicacion;
+    public static class Actions implements Serializable {
+        private boolean canAsk, canOffer, canFavorite, canManage;
+        public boolean canAsk() { return canAsk; }
+        public boolean canOffer() { return canOffer; }
+        public boolean canFavorite() { return canFavorite; }
+        public boolean canManage() { return canManage; }
     }
 }

@@ -4,6 +4,7 @@ import com.da_grupo9.ronda.BuildConfig;
 import com.da_grupo9.ronda.data.remote.PublicacionApi;
 import com.da_grupo9.ronda.data.remote.AuthApi;
 import com.da_grupo9.ronda.data.remote.ProfileApi;
+import com.da_grupo9.ronda.data.remote.AuthInterceptor;
 
 import javax.inject.Singleton;
 
@@ -29,8 +30,9 @@ public final class NetworkModule {
 
     @Provides
     @Singleton
-    static OkHttpClient provideOkHttpClient() {
+    static OkHttpClient provideOkHttpClient(AuthInterceptor authInterceptor) {
         return new OkHttpClient.Builder()
+                .addInterceptor(authInterceptor)
                 .cookieJar(new CookieJar() {
                     private final List<Cookie> cookies = new ArrayList<>();
 

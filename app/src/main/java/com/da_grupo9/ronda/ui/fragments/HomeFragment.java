@@ -165,7 +165,7 @@ public class HomeFragment extends Fragment {
                 if (!isAdded()) return;
                 publicaciones.clear();
                 for (Publicacion publicacion : data) {
-                    if (publicacion.getEstadoPublicacion().equalsIgnoreCase("Activa")) {
+                    if ("active".equals(publicacion.getEstadoPublicacion())) {
                         publicaciones.add(publicacion);
                     }
                 }
@@ -186,8 +186,13 @@ public class HomeFragment extends Fragment {
         String[] categorias = {
                 "Todas",
                 "Tecnología",
+                "Hogar",
                 "Deportes",
-                "Ropa"
+                "Ropa y moda",
+                "Vehículos",
+                "Libros",
+                "Juguetes",
+                "Otros"
         };
 
         String[] estados = {
@@ -287,12 +292,12 @@ public class HomeFragment extends Fragment {
 
             boolean coincideTexto =
                     texto.isEmpty()
-                            || publicacion.getTitulo()
+                            || (publicacion.getTitulo() != null && publicacion.getTitulo()
                             .toLowerCase()
-                            .contains(texto)
-                            || publicacion.getDescripcion()
+                            .contains(texto))
+                            || (publicacion.getDescripcion() != null && publicacion.getDescripcion()
                             .toLowerCase()
-                            .contains(texto);
+                            .contains(texto));
 
             boolean coincideCategoria =
                     categoriaSeleccionada.equals("Todas")
@@ -311,8 +316,7 @@ public class HomeFragment extends Fragment {
             boolean coincideCercania =
                     cercaniaSeleccionada
                             .equals("Todas las zonas")
-                            || publicacion.getZona()
-                            .equals("Palermo");
+                            || "Palermo".equals(publicacion.getZona());
 
             if (coincideTexto
                     && coincideCategoria
@@ -619,7 +623,7 @@ public class HomeFragment extends Fragment {
             Bundle bundle =
                     new Bundle();
 
-            bundle.putInt(
+            bundle.putString(
                     "publicacionId",
                     publicacion.getId()
             );
