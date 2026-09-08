@@ -44,6 +44,15 @@ public class MisPublicacionesFragment extends Fragment {
         publicacionesContainer =
                 view.findViewById(R.id.misPublicacionesContainer);
 
+        Button buttonVolver =
+                view.findViewById(R.id.buttonVolver);
+
+        buttonVolver.setOnClickListener(v -> {
+            androidx.navigation.Navigation
+                    .findNavController(view)
+                    .popBackStack();
+        });
+
         if (getArguments() != null) {
             email = getArguments().getString("email", "");
         }
@@ -52,16 +61,21 @@ public class MisPublicacionesFragment extends Fragment {
     }
 
     private void mostrarPublicaciones() {
+
         publicacionesContainer.removeAllViews();
 
         List<Publicacion> publicaciones =
                 PublicacionRepository.getPublicacionesPorVendedor(email);
 
         if (publicaciones.isEmpty()) {
+
             TextView mensaje = new TextView(requireContext());
+
             mensaje.setText("Todavía no tenés publicaciones.");
             mensaje.setTextSize(18);
+
             publicacionesContainer.addView(mensaje);
+
             return;
         }
 
@@ -71,7 +85,9 @@ public class MisPublicacionesFragment extends Fragment {
     }
 
     private void agregarPublicacion(Publicacion publicacion) {
+
         LinearLayout tarjeta = new LinearLayout(requireContext());
+
         tarjeta.setOrientation(LinearLayout.VERTICAL);
         tarjeta.setPadding(20, 20, 20, 20);
         tarjeta.setBackgroundColor(Color.LTGRAY);
@@ -83,20 +99,31 @@ public class MisPublicacionesFragment extends Fragment {
                 );
 
         parametros.setMargins(0, 0, 0, 16);
+
         tarjeta.setLayoutParams(parametros);
 
+        // Título
         TextView titulo = new TextView(requireContext());
+
         titulo.setText(publicacion.getTitulo());
         titulo.setTextSize(20);
         titulo.setTextColor(Color.BLACK);
 
+        // Precio
         TextView precio = new TextView(requireContext());
+
         precio.setText("Precio: $" + publicacion.getPrecio());
         precio.setTextSize(16);
         precio.setTextColor(Color.DKGRAY);
 
+        // Estado de la publicación
         TextView estado = new TextView(requireContext());
-        estado.setText("Estado de publicación: " + publicacion.getEstadoPublicacion());
+
+        estado.setText(
+                "Estado de publicación: "
+                        + publicacion.getEstadoPublicacion()
+        );
+
         estado.setTextSize(16);
         estado.setTextColor(Color.DKGRAY);
 
@@ -104,29 +131,63 @@ public class MisPublicacionesFragment extends Fragment {
         tarjeta.addView(precio);
         tarjeta.addView(estado);
 
+        // Si está activa puede pausarse o marcarse como vendida
         if (publicacion.getEstadoPublicacion().equals("Activa")) {
+
             Button buttonPausar = new Button(requireContext());
+
             buttonPausar.setText("Pausar");
+
             buttonPausar.setOnClickListener(v -> {
+
                 PublicacionRepository.cambiarEstadoPublicacion(
                         publicacion.getId(),
                         "Pausada"
                 );
+
                 mostrarPublicaciones();
             });
+
             tarjeta.addView(buttonPausar);
+
+            Button buttonVendida = new Button(requireContext());
+
+            buttonVendida.setText("Marcar como vendida");
+
+            buttonVendida.setOnClickListener(v -> {
+
+                PublicacionRepository.cambiarEstadoPublicacion(
+                        publicacion.getId(),
+                        "Vendida"
+                );
+
+                mostrarPublicaciones();
+            });
+
+            tarjeta.addView(buttonVendida);
+
+            // Si está pausada solamente puede reactivarse
         } else if (publicacion.getEstadoPublicacion().equals("Pausada")) {
+
             Button buttonReactivar = new Button(requireContext());
+
             buttonReactivar.setText("Reactivar");
+
             buttonReactivar.setOnClickListener(v -> {
+
                 PublicacionRepository.cambiarEstadoPublicacion(
                         publicacion.getId(),
                         "Activa"
                 );
+
                 mostrarPublicaciones();
             });
+
             tarjeta.addView(buttonReactivar);
         }
+
+        // Si está vendida no se agregan botones.
+        // Solo se muestra el estado "Vendida".
 
         publicacionesContainer.addView(tarjeta);
     }
