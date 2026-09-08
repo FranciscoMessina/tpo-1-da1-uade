@@ -43,6 +43,7 @@ public class PublicarArticuloFragment extends Fragment {
 
     private int pasoActual = 1;
     private String email = "";
+    private int publicacionId = -1;
 
     public PublicarArticuloFragment() {
     }
@@ -88,9 +89,16 @@ public class PublicarArticuloFragment extends Fragment {
 
         if (getArguments() != null) {
             email = getArguments().getString("email", "");
+            publicacionId = getArguments().getInt("publicacionId", -1);
         }
 
         configurarSpinners();
+
+        if (publicacionId != -1) {
+            cargarDatosParaEditar(publicacionId);
+            buttonPublicar.setText("Guardar cambios");
+        }
+
         mostrarPaso();
 
         buttonAnterior.setOnClickListener(v -> {
@@ -230,8 +238,57 @@ public class PublicarArticuloFragment extends Fragment {
         textResumen.setText(resumen);
     }
 
+    private void cargarDatosParaEditar(int id) {
+        Publicacion p = PublicacionRepository.getPublicacionById(id);
+        if (p == null) return;
+
+        if (email.trim().isEmpty()) {
+            email = p.getVendedorEmail();
+        }
+
+        editTitulo.setText(p.getTitulo());
+        editDescripcion.setText(p.getDescripcion());
+        editPrecio.setText(String.format(Locale.US, "%.0f", p.getPrecio()));
+        editZona.setText(p.getZona());
+
+        for (int i = 0; i < spinnerCategoria.getCount(); i++) {
+            if (spinnerCategoria.getItemAtPosition(i).toString().equalsIgnoreCase(p.getCategoria())) {
+                spinnerCategoria.setSelection(i);
+                break;
+            }
+        }
+
+        for (int i = 0; i < spinnerEstado.getCount(); i++) {
+            if (spinnerEstado.getItemAtPosition(i).toString().equalsIgnoreCase(p.getEstado())) {
+                spinnerEstado.setSelection(i);
+                break;
+            }
+        }
+    }
+
     private void publicar(View view) {
         if (!validarPaso1() || !validarPaso2()) {
+            return;
+        }
+
+        if (publicacionId != -1) {
+            PublicacionRepository.actualizarPublicacion(
+                    publicacionId,
+                    editTitulo.getText().toString().trim(),
+                    editDescripcion.getText().toString().trim(),
+                    Double.parseDouble(editPrecio.getText().toString().trim()),
+                    spinnerEstado.getSelectedItem().toString(),
+                    spinnerCategoria.getSelectedItem().toString(),
+                    editZona.getText().toString().trim()
+            );
+
+            Toast.makeText(
+                    requireContext(),
+                    "Publicación modificada con éxito",
+                    Toast.LENGTH_SHORT
+            ).show();
+
+            Navigation.findNavController(view).popBackStack();
             return;
         }
 

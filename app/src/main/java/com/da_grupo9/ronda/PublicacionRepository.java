@@ -60,6 +60,27 @@ public class PublicacionRepository {
         }
     }
 
+    public static void actualizarPublicacion(
+            int id,
+            String titulo,
+            String descripcion,
+            double precio,
+            String estado,
+            String categoria,
+            String zona) {
+
+        Publicacion publicacion = getPublicacionById(id);
+
+        if (publicacion != null) {
+            publicacion.setTitulo(titulo);
+            publicacion.setDescripcion(descripcion);
+            publicacion.setPrecio(precio);
+            publicacion.setEstado(estado);
+            publicacion.setCategoria(categoria);
+            publicacion.setZona(zona);
+        }
+    }
+
     private static void inicializarDatos() {
         publicaciones = new ArrayList<>();
 
@@ -76,7 +97,11 @@ public class PublicacionRepository {
                 "Juan Pérez",
                 "juan@ronda.com",
                 "★ 4.9 (42 ventas)",
-                new ArrayList<>(Arrays.asList("📱 Foto Principal - iPhone 15", "📷 Vista Trasera / Cámaras", "🔋 Estado de Batería (95%)"))
+                new ArrayList<>(Arrays.asList(
+                        "https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=800",
+                        "https://images.unsplash.com/photo-1510557880182-3d4d3cba35a5?w=800",
+                        "https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=800"
+                ))
         ));
 
         publicaciones.add(new Publicacion(
@@ -92,7 +117,11 @@ public class PublicacionRepository {
                 "Martina Gómez",
                 "martina@ronda.com",
                 "★ 4.7 (15 ventas)",
-                new ArrayList<>(Arrays.asList("🚲 Cuadro completo R29", "⚙️ Transmisión Shimano", "🛑 Frenos a disco"))
+                new ArrayList<>(Arrays.asList(
+                        "https://images.unsplash.com/photo-1485965120184-e220f721d03e?w=800",
+                        "https://images.unsplash.com/photo-1532298229144-0ec0c57515c7?w=800",
+                        "https://images.unsplash.com/photo-1576435728678-68d0fbf94e91?w=800"
+                ))
         ));
 
         publicaciones.add(new Publicacion(
@@ -108,7 +137,11 @@ public class PublicacionRepository {
                 "Lucas Rossi",
                 "lucas@ronda.com",
                 "★ 5.0 (28 ventas)",
-                new ArrayList<>(Arrays.asList("🎮 Consola PS5 y caja", "🕹️ Joystick DualSense", "🔌 Cables y base"))
+                new ArrayList<>(Arrays.asList(
+                        "https://images.unsplash.com/photo-1606813907291-d86efa9b94db?w=800",
+                        "https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?w=800",
+                        "https://images.unsplash.com/photo-1622297845775-5ff3fef71d13?w=800"
+                ))
         ));
 
         publicaciones.add(new Publicacion(
@@ -124,7 +157,10 @@ public class PublicacionRepository {
                 "Camila Díaz",
                 "camila@ronda.com",
                 "★ 4.6 (9 ventas)",
-                new ArrayList<>(Arrays.asList("🖥️ Pantalla encendida", "🔌 Puertos traseros HDMI"))
+                new ArrayList<>(Arrays.asList(
+                        "https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?w=800",
+                        "https://images.unsplash.com/photo-1585792180666-f7347c490ee2?w=800"
+                ))
         ));
 
         publicaciones.add(new Publicacion(
@@ -140,7 +176,10 @@ public class PublicacionRepository {
                 "Agustín Álvarez",
                 "agustin@ronda.com",
                 "★ 4.8 (34 ventas)",
-                new ArrayList<>(Arrays.asList("⌨️ Teclado en caja sellada", "🌈 Efectos de iluminación RGB"))
+                new ArrayList<>(Arrays.asList(
+                        "https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=800",
+                        "https://images.unsplash.com/photo-1618384887929-16ec33fab9ef?w=800"
+                ))
         ));
 
         publicaciones.add(new Publicacion(
@@ -156,7 +195,11 @@ public class PublicacionRepository {
                 "Sofía Benítez",
                 "sofia@ronda.com",
                 "★ 4.9 (50 ventas)",
-                new ArrayList<>(Arrays.asList("👟 Vista lateral zapatillas", "🏷️ Etiquetas y caja original", "📏 Suela y plantilla"))
+                new ArrayList<>(Arrays.asList(
+                        "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800",
+                        "https://images.unsplash.com/photo-1600185365926-3a2ce3cdb9eb?w=800",
+                        "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=800"
+                ))
         ));
     }
 }
