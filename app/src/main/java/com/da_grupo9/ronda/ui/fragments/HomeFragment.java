@@ -1,7 +1,14 @@
-package com.da_grupo9.ronda;
+package com.da_grupo9.ronda.ui.fragments;
+
+import com.da_grupo9.ronda.R;
+import com.da_grupo9.ronda.data.model.Publicacion;
+import com.da_grupo9.ronda.data.repository.PublicacionRepository;
+import com.google.android.material.card.MaterialCardView;
+import com.google.android.material.color.MaterialColors;
 
 import android.graphics.Color;
 import android.os.Bundle;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,11 +22,17 @@ import android.widget.TextView;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 
+import javax.inject.Inject;
+import dagger.hilt.android.AndroidEntryPoint;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+@AndroidEntryPoint
 public class HomeFragment extends Fragment {
+
+    @Inject PublicacionRepository publicacionRepository;
 
     private LinearLayout publicacionesContainer;
 
@@ -82,15 +95,6 @@ public class HomeFragment extends Fragment {
         botonAnterior = view.findViewById(R.id.botonAnterior);
         botonSiguiente = view.findViewById(R.id.botonSiguiente);
 
-        Button buttonPerfil =
-                view.findViewById(R.id.buttonPerfil);
-
-        Button buttonPublicarArticulo =
-                view.findViewById(R.id.buttonPublicarArticulo);
-
-        Button buttonMisPublicaciones =
-                view.findViewById(R.id.buttonMisPublicaciones);
-
         textoPagina = view.findViewById(R.id.textoPagina);
 
         publicacionesContainer =
@@ -101,14 +105,10 @@ public class HomeFragment extends Fragment {
                     getArguments().getString("email", "");
         }
 
-        cargarDatos();
-
         configurarSpinners();
-
-        publicacionesFiltradas =
-                new ArrayList<>(publicaciones);
-
-        mostrarPagina();
+        publicaciones = new ArrayList<>();
+        publicacionesFiltradas = new ArrayList<>();
+        cargarDatos();
 
         botonFiltrar.setOnClickListener(
                 v -> aplicarFiltros()
@@ -121,50 +121,29 @@ public class HomeFragment extends Fragment {
         botonSiguiente.setOnClickListener(
                 v -> paginaSiguiente()
         );
-
-        buttonPerfil.setOnClickListener(v ->
-                Navigation.findNavController(v)
-                        .navigate(
-                                R.id.action_homeFragment_to_profileFragment
-                        )
-        );
-
-        buttonPublicarArticulo.setOnClickListener(v -> {
-            Bundle bundle = new Bundle();
-            bundle.putString("email", usuarioActualEmail);
-
-            Navigation.findNavController(v)
-                    .navigate(
-                            R.id.action_homeFragment_to_publicarArticuloFragment,
-                            bundle
-                    );
-        });
-
-        buttonMisPublicaciones.setOnClickListener(v -> {
-            Bundle bundle = new Bundle();
-            bundle.putString("email", usuarioActualEmail);
-
-            Navigation.findNavController(v)
-                    .navigate(
-                            R.id.action_homeFragment_to_misPublicacionesFragment,
-                            bundle
-                    );
-        });
     }
 
     private void cargarDatos() {
-
-        publicaciones = new ArrayList<>();
-
-        for (Publicacion publicacion :
-                PublicacionRepository.getPublicaciones()) {
-
-            if (publicacion.getEstadoPublicacion()
-                    .equals("Activa")) {
-
-                publicaciones.add(publicacion);
+        publicacionRepository.getPublicaciones(new PublicacionRepository.Resultado<List<Publicacion>>() {
+            @Override
+            public void onSuccess(List<Publicacion> data) {
+                if (!isAdded()) return;
+                publicaciones.clear();
+                for (Publicacion publicacion : data) {
+                    if (publicacion.isVisibleInPublicFeed()) {
+                        publicaciones.add(publicacion);
+                    }
+                }
+                publicacionesFiltradas = new ArrayList<>(publicaciones);
+                paginaActual = 1;
+                mostrarPagina();
             }
-        }
+
+            @Override
+            public void onError(String mensaje) {
+                if (isAdded()) android.widget.Toast.makeText(requireContext(), mensaje, android.widget.Toast.LENGTH_LONG).show();
+            }
+        });
     }
 
     private void configurarSpinners() {
@@ -172,8 +151,13 @@ public class HomeFragment extends Fragment {
         String[] categorias = {
                 "Todas",
                 "Tecnología",
+                "Hogar",
                 "Deportes",
-                "Ropa"
+                "Ropa y moda",
+                "Vehículos",
+                "Libros",
+                "Juguetes",
+                "Otros"
         };
 
         String[] estados = {
@@ -273,12 +257,12 @@ public class HomeFragment extends Fragment {
 
             boolean coincideTexto =
                     texto.isEmpty()
-                            || publicacion.getTitulo()
+                            || (publicacion.getTitulo() != null && publicacion.getTitulo()
                             .toLowerCase()
-                            .contains(texto)
-                            || publicacion.getDescripcion()
+                            .contains(texto))
+                            || (publicacion.getDescripcion() != null && publicacion.getDescripcion()
                             .toLowerCase()
-                            .contains(texto);
+                            .contains(texto));
 
             boolean coincideCategoria =
                     categoriaSeleccionada.equals("Todas")
@@ -297,8 +281,7 @@ public class HomeFragment extends Fragment {
             boolean coincideCercania =
                     cercaniaSeleccionada
                             .equals("Todas las zonas")
-                            || publicacion.getZona()
-                            .equals("Palermo");
+                            || "Palermo".equals(publicacion.getZona());
 
             if (coincideTexto
                     && coincideCategoria
@@ -448,24 +431,8 @@ public class HomeFragment extends Fragment {
 
         if (lista.isEmpty()) {
 
-            TextView mensaje =
-                    new TextView(requireContext());
-
-            mensaje.setText(
-                    "No se encontraron publicaciones."
-            );
-
-            mensaje.setTextSize(18);
-
-            mensaje.setPadding(
-                    10,
-                    20,
-                    10,
-                    20
-            );
-
             publicacionesContainer.addView(
-                    mensaje
+                    crearMensajeVacio("No se encontraron publicaciones.")
             );
 
             return;
@@ -480,38 +447,18 @@ public class HomeFragment extends Fragment {
     private void agregarPublicacion(
             Publicacion publicacion) {
 
-        LinearLayout tarjeta =
+        MaterialCardView tarjeta = crearTarjeta();
+
+        LinearLayout contenido =
                 new LinearLayout(requireContext());
 
-        tarjeta.setOrientation(
-                LinearLayout.VERTICAL
-        );
+        contenido.setOrientation(LinearLayout.VERTICAL);
+        tarjeta.addView(contenido);
 
-        tarjeta.setPadding(
-                20,
-                20,
-                20,
-                20
-        );
-
-        tarjeta.setBackgroundColor(
-                Color.LTGRAY
-        );
-
-        LinearLayout.LayoutParams parametros =
-                new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT
-                );
-
-        parametros.setMargins(
-                0,
-                0,
-                0,
-                16
-        );
-
-        tarjeta.setLayoutParams(parametros);
+        int colorOnSurface = MaterialColors.getColor(requireContext(), com.google.android.material.R.attr.colorOnSurface, Color.BLACK);
+        int colorOnSurfaceVariant = MaterialColors.getColor(requireContext(), com.google.android.material.R.attr.colorOnSurfaceVariant, Color.DKGRAY);
+        int colorPrice = androidx.core.content.ContextCompat.getColor(requireContext(), R.color.price);
+        int colorPrimary = MaterialColors.getColor(requireContext(), android.R.attr.colorPrimary, Color.BLUE);
 
         TextView titulo =
                 new TextView(requireContext());
@@ -520,8 +467,8 @@ public class HomeFragment extends Fragment {
                 publicacion.getTitulo()
         );
 
-        titulo.setTextSize(20);
-        titulo.setTextColor(Color.BLACK);
+        titulo.setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_TitleMedium);
+        titulo.setTextColor(colorOnSurface);
 
         TextView descripcion =
                 new TextView(requireContext());
@@ -530,8 +477,9 @@ public class HomeFragment extends Fragment {
                 publicacion.getDescripcion()
         );
 
-        descripcion.setTextSize(15);
-        descripcion.setTextColor(Color.DKGRAY);
+        descripcion.setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_BodyMedium);
+        descripcion.setTextColor(colorOnSurfaceVariant);
+        descripcion.setPaddingRelative(0, dpToPx(4), 0, 0);
 
         TextView precio =
                 new TextView(requireContext());
@@ -541,8 +489,9 @@ public class HomeFragment extends Fragment {
                         + publicacion.getPrecio()
         );
 
-        precio.setTextSize(18);
-        precio.setTextColor(Color.BLACK);
+        precio.setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_TitleSmall);
+        precio.setTextColor(colorPrice);
+        precio.setPaddingRelative(0, dpToPx(8), 0, 0);
 
         TextView estado =
                 new TextView(requireContext());
@@ -552,8 +501,9 @@ public class HomeFragment extends Fragment {
                         + publicacion.getEstado()
         );
 
-        estado.setTextSize(16);
-        estado.setTextColor(Color.DKGRAY);
+        estado.setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_BodyMedium);
+        estado.setTextColor(colorOnSurfaceVariant);
+        estado.setPaddingRelative(0, dpToPx(4), 0, 0);
 
         TextView categoria =
                 new TextView(requireContext());
@@ -563,8 +513,8 @@ public class HomeFragment extends Fragment {
                         + publicacion.getCategoria()
         );
 
-        categoria.setTextSize(16);
-        categoria.setTextColor(Color.DKGRAY);
+        categoria.setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_BodyMedium);
+        categoria.setTextColor(colorOnSurfaceVariant);
 
         TextView zona =
                 new TextView(requireContext());
@@ -574,8 +524,8 @@ public class HomeFragment extends Fragment {
                         + publicacion.getZona()
         );
 
-        zona.setTextSize(16);
-        zona.setTextColor(Color.DKGRAY);
+        zona.setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_BodyMedium);
+        zona.setTextColor(colorOnSurfaceVariant);
 
         TextView verDetalle =
                 new TextView(requireContext());
@@ -584,28 +534,29 @@ public class HomeFragment extends Fragment {
                 "Ver detalle"
         );
 
-        verDetalle.setTextSize(16);
-        verDetalle.setPadding(
+        verDetalle.setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_LabelLarge);
+        verDetalle.setTextColor(colorPrimary);
+        verDetalle.setPaddingRelative(
                 0,
-                12,
+                dpToPx(12),
                 0,
                 0
         );
 
-        tarjeta.addView(titulo);
-        tarjeta.addView(descripcion);
-        tarjeta.addView(precio);
-        tarjeta.addView(estado);
-        tarjeta.addView(categoria);
-        tarjeta.addView(zona);
-        tarjeta.addView(verDetalle);
+        contenido.addView(titulo);
+        contenido.addView(descripcion);
+        contenido.addView(precio);
+        contenido.addView(estado);
+        contenido.addView(categoria);
+        contenido.addView(zona);
+        contenido.addView(verDetalle);
 
         tarjeta.setOnClickListener(v -> {
 
             Bundle bundle =
                     new Bundle();
 
-            bundle.putInt(
+            bundle.putString(
                     "publicacionId",
                     publicacion.getId()
             );
@@ -625,5 +576,50 @@ public class HomeFragment extends Fragment {
         publicacionesContainer.addView(
                 tarjeta
         );
+    }
+
+    private MaterialCardView crearTarjeta() {
+        MaterialCardView tarjeta = new MaterialCardView(requireContext());
+
+        tarjeta.setRadius(
+                getResources().getDimension(R.dimen.corner_radius_card)
+        );
+
+        tarjeta.setCardElevation(
+                getResources().getDimension(R.dimen.card_elevation)
+        );
+
+        tarjeta.setContentPadding(
+                dpToPx(16), dpToPx(16), dpToPx(16), dpToPx(16)
+        );
+
+        LinearLayout.LayoutParams parametros =
+                new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                );
+
+        parametros.setMargins(0, 0, 0, dpToPx(12));
+        tarjeta.setLayoutParams(parametros);
+
+        return tarjeta;
+    }
+
+    private TextView crearMensajeVacio(String texto) {
+        TextView mensaje = new TextView(requireContext());
+
+        mensaje.setText(texto);
+        mensaje.setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_BodyLarge);
+        mensaje.setTextColor(
+                MaterialColors.getColor(requireContext(), com.google.android.material.R.attr.colorOnSurfaceVariant, Color.DKGRAY)
+        );
+        mensaje.setGravity(Gravity.CENTER);
+        mensaje.setPadding(dpToPx(16), dpToPx(32), dpToPx(16), dpToPx(32));
+
+        return mensaje;
+    }
+
+    private int dpToPx(int dp) {
+        return Math.round(dp * getResources().getDisplayMetrics().density);
     }
 }

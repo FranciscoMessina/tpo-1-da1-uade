@@ -1,4 +1,6 @@
-package com.da_grupo9.ronda;
+package com.da_grupo9.ronda.ui.fragments;
+
+import com.da_grupo9.ronda.R;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;

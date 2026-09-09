@@ -1,4 +1,8 @@
-package com.da_grupo9.ronda;
+package com.da_grupo9.ronda.ui.fragments;
+
+import com.da_grupo9.ronda.R;
+import com.da_grupo9.ronda.data.model.Publicacion;
+import com.da_grupo9.ronda.data.repository.PublicacionRepository;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -15,13 +19,15 @@ import android.widget.Toast;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import javax.inject.Inject;
+import dagger.hilt.android.AndroidEntryPoint;
+
 import java.util.Locale;
 
+@AndroidEntryPoint
 public class PublicarArticuloFragment extends Fragment {
+
+    @Inject PublicacionRepository publicacionRepository;
 
     private LinearLayout containerPaso1;
     private LinearLayout containerPaso2;
@@ -43,7 +49,7 @@ public class PublicarArticuloFragment extends Fragment {
 
     private int pasoActual = 1;
     private String email = "";
-    private int publicacionId = -1;
+    private String publicacionId;
 
     public PublicarArticuloFragment() {
     }
@@ -89,12 +95,12 @@ public class PublicarArticuloFragment extends Fragment {
 
         if (getArguments() != null) {
             email = getArguments().getString("email", "");
-            publicacionId = getArguments().getInt("publicacionId", -1);
+            publicacionId = getArguments().getString("publicacionId", null);
         }
 
         configurarSpinners();
 
-        if (publicacionId != -1) {
+        if (publicacionId != null && !publicacionId.isEmpty()) {
             cargarDatosParaEditar(publicacionId);
             buttonPublicar.setText("Guardar cambios");
         }
@@ -115,8 +121,13 @@ public class PublicarArticuloFragment extends Fragment {
     private void configurarSpinners() {
         String[] categorias = {
                 "Tecnología",
+                "Hogar",
                 "Deportes",
-                "Ropa"
+                "Ropa y moda",
+                "Vehículos",
+                "Libros",
+                "Juguetes",
+                "Otros"
         };
 
         String[] estados = {
@@ -158,8 +169,10 @@ public class PublicarArticuloFragment extends Fragment {
     }
 
     private boolean validarPaso1() {
-        if (editTitulo.getText().toString().trim().isEmpty()
-                || editDescripcion.getText().toString().trim().isEmpty()) {
+        String titulo = editTitulo.getText().toString().trim();
+        String descripcion = editDescripcion.getText().toString().trim();
+
+        if (titulo.isEmpty() || descripcion.isEmpty()) {
 
             Toast.makeText(
                     requireContext(),
@@ -167,6 +180,24 @@ public class PublicarArticuloFragment extends Fragment {
                     Toast.LENGTH_SHORT
             ).show();
 
+            return false;
+        }
+
+        if (titulo.length() < 3 || titulo.length() > 120) {
+            Toast.makeText(
+                    requireContext(),
+                    "El título debe tener entre 3 y 120 caracteres",
+                    Toast.LENGTH_SHORT
+            ).show();
+            return false;
+        }
+
+        if (descripcion.length() < 10 || descripcion.length() > 5000) {
+            Toast.makeText(
+                    requireContext(),
+                    "La descripción debe tener entre 10 y 5000 caracteres",
+                    Toast.LENGTH_SHORT
+            ).show();
             return false;
         }
 
@@ -238,32 +269,34 @@ public class PublicarArticuloFragment extends Fragment {
         textResumen.setText(resumen);
     }
 
-    private void cargarDatosParaEditar(int id) {
-        Publicacion p = PublicacionRepository.getPublicacionById(id);
-        if (p == null) return;
+    private void cargarDatosParaEditar(String id) {
+        publicacionRepository.getPublicacionById(id, new PublicacionRepository.Resultado<Publicacion>() {
+            @Override public void onSuccess(Publicacion p) {
+                if (!isAdded()) return;
 
-        if (email.trim().isEmpty()) {
-            email = p.getVendedorEmail();
-        }
+                editTitulo.setText(p.getTitulo());
+                editDescripcion.setText(p.getDescripcion());
+                editPrecio.setText(String.format(Locale.US, "%.0f", p.getPrecio()));
+                editZona.setText(p.getZona());
 
-        editTitulo.setText(p.getTitulo());
-        editDescripcion.setText(p.getDescripcion());
-        editPrecio.setText(String.format(Locale.US, "%.0f", p.getPrecio()));
-        editZona.setText(p.getZona());
+                for (int i = 0; i < spinnerCategoria.getCount(); i++) {
+                    if (spinnerCategoria.getItemAtPosition(i).toString().equalsIgnoreCase(p.getCategoria())) {
+                        spinnerCategoria.setSelection(i);
+                        break;
+                    }
+                }
 
-        for (int i = 0; i < spinnerCategoria.getCount(); i++) {
-            if (spinnerCategoria.getItemAtPosition(i).toString().equalsIgnoreCase(p.getCategoria())) {
-                spinnerCategoria.setSelection(i);
-                break;
+                for (int i = 0; i < spinnerEstado.getCount(); i++) {
+                    if (spinnerEstado.getItemAtPosition(i).toString().equalsIgnoreCase(p.getEstado())) {
+                        spinnerEstado.setSelection(i);
+                        break;
+                    }
+                }
             }
-        }
-
-        for (int i = 0; i < spinnerEstado.getCount(); i++) {
-            if (spinnerEstado.getItemAtPosition(i).toString().equalsIgnoreCase(p.getEstado())) {
-                spinnerEstado.setSelection(i);
-                break;
+            @Override public void onError(String mensaje) {
+                if (isAdded()) Toast.makeText(requireContext(), mensaje, Toast.LENGTH_LONG).show();
             }
-        }
+        });
     }
 
     private void publicar(View view) {
@@ -271,24 +304,27 @@ public class PublicarArticuloFragment extends Fragment {
             return;
         }
 
-        if (publicacionId != -1) {
-            PublicacionRepository.actualizarPublicacion(
-                    publicacionId,
-                    editTitulo.getText().toString().trim(),
-                    editDescripcion.getText().toString().trim(),
-                    Double.parseDouble(editPrecio.getText().toString().trim()),
-                    spinnerEstado.getSelectedItem().toString(),
-                    spinnerCategoria.getSelectedItem().toString(),
-                    editZona.getText().toString().trim()
-            );
+        Publicacion publicacion = new Publicacion(
+                editTitulo.getText().toString().trim(),
+                editDescripcion.getText().toString().trim(),
+                Double.parseDouble(editPrecio.getText().toString().trim()),
+                conditionApiValue(spinnerEstado.getSelectedItemPosition()),
+                categoryApiValue(spinnerCategoria.getSelectedItemPosition()),
+                editZona.getText().toString().trim(),
+                7
+        );
 
-            Toast.makeText(
-                    requireContext(),
-                    "Publicación modificada con éxito",
-                    Toast.LENGTH_SHORT
-            ).show();
-
-            Navigation.findNavController(view).popBackStack();
+        if (publicacionId != null && !publicacionId.isEmpty()) {
+            publicacionRepository.actualizarPublicacion(publicacionId, publicacion, new PublicacionRepository.Resultado<Publicacion>() {
+                @Override public void onSuccess(Publicacion data) {
+                    if (!isAdded()) return;
+                    Toast.makeText(requireContext(), "Publicación modificada con éxito", Toast.LENGTH_SHORT).show();
+                    Navigation.findNavController(view).popBackStack();
+                }
+                @Override public void onError(String mensaje) {
+                    if (isAdded()) Toast.makeText(requireContext(), mensaje, Toast.LENGTH_LONG).show();
+                }
+            });
             return;
         }
 
@@ -302,43 +338,23 @@ public class PublicarArticuloFragment extends Fragment {
             return;
         }
 
-        Publicacion publicacion = new Publicacion(
-                PublicacionRepository.getProximoId(),
-                editTitulo.getText().toString().trim(),
-                editDescripcion.getText().toString().trim(),
-                Double.parseDouble(editPrecio.getText().toString().trim()),
-                spinnerEstado.getSelectedItem().toString(),
-                spinnerCategoria.getSelectedItem().toString(),
-                editZona.getText().toString().trim(),
-                obtenerProximaFechaOrden(),
-                new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(new Date()),
-                "Usuario",
-                email.trim(),
-                "Sin calificaciones",
-                new ArrayList<>()
-        );
-
-        PublicacionRepository.agregarPublicacion(publicacion);
-
-        Toast.makeText(
-                requireContext(),
-                "Publicación creada",
-                Toast.LENGTH_SHORT
-        ).show();
-
-        Navigation.findNavController(view).popBackStack();
+        publicacionRepository.agregarPublicacion(publicacion, new PublicacionRepository.Resultado<Publicacion>() {
+            @Override public void onSuccess(Publicacion data) {
+                if (!isAdded()) return;
+                Toast.makeText(requireContext(), "Publicación creada", Toast.LENGTH_SHORT).show();
+                Navigation.findNavController(view).popBackStack();
+            }
+            @Override public void onError(String mensaje) {
+                if (isAdded()) Toast.makeText(requireContext(), mensaje, Toast.LENGTH_LONG).show();
+            }
+        });
     }
 
-    private int obtenerProximaFechaOrden() {
-        int fechaMaxima = 0;
-        List<Publicacion> publicaciones = PublicacionRepository.getPublicaciones();
+    private String conditionApiValue(int position) {
+        return new String[]{"new", "like_new", "used"}[position];
+    }
 
-        for (Publicacion publicacion : publicaciones) {
-            if (publicacion.getFecha() > fechaMaxima) {
-                fechaMaxima = publicacion.getFecha();
-            }
-        }
-
-        return fechaMaxima + 1;
+    private String categoryApiValue(int position) {
+        return new String[]{"electronics", "home", "sports", "fashion", "vehicles", "books", "toys", "other"}[position];
     }
 }

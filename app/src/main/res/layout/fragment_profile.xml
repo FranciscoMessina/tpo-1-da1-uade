@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
@@ -8,96 +9,149 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:padding="@dimen/spacing_md">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/spacing_md"
             android:text="Mi perfil"
-            android:textSize="28sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="16dp" />
+            android:textAppearance="@style/TextAppearance.Material3.HeadlineSmall"
+            android:textColor="?attr/colorOnSurface" />
 
-        <EditText
-            android:id="@+id/editNombre"
+        <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Nombre" />
+            android:hint="Nombre">
 
-        <EditText
-            android:id="@+id/editEmailPerfil"
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/editNombre"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Email"
-            android:inputType="textEmailAddress" />
+            android:layout_marginTop="@dimen/spacing_sm"
+            android:hint="Email">
 
-        <EditText
-            android:id="@+id/editTelefono"
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/editEmailPerfil"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textEmailAddress" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Teléfono"
-            android:inputType="phone" />
+            android:layout_marginTop="@dimen/spacing_sm"
+            android:hint="Teléfono">
 
-        <EditText
-            android:id="@+id/editZona"
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/editTelefono"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="phone" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Zona" />
+            android:layout_marginTop="@dimen/spacing_sm"
+            android:hint="Zona">
 
-        <Button
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/editZona"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/buttonGuardarPerfil"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Guardar cambios"
-            android:layout_marginTop="12dp" />
+            android:layout_marginTop="@dimen/spacing_md"
+            android:text="Guardar cambios" />
 
-        <TextView
-            android:layout_width="wrap_content"
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Reputación"
-            android:textSize="22sp"
-            android:textStyle="bold"
-            android:layout_marginTop="24dp" />
+            android:layout_marginTop="@dimen/spacing_lg">
 
-        <TextView
-            android:id="@+id/textReputacion"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="4.7 estrellas"
-            android:textSize="18sp"
-            android:layout_marginTop="8dp" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/textOperaciones"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="12 operaciones concretadas"
-            android:textSize="16sp"
-            android:layout_marginTop="8dp" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Reputación"
+                    android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
+                    android:textColor="?attr/colorOnSurface" />
 
-        <TextView
-            android:id="@+id/textCompradorVendedor"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="7 como comprador · 5 como vendedor"
-            android:textSize="16sp"
-            android:layout_marginTop="4dp" />
+                <TextView
+                    android:id="@+id/textReputacion"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_sm"
+                    android:text="4.7 estrellas"
+                    android:textAppearance="@style/TextAppearance.Material3.BodyLarge"
+                    android:textColor="?attr/colorPrimary" />
 
-        <TextView
-            android:id="@+id/textAntiguedad"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Antigüedad: 2 años"
-            android:textSize="16sp"
-            android:layout_marginTop="12dp" />
+                <TextView
+                    android:id="@+id/textOperaciones"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_xs"
+                    android:text="12 operaciones concretadas"
+                    android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+                    android:textColor="?attr/colorOnSurfaceVariant" />
 
-        <TextView
-            android:id="@+id/textPublicacionesActivas"
-            android:layout_width="wrap_content"
+                <TextView
+                    android:id="@+id/textCompradorVendedor"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_xs"
+                    android:text="7 como comprador · 5 como vendedor"
+                    android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+                    android:textColor="?attr/colorOnSurfaceVariant" />
+
+                <TextView
+                    android:id="@+id/textAntiguedad"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_sm"
+                    android:text="Antigüedad: 2 años"
+                    android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+                    android:textColor="?attr/colorOnSurfaceVariant" />
+
+                <TextView
+                    android:id="@+id/textPublicacionesActivas"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_xs"
+                    android:text="Publicaciones activas: 3"
+                    android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+                    android:textColor="?attr/colorOnSurfaceVariant" />
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/buttonLogout"
+            style="@style/Widget.Ronda.Button.Outlined"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Publicaciones activas: 3"
-            android:textSize="16sp"
-            android:layout_marginTop="4dp" />
+            android:layout_marginTop="@dimen/spacing_lg"
+            android:text="Cerrar sesión" />
 
     </LinearLayout>
 

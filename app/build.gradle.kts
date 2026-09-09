@@ -6,6 +6,7 @@ plugins {
 val apiBaseUrl = providers.gradleProperty("API_BASE_URL")
     .orElse("https://example.com/")
     .get()
+    .let { if (it.endsWith("/")) it else "$it/" }
 
 android {
     namespace = "com.da_grupo9.ronda"
@@ -49,6 +50,7 @@ dependencies {
     annotationProcessor(libs.hilt.compiler)
     implementation(libs.retrofit)
     implementation(libs.retrofit.converter.gson)
+    implementation(libs.security.crypto)
     implementation(libs.glide)
     testImplementation(libs.junit)
     androidTestImplementation(libs.espresso.core)

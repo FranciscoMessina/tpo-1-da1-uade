@@ -1,4 +1,8 @@
-package com.da_grupo9.ronda;
+package com.da_grupo9.ronda.ui.fragments;
+
+import com.da_grupo9.ronda.R;
+import com.da_grupo9.ronda.data.model.Publicacion;
+import com.da_grupo9.ronda.data.repository.PublicacionRepository;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -14,10 +18,18 @@ import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 
 import com.bumptech.glide.Glide;
+import com.google.android.material.button.MaterialButton;
+
+import javax.inject.Inject;
+import dagger.hilt.android.AndroidEntryPoint;
 
 import java.util.List;
 
+@AndroidEntryPoint
 public class DetailFragment extends Fragment {
+
+    @Inject PublicacionRepository publicacionRepository;
+    private Publicacion publicacionCargada;
 
     private int fotoActualIndex = 0;
     private List<String> listaFotos;
@@ -79,25 +91,36 @@ public class DetailFragment extends Fragment {
         Button buttonGuardar = view.findViewById(R.id.buttonGuardar);
 
         // Botones de vendedor
-        Button buttonModificar = view.findViewById(R.id.buttonModificar);
-        Button buttonPausar = view.findViewById(R.id.buttonPausar);
+        MaterialButton buttonModificar = view.findViewById(R.id.buttonModificar);
+        MaterialButton buttonPausar = view.findViewById(R.id.buttonPausar);
 
         // Obtener argumentos pasados por Navigation Component
-        final int publicacionId = (getArguments() != null)
-                ? getArguments().getInt("publicacionId", 1)
-                : 1;
+        String publicacionId = "";
+
+        if (getArguments() != null) {
+            publicacionId = getArguments().getString("publicacionId", "");
+        }
+
         final String usuarioActualEmail = (getArguments() != null)
                 ? getArguments().getString("usuarioActualEmail", "")
                 : "";
 
-        // Buscar publicación en el repositorio
-        Publicacion publicacion = PublicacionRepository.getPublicacionById(publicacionId);
-
-        if (publicacion == null) {
-            Toast.makeText(requireContext(), "No se encontró la publicación", Toast.LENGTH_SHORT).show();
-            Navigation.findNavController(view).popBackStack();
+        if (publicacionCargada == null) {
+            publicacionRepository.getPublicacionById(publicacionId, new PublicacionRepository.Resultado<Publicacion>() {
+                @Override public void onSuccess(Publicacion data) {
+                    if (!isAdded()) return;
+                    publicacionCargada = data;
+                    onViewCreated(view, savedInstanceState);
+                }
+                @Override public void onError(String mensaje) {
+                    if (!isAdded()) return;
+                    Toast.makeText(requireContext(), mensaje, Toast.LENGTH_LONG).show();
+                    Navigation.findNavController(view).popBackStack();
+                }
+            });
             return;
         }
+        Publicacion publicacion = publicacionCargada;
 
         // Cargar datos en la UI
         textDetailTitulo.setText(publicacion.getTitulo());
@@ -109,7 +132,7 @@ public class DetailFragment extends Fragment {
         textDetailDescripcion.setText(publicacion.getDescripcion());
 
         // Datos del vendedor
-        textVendedorNombre.setText("Vendedor: " + publicacion.getVendedorNombre() + " (" + publicacion.getVendedorEmail() + ")");
+        textVendedorNombre.setText("Vendedor: " + publicacion.getVendedorNombre());
         textVendedorReputacion.setText("Reputación: " + publicacion.getVendedorReputacion());
 
         // Configurar galería de fotos
@@ -131,9 +154,7 @@ public class DetailFragment extends Fragment {
         });
 
         // Determinar si el usuario actual es el vendedor o un comprador interesado
-        boolean esVendedor = usuarioActualEmail != null
-                && !usuarioActualEmail.trim().isEmpty()
-                && usuarioActualEmail.trim().equalsIgnoreCase(publicacion.getVendedorEmail().trim());
+        boolean esVendedor = publicacion.getActions() != null && publicacion.getActions().canManage();
 
         if (esVendedor) {
             containerAccionesComprador.setVisibility(View.GONE);
@@ -179,7 +200,7 @@ public class DetailFragment extends Fragment {
 
             bundle.putString(
                     "vendedorEmail",
-                    publicacion.getVendedorEmail()
+                    publicacion.getSeller() != null ? publicacion.getSeller().getId() : ""
             );
 
             bundle.putString(
@@ -198,7 +219,7 @@ public class DetailFragment extends Fragment {
         buttonModificar.setOnClickListener(v -> {
             Bundle bundle = new Bundle();
             bundle.putString("email", usuarioActualEmail);
-            bundle.putInt("publicacionId", publicacion.getId());
+            bundle.putString("publicacionId", publicacion.getId());
 
             Navigation.findNavController(v)
                     .navigate(
@@ -207,28 +228,44 @@ public class DetailFragment extends Fragment {
                     );
         });
 
-        if ("Pausada".equalsIgnoreCase(publicacion.getEstadoPublicacion())) {
-            buttonPausar.setText("▶️ Reanudar publicación");
-        } else {
-            buttonPausar.setText("⏸️ Pausar publicación");
-        }
+        actualizarBotonPausar(buttonPausar, publicacion);
 
         buttonPausar.setOnClickListener(v -> {
-            boolean estaPausada = "Pausada".equalsIgnoreCase(publicacion.getEstadoPublicacion());
-            String nuevoEstado = estaPausada ? "Activa" : "Pausada";
-            PublicacionRepository.cambiarEstadoPublicacion(publicacion.getId(), nuevoEstado);
-            buttonPausar.setText(estaPausada ? "⏸️ Pausar publicación" : "▶️ Reanudar publicación");
-            Toast.makeText(
-                    requireContext(),
-                    "La publicación ahora está " + nuevoEstado.toLowerCase(),
-                    Toast.LENGTH_SHORT
-            ).show();
+            boolean estaPausada = "paused".equalsIgnoreCase(publicacion.getEstadoPublicacion());
+            String nuevoEstado = estaPausada ? "active" : "paused";
+
+            publicacionRepository.cambiarEstadoPublicacion(
+                    publicacion.getId(),
+                    nuevoEstado,
+                    new PublicacionRepository.Resultado<Publicacion>() {
+                        @Override public void onSuccess(Publicacion data) {
+                            if (!isAdded()) return;
+                            publicacionCargada = data;
+                            actualizarBotonPausar(buttonPausar, data);
+                            Toast.makeText(
+                                    requireContext(),
+                                    "La publicación ahora está " + data.getEstadoPublicacionVisible().toLowerCase(),
+                                    Toast.LENGTH_SHORT
+                            ).show();
+                        }
+                        @Override public void onError(String mensaje) {
+                            if (isAdded()) Toast.makeText(requireContext(), mensaje, Toast.LENGTH_LONG).show();
+                        }
+                    }
+            );
         });
 
         // Botón Volver con Navigation Component
         buttonBack.setOnClickListener(v ->
                 Navigation.findNavController(v).popBackStack()
         );
+    }
+
+    private void actualizarBotonPausar(MaterialButton buttonPausar, Publicacion publicacion) {
+        boolean estaPausada = "paused".equalsIgnoreCase(publicacion.getEstadoPublicacion());
+
+        buttonPausar.setText(estaPausada ? "Reanudar publicación" : "Pausar publicación");
+        buttonPausar.setIconResource(estaPausada ? R.drawable.ic_play_arrow : R.drawable.ic_pause);
     }
 
     private void actualizarGaleria(

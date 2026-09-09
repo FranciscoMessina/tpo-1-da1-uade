@@ -5,48 +5,33 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="16dp">
+    android:padding="@dimen/spacing_md">
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/spacing_sm"
         android:text="Publicaciones"
-        android:textSize="28sp"
-        android:textStyle="bold"
-        android:layout_marginBottom="12dp" />
+        android:textAppearance="@style/TextAppearance.Material3.HeadlineSmall"
+        android:textColor="?attr/colorOnSurface" />
 
-    <Button
-        android:id="@+id/buttonPerfil"
+    <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Mi perfil"
-        android:layout_marginBottom="12dp" />
+        android:hint="Buscar por título o descripción">
 
-    <Button
-        android:id="@+id/buttonPublicarArticulo"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Publicar artículo"
-        android:layout_marginBottom="8dp" />
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/buscador"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="text" />
 
-    <Button
-        android:id="@+id/buttonMisPublicaciones"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Mis publicaciones"
-        android:layout_marginBottom="12dp" />
-
-    <EditText
-        android:id="@+id/buscador"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Buscar por título o descripción"
-        android:inputType="text"
-        android:layout_marginBottom="8dp" />
+    </com.google.android.material.textfield.TextInputLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/spacing_sm"
         android:orientation="horizontal">
 
         <Spinner
@@ -67,23 +52,36 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:layout_marginTop="8dp">
+        android:layout_marginTop="@dimen/spacing_sm">
 
-        <EditText
-            android:id="@+id/precioMinimo"
+        <com.google.android.material.textfield.TextInputLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:hint="Precio mínimo"
-            android:inputType="numberDecimal" />
+            android:hint="Precio mínimo">
 
-        <EditText
-            android:id="@+id/precioMaximo"
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/precioMinimo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="numberDecimal" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:hint="Precio máximo"
-            android:inputType="numberDecimal" />
+            android:layout_marginStart="@dimen/spacing_sm"
+            android:hint="Precio máximo">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/precioMaximo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="numberDecimal" />
+
+        </com.google.android.material.textfield.TextInputLayout>
 
     </LinearLayout>
 
@@ -91,26 +89,27 @@
         android:id="@+id/spinnerCercania"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp" />
+        android:layout_marginTop="@dimen/spacing_sm" />
 
     <Spinner
         android:id="@+id/spinnerOrden"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp" />
+        android:layout_marginTop="@dimen/spacing_sm" />
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/botonFiltrar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="APLICAR FILTROS"
-        android:layout_marginTop="8dp"
-        android:layout_marginBottom="12dp" />
+        android:text="Aplicar filtros"
+        android:layout_marginTop="@dimen/spacing_sm"
+        android:layout_marginBottom="@dimen/spacing_sm" />
 
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1">
+        android:layout_weight="1"
+        android:clipToPadding="false">
 
         <LinearLayout
             android:id="@+id/publicacionesContainer"
@@ -124,10 +123,11 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center"
-        android:layout_marginTop="8dp">
+        android:layout_marginTop="@dimen/spacing_sm">
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/botonAnterior"
+            style="@style/Widget.Ronda.Button.Text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Anterior" />
@@ -137,11 +137,13 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Página 1"
-            android:textSize="16sp"
-            android:padding="16dp" />
+            android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            android:padding="@dimen/spacing_md" />
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/botonSiguiente"
+            style="@style/Widget.Ronda.Button.Text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Siguiente" />

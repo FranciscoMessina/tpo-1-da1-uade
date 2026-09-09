@@ -1,40 +1,57 @@
 <?xml version="1.0" encoding="utf-8"?>
-
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    tools:context=".OtpFragment">
+    android:fillViewport="true">
 
-    <TextView
-        android:id="@+id/textOtpEmail"
+    <LinearLayout
+        android:id="@+id/main"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Ingresá el código enviado a tu email" />
+        android:orientation="vertical"
+        android:padding="@dimen/spacing_md"
+        android:gravity="center_vertical"
+        tools:context=".ui.fragments.OtpFragment">
 
-    <EditText
-        android:id="@+id/editOtp"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        android:hint="Código OTP"
-        android:inputType="number"
-        android:maxLength="6" />
+        <TextView
+            android:id="@+id/textOtpEmail"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/spacing_md"
+            android:text="Ingresá el código enviado a tu email"
+            android:textAppearance="@style/TextAppearance.Material3.BodyLarge"
+            android:textColor="?attr/colorOnSurface" />
 
-    <Button
-        android:id="@+id/buttonConfirmOtp"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:text="Confirmar" />
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Código OTP">
 
-    <Button
-        android:id="@+id/buttonResendOtp"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        android:text="Reenviar código" />
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/editOtp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="number"
+                android:maxLength="6" />
 
-</LinearLayout>
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/buttonConfirmOtp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_lg"
+            android:text="Confirmar" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/buttonResendOtp"
+            style="@style/Widget.Ronda.Button.Text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_sm"
+            android:text="Reenviar código" />
+
+    </LinearLayout>
+
+</ScrollView>
