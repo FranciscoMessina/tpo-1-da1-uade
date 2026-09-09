@@ -9,12 +9,16 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
+
+import com.bumptech.glide.Glide;
+import com.google.android.material.button.MaterialButton;
 
 import javax.inject.Inject;
 import dagger.hilt.android.AndroidEntryPoint;
@@ -58,7 +62,7 @@ public class DetailFragment extends Fragment {
         Button buttonBack = view.findViewById(R.id.buttonBack);
 
         // Vistas de la galería
-        TextView textFotoViewer = view.findViewById(R.id.textFotoViewer);
+        ImageView imageFotoViewer = view.findViewById(R.id.imageFotoViewer);
         TextView textFotoIndicador = view.findViewById(R.id.textFotoIndicador);
         Button buttonFotoAnterior = view.findViewById(R.id.buttonFotoAnterior);
         Button buttonFotoSiguiente = view.findViewById(R.id.buttonFotoSiguiente);
@@ -87,8 +91,8 @@ public class DetailFragment extends Fragment {
         Button buttonGuardar = view.findViewById(R.id.buttonGuardar);
 
         // Botones de vendedor
-        Button buttonModificar = view.findViewById(R.id.buttonModificar);
-        Button buttonPausar = view.findViewById(R.id.buttonPausar);
+        MaterialButton buttonModificar = view.findViewById(R.id.buttonModificar);
+        MaterialButton buttonPausar = view.findViewById(R.id.buttonPausar);
 
         // Obtener argumentos pasados por Navigation Component
         String publicacionId = "";
@@ -96,6 +100,10 @@ public class DetailFragment extends Fragment {
         if (getArguments() != null) {
             publicacionId = getArguments().getString("publicacionId", "");
         }
+
+        final String usuarioActualEmail = (getArguments() != null)
+                ? getArguments().getString("usuarioActualEmail", "")
+                : "";
 
         if (publicacionCargada == null) {
             publicacionRepository.getPublicacionById(publicacionId, new PublicacionRepository.Resultado<Publicacion>() {
@@ -129,19 +137,19 @@ public class DetailFragment extends Fragment {
 
         // Configurar galería de fotos
         listaFotos = publicacion.getImagenes();
-        actualizarGaleria(textFotoViewer, textFotoIndicador, buttonFotoAnterior, buttonFotoSiguiente);
+        actualizarGaleria(imageFotoViewer, textFotoIndicador, buttonFotoAnterior, buttonFotoSiguiente);
 
         buttonFotoAnterior.setOnClickListener(v -> {
             if (fotoActualIndex > 0) {
                 fotoActualIndex--;
-                actualizarGaleria(textFotoViewer, textFotoIndicador, buttonFotoAnterior, buttonFotoSiguiente);
+                actualizarGaleria(imageFotoViewer, textFotoIndicador, buttonFotoAnterior, buttonFotoSiguiente);
             }
         });
 
         buttonFotoSiguiente.setOnClickListener(v -> {
             if (fotoActualIndex < listaFotos.size() - 1) {
                 fotoActualIndex++;
-                actualizarGaleria(textFotoViewer, textFotoIndicador, buttonFotoAnterior, buttonFotoSiguiente);
+                actualizarGaleria(imageFotoViewer, textFotoIndicador, buttonFotoAnterior, buttonFotoSiguiente);
             }
         });
 
@@ -208,21 +216,44 @@ public class DetailFragment extends Fragment {
         });
 
         // Listeners para Vendedor
-        buttonModificar.setOnClickListener(v ->
-                Toast.makeText(
-                        requireContext(),
-                        "Abriendo editor para: " + publicacion.getTitulo(),
-                        Toast.LENGTH_SHORT
-                ).show()
-        );
+        buttonModificar.setOnClickListener(v -> {
+            Bundle bundle = new Bundle();
+            bundle.putString("email", usuarioActualEmail);
+            bundle.putString("publicacionId", publicacion.getId());
 
-        buttonPausar.setOnClickListener(v ->
-                Toast.makeText(
-                        requireContext(),
-                        "La publicación ha sido pausada",
-                        Toast.LENGTH_SHORT
-                ).show()
-        );
+            Navigation.findNavController(v)
+                    .navigate(
+                            R.id.action_detailFragment_to_publicarArticuloFragment,
+                            bundle
+                    );
+        });
+
+        actualizarBotonPausar(buttonPausar, publicacion);
+
+        buttonPausar.setOnClickListener(v -> {
+            boolean estaPausada = "paused".equalsIgnoreCase(publicacion.getEstadoPublicacion());
+            String nuevoEstado = estaPausada ? "active" : "paused";
+
+            publicacionRepository.cambiarEstadoPublicacion(
+                    publicacion.getId(),
+                    nuevoEstado,
+                    new PublicacionRepository.Resultado<Publicacion>() {
+                        @Override public void onSuccess(Publicacion data) {
+                            if (!isAdded()) return;
+                            publicacionCargada = data;
+                            actualizarBotonPausar(buttonPausar, data);
+                            Toast.makeText(
+                                    requireContext(),
+                                    "La publicación ahora está " + data.getEstadoPublicacionVisible().toLowerCase(),
+                                    Toast.LENGTH_SHORT
+                            ).show();
+                        }
+                        @Override public void onError(String mensaje) {
+                            if (isAdded()) Toast.makeText(requireContext(), mensaje, Toast.LENGTH_LONG).show();
+                        }
+                    }
+            );
+        });
 
         // Botón Volver con Navigation Component
         buttonBack.setOnClickListener(v ->
@@ -230,21 +261,32 @@ public class DetailFragment extends Fragment {
         );
     }
 
+    private void actualizarBotonPausar(MaterialButton buttonPausar, Publicacion publicacion) {
+        boolean estaPausada = "paused".equalsIgnoreCase(publicacion.getEstadoPublicacion());
+
+        buttonPausar.setText(estaPausada ? "Reanudar publicación" : "Pausar publicación");
+        buttonPausar.setIconResource(estaPausada ? R.drawable.ic_play_arrow : R.drawable.ic_pause);
+    }
+
     private void actualizarGaleria(
-            TextView textFotoViewer,
+            ImageView imageFotoViewer,
             TextView textFotoIndicador,
             Button buttonFotoAnterior,
             Button buttonFotoSiguiente) {
 
         if (listaFotos == null || listaFotos.isEmpty()) {
-            textFotoViewer.setText("📷 Sin fotos disponibles");
+            imageFotoViewer.setImageDrawable(null);
             textFotoIndicador.setText("Foto 0 de 0");
             buttonFotoAnterior.setEnabled(false);
             buttonFotoSiguiente.setEnabled(false);
             return;
         }
 
-        textFotoViewer.setText(listaFotos.get(fotoActualIndex));
+        Glide.with(this)
+                .load(listaFotos.get(fotoActualIndex))
+                .centerCrop()
+                .into(imageFotoViewer);
+
         textFotoIndicador.setText("Foto " + (fotoActualIndex + 1) + " de " + listaFotos.size());
 
         buttonFotoAnterior.setEnabled(fotoActualIndex > 0);

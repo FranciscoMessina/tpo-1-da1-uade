@@ -91,6 +91,10 @@ public class PublicacionRepository {
         ejecutar(api.cambiarEstado(id, Collections.singletonMap("status", estado)), resultado);
     }
 
+    public void actualizarPublicacion(String id, Publicacion publicacion, Resultado<Publicacion> resultado) {
+        ejecutar(api.actualizarBorrador(id, publicacion), resultado);
+    }
+
     private void publicar(String id, Publicacion publicacion, Resultado<Publicacion> resultado) {
         api.publicar(id).enqueue(new Callback<Void>() {
             @Override public void onResponse(Call<Void> call, Response<Void> response) {

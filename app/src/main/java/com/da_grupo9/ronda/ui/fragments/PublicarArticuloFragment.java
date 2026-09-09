@@ -22,10 +22,6 @@ import androidx.navigation.Navigation;
 import javax.inject.Inject;
 import dagger.hilt.android.AndroidEntryPoint;
 
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
 import java.util.Locale;
 
 @AndroidEntryPoint
@@ -53,6 +49,7 @@ public class PublicarArticuloFragment extends Fragment {
 
     private int pasoActual = 1;
     private String email = "";
+    private String publicacionId;
 
     public PublicarArticuloFragment() {
     }
@@ -98,9 +95,16 @@ public class PublicarArticuloFragment extends Fragment {
 
         if (getArguments() != null) {
             email = getArguments().getString("email", "");
+            publicacionId = getArguments().getString("publicacionId", null);
         }
 
         configurarSpinners();
+
+        if (publicacionId != null && !publicacionId.isEmpty()) {
+            cargarDatosParaEditar(publicacionId);
+            buttonPublicar.setText("Guardar cambios");
+        }
+
         mostrarPaso();
 
         buttonAnterior.setOnClickListener(v -> {
@@ -265,12 +269,40 @@ public class PublicarArticuloFragment extends Fragment {
         textResumen.setText(resumen);
     }
 
+    private void cargarDatosParaEditar(String id) {
+        publicacionRepository.getPublicacionById(id, new PublicacionRepository.Resultado<Publicacion>() {
+            @Override public void onSuccess(Publicacion p) {
+                if (!isAdded()) return;
+
+                editTitulo.setText(p.getTitulo());
+                editDescripcion.setText(p.getDescripcion());
+                editPrecio.setText(String.format(Locale.US, "%.0f", p.getPrecio()));
+                editZona.setText(p.getZona());
+
+                for (int i = 0; i < spinnerCategoria.getCount(); i++) {
+                    if (spinnerCategoria.getItemAtPosition(i).toString().equalsIgnoreCase(p.getCategoria())) {
+                        spinnerCategoria.setSelection(i);
+                        break;
+                    }
+                }
+
+                for (int i = 0; i < spinnerEstado.getCount(); i++) {
+                    if (spinnerEstado.getItemAtPosition(i).toString().equalsIgnoreCase(p.getEstado())) {
+                        spinnerEstado.setSelection(i);
+                        break;
+                    }
+                }
+            }
+            @Override public void onError(String mensaje) {
+                if (isAdded()) Toast.makeText(requireContext(), mensaje, Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+
     private void publicar(View view) {
         if (!validarPaso1() || !validarPaso2()) {
             return;
         }
-
-
 
         Publicacion publicacion = new Publicacion(
                 editTitulo.getText().toString().trim(),
@@ -281,6 +313,30 @@ public class PublicarArticuloFragment extends Fragment {
                 editZona.getText().toString().trim(),
                 7
         );
+
+        if (publicacionId != null && !publicacionId.isEmpty()) {
+            publicacionRepository.actualizarPublicacion(publicacionId, publicacion, new PublicacionRepository.Resultado<Publicacion>() {
+                @Override public void onSuccess(Publicacion data) {
+                    if (!isAdded()) return;
+                    Toast.makeText(requireContext(), "Publicación modificada con éxito", Toast.LENGTH_SHORT).show();
+                    Navigation.findNavController(view).popBackStack();
+                }
+                @Override public void onError(String mensaje) {
+                    if (isAdded()) Toast.makeText(requireContext(), mensaje, Toast.LENGTH_LONG).show();
+                }
+            });
+            return;
+        }
+
+        if (email.trim().isEmpty()) {
+            Toast.makeText(
+                    requireContext(),
+                    "No se pudo identificar el email del usuario",
+                    Toast.LENGTH_SHORT
+            ).show();
+
+            return;
+        }
 
         publicacionRepository.agregarPublicacion(publicacion, new PublicacionRepository.Resultado<Publicacion>() {
             @Override public void onSuccess(Publicacion data) {

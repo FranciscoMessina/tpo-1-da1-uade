@@ -115,6 +115,12 @@
             android:defaultValue=""
             app:argType="string" />
 
+        <argument
+            android:name="publicacionId"
+            app:argType="string"
+            app:nullable="true"
+            android:defaultValue="@null" />
+
     </fragment>
 
     <fragment
@@ -136,8 +142,8 @@
 
         <argument
             android:name="publicacionId"
-            android:defaultValue="1"
-            app:argType="integer" />
+            android:defaultValue=""
+            app:argType="string" />
 
         <argument
             android:name="usuarioActualEmail"
@@ -147,6 +153,10 @@
         <action
             android:id="@+id/action_detailFragment_to_publicProfileFragment"
             app:destination="@id/publicProfileFragment" />
+
+        <action
+            android:id="@+id/action_detailFragment_to_publicarArticuloFragment"
+            app:destination="@id/publicarArticuloFragment" />
 
     </fragment>
 
