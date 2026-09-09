@@ -70,6 +70,7 @@ public class Publicacion implements Serializable {
     }
     public String getZona() { return zone; }
     public String getEstadoPublicacion() { return status; }
+    public boolean isVisibleInPublicFeed() { return status == null || "active".equals(status); }
     public String getEstadoPublicacionVisible() {
         if (status == null) return "Sin estado";
         switch (status) {

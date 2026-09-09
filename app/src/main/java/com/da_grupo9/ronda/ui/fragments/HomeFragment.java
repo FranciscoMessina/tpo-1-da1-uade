@@ -92,15 +92,6 @@ public class HomeFragment extends Fragment {
         botonAnterior = view.findViewById(R.id.botonAnterior);
         botonSiguiente = view.findViewById(R.id.botonSiguiente);
 
-        Button buttonPerfil =
-                view.findViewById(R.id.buttonPerfil);
-
-        Button buttonPublicarArticulo =
-                view.findViewById(R.id.buttonPublicarArticulo);
-
-        Button buttonMisPublicaciones =
-                view.findViewById(R.id.buttonMisPublicaciones);
-
         textoPagina = view.findViewById(R.id.textoPagina);
 
         publicacionesContainer =
@@ -127,35 +118,6 @@ public class HomeFragment extends Fragment {
         botonSiguiente.setOnClickListener(
                 v -> paginaSiguiente()
         );
-
-        buttonPerfil.setOnClickListener(v ->
-                Navigation.findNavController(v)
-                        .navigate(
-                                R.id.action_homeFragment_to_profileFragment
-                        )
-        );
-
-        buttonPublicarArticulo.setOnClickListener(v -> {
-            Bundle bundle = new Bundle();
-            bundle.putString("email", usuarioActualEmail);
-
-            Navigation.findNavController(v)
-                    .navigate(
-                            R.id.action_homeFragment_to_publicarArticuloFragment,
-                            bundle
-                    );
-        });
-
-        buttonMisPublicaciones.setOnClickListener(v -> {
-            Bundle bundle = new Bundle();
-            bundle.putString("email", usuarioActualEmail);
-
-            Navigation.findNavController(v)
-                    .navigate(
-                            R.id.action_homeFragment_to_misPublicacionesFragment,
-                            bundle
-                    );
-        });
     }
 
     private void cargarDatos() {
@@ -165,7 +127,7 @@ public class HomeFragment extends Fragment {
                 if (!isAdded()) return;
                 publicaciones.clear();
                 for (Publicacion publicacion : data) {
-                    if ("active".equals(publicacion.getEstadoPublicacion())) {
+                    if (publicacion.isVisibleInPublicFeed()) {
                         publicaciones.add(publicacion);
                     }
                 }

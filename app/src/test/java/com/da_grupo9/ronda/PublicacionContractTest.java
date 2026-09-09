@@ -1,6 +1,7 @@
 package com.da_grupo9.ronda;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.da_grupo9.ronda.data.model.Publicacion;
@@ -24,5 +25,20 @@ public class PublicacionContractTest {
         assertEquals("Ana", item.getVendedorNombre());
         assertEquals("https://example.test/a.jpg", item.getImagenes().get(0));
         assertTrue(item.isFavorite());
+    }
+
+    @Test public void listadoPublicoSinStatusSigueSiendoVisible() {
+        String json = "{\"id\":\"publication-id\",\"title\":\"Notebook\","
+                + "\"description\":\"Equipo\",\"price\":1250.5}";
+
+        Publicacion item = new Gson().fromJson(json, Publicacion.class);
+
+        assertTrue(item.isVisibleInPublicFeed());
+    }
+
+    @Test public void listadoPublicoNoMuestraEstadosNoActivosExplicitos() {
+        Publicacion item = new Gson().fromJson("{\"status\":\"paused\"}", Publicacion.class);
+
+        assertFalse(item.isVisibleInPublicFeed());
     }
 }
