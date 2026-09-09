@@ -3,6 +3,7 @@ package com.da_grupo9.ronda.ui.fragments;
 import com.da_grupo9.ronda.R;
 import com.da_grupo9.ronda.data.repository.ProfileRepository;
 import com.da_grupo9.ronda.data.repository.PublicacionRepository;
+import com.da_grupo9.ronda.data.repository.AuthRepository;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -13,6 +14,8 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import androidx.fragment.app.Fragment;
+import androidx.navigation.NavOptions;
+import androidx.navigation.Navigation;
 import com.da_grupo9.ronda.data.model.Perfil;
 import javax.inject.Inject;
 import dagger.hilt.android.AndroidEntryPoint;
@@ -20,6 +23,7 @@ import dagger.hilt.android.AndroidEntryPoint;
 @AndroidEntryPoint
 public class ProfileFragment extends Fragment {
     @Inject ProfileRepository profileRepository;
+    @Inject AuthRepository authRepository;
 
     public ProfileFragment() {
     }
@@ -58,6 +62,9 @@ public class ProfileFragment extends Fragment {
 
         Button buttonGuardar =
                 view.findViewById(R.id.buttonGuardarPerfil);
+
+        Button buttonLogout =
+                view.findViewById(R.id.buttonLogout);
 
         profileRepository.getMe(new PublicacionRepository.Resultado<Perfil>() {
             @Override public void onSuccess(Perfil perfil) {
@@ -105,6 +112,25 @@ public class ProfileFragment extends Fragment {
                     @Override public void onError(String mensaje) { mostrarError(mensaje); }
                 });
             }
+        });
+
+        buttonLogout.setOnClickListener(v -> {
+            buttonLogout.setEnabled(false);
+            authRepository.logout(new AuthRepository.Resultado() {
+                @Override public void onSuccess() {
+                    if (!isAdded()) return;
+                    NavOptions options = new NavOptions.Builder()
+                            .setPopUpTo(R.id.nav_graph, true)
+                            .build();
+                    Navigation.findNavController(v).navigate(R.id.loginFragment, null, options);
+                }
+
+                @Override public void onError(String mensaje) {
+                    if (!isAdded()) return;
+                    buttonLogout.setEnabled(true);
+                    mostrarError(mensaje);
+                }
+            });
         });
     }
 

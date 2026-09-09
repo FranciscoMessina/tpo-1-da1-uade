@@ -14,11 +14,15 @@ import androidx.navigation.fragment.NavHostFragment;
 import androidx.navigation.ui.NavigationUI;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.da_grupo9.ronda.data.repository.AuthRepository;
+
+import javax.inject.Inject;
 
 import dagger.hilt.android.AndroidEntryPoint;
 
 @AndroidEntryPoint
 public class MainActivity extends AppCompatActivity {
+    @Inject AuthRepository authRepository;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,6 +72,20 @@ public class MainActivity extends AppCompatActivity {
         NavController navController = navHostFragment.getNavController();
 
         NavigationUI.setupWithNavController(bottomNavigationView, navController);
+
+        if (savedInstanceState == null) {
+            navHostFragmentView.setVisibility(View.INVISIBLE);
+            authRepository.validarSesionGuardada(new AuthRepository.Resultado() {
+                @Override public void onSuccess() {
+                    navController.navigate(R.id.action_loginFragment_to_homeFragment);
+                    navHostFragmentView.setVisibility(View.VISIBLE);
+                }
+
+                @Override public void onError(String mensaje) {
+                    navHostFragmentView.setVisibility(View.VISIBLE);
+                }
+            });
+        }
 
         navController.addOnDestinationChangedListener((controller, destination, arguments) -> {
             int destinationId = destination.getId();
