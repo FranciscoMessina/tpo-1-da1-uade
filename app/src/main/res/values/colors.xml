@@ -2,4 +2,50 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
+    <!-- Material 3 palette — warm coral/orange seed -->
+    <color name="md_theme_light_primary">#B84A1E</color>
+    <color name="md_theme_light_onPrimary">#FFFFFF</color>
+    <color name="md_theme_light_primaryContainer">#FFDBC9</color>
+    <color name="md_theme_light_onPrimaryContainer">#3A0D00</color>
+    <color name="md_theme_light_secondary">#77574A</color>
+    <color name="md_theme_light_onSecondary">#FFFFFF</color>
+    <color name="md_theme_light_secondaryContainer">#F6DDD1</color>
+    <color name="md_theme_light_onSecondaryContainer">#2C160C</color>
+    <color name="md_theme_light_background">#FFFBF8</color>
+    <color name="md_theme_light_onBackground">#21190F</color>
+    <color name="md_theme_light_surface">#FFFBF8</color>
+    <color name="md_theme_light_onSurface">#21190F</color>
+    <color name="md_theme_light_surfaceVariant">#F5DED3</color>
+    <color name="md_theme_light_onSurfaceVariant">#53433A</color>
+    <color name="md_theme_light_outline">#85736A</color>
+    <color name="md_theme_light_error">#BA1A1A</color>
+    <color name="md_theme_light_onError">#FFFFFF</color>
+    <color name="md_theme_light_errorContainer">#FFDAD6</color>
+    <color name="md_theme_light_onErrorContainer">#410002</color>
+
+    <color name="md_theme_dark_primary">#FFB68C</color>
+    <color name="md_theme_dark_onPrimary">#5A1E00</color>
+    <color name="md_theme_dark_primaryContainer">#7F2C00</color>
+    <color name="md_theme_dark_onPrimaryContainer">#FFDBC9</color>
+    <color name="md_theme_dark_secondary">#E5BFAE</color>
+    <color name="md_theme_dark_onSecondary">#422B20</color>
+    <color name="md_theme_dark_secondaryContainer">#5A4034</color>
+    <color name="md_theme_dark_onSecondaryContainer">#F6DDD1</color>
+    <color name="md_theme_dark_background">#19120C</color>
+    <color name="md_theme_dark_onBackground">#EFE0D6</color>
+    <color name="md_theme_dark_surface">#19120C</color>
+    <color name="md_theme_dark_onSurface">#EFE0D6</color>
+    <color name="md_theme_dark_surfaceVariant">#53433A</color>
+    <color name="md_theme_dark_onSurfaceVariant">#D8C2B6</color>
+    <color name="md_theme_dark_outline">#A08D82</color>
+    <color name="md_theme_dark_error">#FFB4AB</color>
+    <color name="md_theme_dark_onError">#690005</color>
+    <color name="md_theme_dark_errorContainer">#93000A</color>
+    <color name="md_theme_dark_onErrorContainer">#FFDAD6</color>
+
+    <!-- Semantic -->
+    <color name="price_light">#2E7D32</color>
+    <color name="price_dark">#81C784</color>
+    <color name="price">@color/price_light</color>
 </resources>

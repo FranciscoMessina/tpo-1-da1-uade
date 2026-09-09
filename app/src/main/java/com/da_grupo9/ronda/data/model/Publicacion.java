@@ -13,9 +13,10 @@ public class Publicacion implements Serializable {
     private String title;
     private String description;
     private String category;
-    private Integer priceCents;
+    private Long priceCents;
     private Double price;
     private String itemCondition;
+    private String condition;
     private String zone;
     private String status;
     private int draftStep;
@@ -30,12 +31,12 @@ public class Publicacion implements Serializable {
     private Boolean isFavorite;
     private Actions actions;
 
-    public Publicacion(String title, String description, int priceCents,
-                       String itemCondition, String category, String zone, int draftStep) {
+    public Publicacion(String title, String description, double price,
+                       String condition, String category, String zone, int draftStep) {
         this.title = title;
         this.description = description;
-        this.priceCents = priceCents;
-        this.itemCondition = itemCondition;
+        this.price = price;
+        this.condition = condition;
         this.category = category;
         this.zone = zone;
         this.draftStep = draftStep;
@@ -60,12 +61,13 @@ public class Publicacion implements Serializable {
         }
     }
     public String getEstado() {
-        if (itemCondition == null) return "Sin especificar";
-        switch (itemCondition) {
+        String conditionValue = itemCondition != null ? itemCondition : condition;
+        if (conditionValue == null) return "Sin especificar";
+        switch (conditionValue) {
             case "new": return "Nuevo";
             case "like_new": return "Como nuevo";
             case "used": return "Usado";
-            default: return itemCondition;
+            default: return conditionValue;
         }
     }
     public String getZona() { return zone; }

@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F5F5F5"
-    android:padding="16dp">
+    android:background="?attr/colorSurface"
+    android:padding="@dimen/spacing_md">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -11,236 +12,258 @@
         android:orientation="vertical">
 
         <!-- Botón Volver -->
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/buttonBack"
+            style="@style/Widget.Ronda.Button.Text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="12dp"
-            android:text="← Volver a publicaciones" />
+            android:layout_marginBottom="@dimen/spacing_sm"
+            app:icon="@drawable/ic_arrow_back"
+            app:iconGravity="textStart"
+            android:text="Volver a publicaciones" />
 
         <!-- Galería de fotos -->
-        <LinearLayout
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="#E0E0E0"
-            android:orientation="vertical"
-            android:padding="16dp">
-
-            <TextView
-                android:id="@+id/textFotoViewer"
-                android:layout_width="match_parent"
-                android:layout_height="180dp"
-                android:background="#CCCCCC"
-                android:gravity="center"
-                android:padding="12dp"
-                android:text="📱 Foto 1"
-                android:textColor="#333333"
-                android:textSize="18sp"
-                android:textStyle="bold" />
+            android:layout_height="wrap_content">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:gravity="center"
-                android:orientation="horizontal">
-
-                <Button
-                    android:id="@+id/buttonFotoAnterior"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="◀ Anterior" />
+                android:orientation="vertical">
 
                 <TextView
-                    android:id="@+id/textFotoIndicador"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="16dp"
-                    android:layout_marginEnd="16dp"
-                    android:text="Foto 1 de 3"
-                    android:textColor="#333333"
-                    android:textSize="14sp" />
+                    android:id="@+id/textFotoViewer"
+                    android:layout_width="match_parent"
+                    android:layout_height="180dp"
+                    android:background="?attr/colorSurfaceVariant"
+                    android:gravity="center"
+                    android:padding="@dimen/spacing_sm"
+                    android:text="Foto 1"
+                    android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
+                    android:textColor="?attr/colorOnSurfaceVariant" />
 
-                <Button
-                    android:id="@+id/buttonFotoSiguiente"
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Siguiente ▶" />
+                    android:layout_marginTop="@dimen/spacing_sm"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/buttonFotoAnterior"
+                        style="@style/Widget.Material3.Button.IconButton.Outlined"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        app:icon="@drawable/ic_chevron_left"
+                        android:contentDescription="Foto anterior" />
+
+                    <TextView
+                        android:id="@+id/textFotoIndicador"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:text="Foto 1 de 3"
+                        android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+                        android:textColor="?attr/colorOnSurfaceVariant" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/buttonFotoSiguiente"
+                        style="@style/Widget.Material3.Button.IconButton.Outlined"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        app:icon="@drawable/ic_chevron_right"
+                        android:contentDescription="Foto siguiente" />
+
+                </LinearLayout>
 
             </LinearLayout>
 
-        </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
 
         <!-- Información principal del artículo -->
         <TextView
             android:id="@+id/textDetailTitulo"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="@dimen/spacing_md"
             android:text="Título del Artículo"
-            android:textColor="#000000"
-            android:textSize="22sp"
-            android:textStyle="bold" />
+            android:textAppearance="@style/TextAppearance.Material3.HeadlineSmall"
+            android:textColor="?attr/colorOnSurface" />
 
         <TextView
             android:id="@+id/textDetailPrecio"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
+            android:layout_marginTop="@dimen/spacing_xs"
             android:text="Precio: $0"
-            android:textColor="#2E7D32"
-            android:textSize="22sp"
-            android:textStyle="bold" />
+            android:textAppearance="@style/TextAppearance.Material3.TitleLarge"
+            android:textColor="@color/price" />
 
         <!-- Ficha técnica rápida -->
-        <LinearLayout
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:background="#FFFFFF"
-            android:orientation="vertical"
-            android:padding="12dp">
+            android:layout_marginTop="@dimen/spacing_sm">
 
-            <TextView
-                android:id="@+id/textDetailEstado"
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Estado: -"
-                android:textColor="#424242"
-                android:textSize="15sp" />
+                android:orientation="vertical">
 
-            <TextView
-                android:id="@+id/textDetailCategoria"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:text="Categoría: -"
-                android:textColor="#424242"
-                android:textSize="15sp" />
+                <TextView
+                    android:id="@+id/textDetailEstado"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Estado: -"
+                    android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+                    android:textColor="?attr/colorOnSurface" />
 
-            <TextView
-                android:id="@+id/textDetailZona"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:text="Zona de entrega: -"
-                android:textColor="#424242"
-                android:textSize="15sp" />
+                <TextView
+                    android:id="@+id/textDetailCategoria"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_xs"
+                    android:text="Categoría: -"
+                    android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+                    android:textColor="?attr/colorOnSurface" />
 
-            <TextView
-                android:id="@+id/textDetailFecha"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:text="Fecha de publicación: -"
-                android:textColor="#757575"
-                android:textSize="14sp" />
+                <TextView
+                    android:id="@+id/textDetailZona"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_xs"
+                    android:text="Zona de entrega: -"
+                    android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+                    android:textColor="?attr/colorOnSurface" />
 
-        </LinearLayout>
+                <TextView
+                    android:id="@+id/textDetailFecha"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_xs"
+                    android:text="Fecha de publicación: -"
+                    android:textAppearance="@style/TextAppearance.Material3.BodySmall"
+                    android:textColor="?attr/colorOnSurfaceVariant" />
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
 
         <!-- Descripción Completa -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="@dimen/spacing_md"
             android:text="Descripción"
-            android:textColor="#000000"
-            android:textSize="17sp"
-            android:textStyle="bold" />
+            android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
+            android:textColor="?attr/colorOnSurface" />
 
-        <TextView
-            android:id="@+id/textDetailDescripcion"
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:background="#FFFFFF"
-            android:padding="12dp"
-            android:text="Descripción completa del artículo..."
-            android:textColor="#333333"
-            android:textSize="15sp" />
+            android:layout_marginTop="@dimen/spacing_xs">
+
+            <TextView
+                android:id="@+id/textDetailDescripcion"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Descripción completa del artículo..."
+                android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+                android:textColor="?attr/colorOnSurface" />
+
+        </com.google.android.material.card.MaterialCardView>
 
         <!-- Datos del Vendedor -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="Información del Vendedor"
-            android:textColor="#000000"
-            android:textSize="17sp"
-            android:textStyle="bold" />
+            android:layout_marginTop="@dimen/spacing_md"
+            android:text="Información del vendedor"
+            android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
+            android:textColor="?attr/colorOnSurface" />
 
-        <LinearLayout
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:background="#FFFFFF"
-            android:orientation="vertical"
-            android:padding="12dp">
+            android:layout_marginTop="@dimen/spacing_xs">
 
-            <TextView
-                android:id="@+id/textVendedorNombre"
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Vendedor: Nombre Apellido"
-                android:textColor="#000000"
-                android:textSize="16sp"
-                android:textStyle="bold" />
+                android:orientation="vertical">
 
-            <TextView
-                android:id="@+id/textVendedorReputacion"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:text="Reputación: ★ 4.9 (42 ventas)"
-                android:textColor="#E65100"
-                android:textSize="14sp" />
+                <TextView
+                    android:id="@+id/textVendedorNombre"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Vendedor: Nombre Apellido"
+                    android:textAppearance="@style/TextAppearance.Material3.TitleSmall"
+                    android:textColor="?attr/colorOnSurface" />
 
-            <Button
-                android:id="@+id/buttonVerPerfilVendedor"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="Ver perfil público" />
+                <TextView
+                    android:id="@+id/textVendedorReputacion"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_xs"
+                    android:text="Reputación: ★ 4.9 (42 ventas)"
+                    android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+                    android:textColor="?attr/colorPrimary" />
 
-        </LinearLayout>
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/buttonVerPerfilVendedor"
+                    style="@style/Widget.Ronda.Button.Outlined"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_sm"
+                    android:text="Ver perfil público" />
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
 
         <!-- SECCIÓN: Acciones para Interesado / Comprador -->
         <LinearLayout
             android:id="@+id/containerAccionesComprador"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:layout_marginBottom="24dp"
+            android:layout_marginTop="@dimen/spacing_lg"
+            android:layout_marginBottom="@dimen/spacing_lg"
             android:orientation="vertical">
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp"
+                android:layout_marginBottom="@dimen/spacing_sm"
                 android:text="Acciones disponibles"
-                android:textColor="#000000"
-                android:textSize="16sp"
-                android:textStyle="bold" />
+                android:textAppearance="@style/TextAppearance.Material3.TitleSmall"
+                android:textColor="?attr/colorOnSurface" />
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/buttonPreguntar"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="💬 Preguntar al vendedor" />
+                app:icon="@drawable/ic_chat"
+                android:text="Preguntar al vendedor" />
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/buttonOfertar"
+                style="@style/Widget.Ronda.Button.Outlined"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:text="💰 Hacer una oferta de precio" />
+                android:layout_marginTop="@dimen/spacing_xs"
+                app:icon="@drawable/ic_local_offer"
+                android:text="Hacer una oferta de precio" />
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/buttonGuardar"
+                style="@style/Widget.Ronda.Button.Text"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:text="⭐ Guardar en favoritos" />
+                android:layout_marginTop="@dimen/spacing_xs"
+                app:icon="@drawable/ic_star"
+                android:text="Guardar en favoritos" />
 
         </LinearLayout>
 
@@ -249,42 +272,44 @@
             android:id="@+id/containerAccionesVendedor"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:layout_marginBottom="24dp"
-            android:background="#FFF9C4"
+            android:layout_marginTop="@dimen/spacing_lg"
+            android:layout_marginBottom="@dimen/spacing_lg"
+            android:background="@drawable/bg_rounded_primary_container"
             android:orientation="vertical"
-            android:padding="12dp"
+            android:padding="@dimen/spacing_md"
             android:visibility="gone">
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="📌 Gestión de tu publicación"
-                android:textColor="#5D4037"
-                android:textSize="16sp"
-                android:textStyle="bold" />
+                android:text="Gestión de tu publicación"
+                android:textAppearance="@style/TextAppearance.Material3.TitleSmall"
+                android:textColor="?attr/colorOnPrimaryContainer" />
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
+                android:layout_marginTop="@dimen/spacing_xs"
                 android:text="Como sos el autor de esta publicación, podés administrarla:"
-                android:textColor="#5D4037"
-                android:textSize="13sp" />
+                android:textAppearance="@style/TextAppearance.Material3.BodySmall"
+                android:textColor="?attr/colorOnPrimaryContainer" />
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/buttonModificar"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="✏️ Modificar publicación" />
+                android:layout_marginTop="@dimen/spacing_sm"
+                app:icon="@drawable/ic_edit"
+                android:text="Modificar publicación" />
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/buttonPausar"
+                style="@style/Widget.Ronda.Button.Outlined"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:text="⏸️ Pausar publicación" />
+                android:layout_marginTop="@dimen/spacing_xs"
+                app:icon="@drawable/ic_pause"
+                android:text="Pausar publicación" />
 
         </LinearLayout>
 

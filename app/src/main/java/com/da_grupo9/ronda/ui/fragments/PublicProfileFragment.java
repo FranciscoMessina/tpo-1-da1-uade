@@ -4,8 +4,11 @@ import com.da_grupo9.ronda.R;
 import com.da_grupo9.ronda.data.model.Publicacion;
 import com.da_grupo9.ronda.data.model.PublicUser;
 import com.da_grupo9.ronda.data.repository.PublicacionRepository;
+import com.google.android.material.color.MaterialColors;
 
+import android.graphics.Color;
 import android.os.Bundle;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -95,15 +98,15 @@ public class PublicProfileFragment extends Fragment {
             }
             @Override public void onError(String mensaje) {
                 if (!isAdded()) return;
-                TextView error = new TextView(requireContext());
-                error.setText(mensaje);
-                container.addView(error);
+                container.addView(crearMensajeVacio(mensaje));
             }
         });
     }
 
     private void renderizarPublicacionesActivas(List<Publicacion> publicaciones, LinearLayout container) {
         int cantidad = 0;
+
+        int colorOnSurface = MaterialColors.getColor(requireContext(), com.google.android.material.R.attr.colorOnSurface, Color.BLACK);
 
         for (Publicacion publicacion : publicaciones) {
 
@@ -119,8 +122,9 @@ public class PublicProfileFragment extends Fragment {
                                 + String.format("%,.0f", publicacion.getPrecio())
                 );
 
-                publicacionView.setTextSize(16);
-                publicacionView.setPadding(0, 10, 0, 10);
+                publicacionView.setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_BodyLarge);
+                publicacionView.setTextColor(colorOnSurface);
+                publicacionView.setPaddingRelative(0, dpToPx(6), 0, dpToPx(6));
 
                 container.addView(publicacionView);
 
@@ -129,17 +133,25 @@ public class PublicProfileFragment extends Fragment {
         }
 
         if (cantidad == 0) {
-
-            TextView mensaje =
-                    new TextView(requireContext());
-
-            mensaje.setText(
-                    "El usuario no tiene publicaciones activas."
-            );
-
-            mensaje.setTextSize(16);
-
-            container.addView(mensaje);
+            container.addView(crearMensajeVacio("El usuario no tiene publicaciones activas."));
         }
+    }
+
+    private TextView crearMensajeVacio(String texto) {
+        TextView mensaje = new TextView(requireContext());
+
+        mensaje.setText(texto);
+        mensaje.setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_BodyLarge);
+        mensaje.setTextColor(
+                MaterialColors.getColor(requireContext(), com.google.android.material.R.attr.colorOnSurfaceVariant, Color.DKGRAY)
+        );
+        mensaje.setGravity(Gravity.CENTER);
+        mensaje.setPadding(dpToPx(16), dpToPx(24), dpToPx(16), dpToPx(24));
+
+        return mensaje;
+    }
+
+    private int dpToPx(int dp) {
+        return Math.round(dp * getResources().getDisplayMetrics().density);
     }
 }

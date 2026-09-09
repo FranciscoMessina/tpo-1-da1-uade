@@ -19,7 +19,7 @@ public interface PublicacionApi {
     @GET("me/publications") Call<PublicacionesResponse> getPublicacionesPropias();
     @POST("publications/drafts") Call<Publicacion> crearBorrador();
     @PATCH("publications/{id}") Call<Publicacion> actualizarBorrador(@Path("id") String id, @Body Publicacion publicacion);
-    @POST("publications/{id}/publish") Call<Publicacion> publicar(@Path("id") String id);
+    @POST("publications/{id}/publish") Call<Void> publicar(@Path("id") String id);
     @PATCH("publications/{id}/status")
     Call<Publicacion> cambiarEstado(@Path("id") String id, @Body Map<String, String> estado);
 }

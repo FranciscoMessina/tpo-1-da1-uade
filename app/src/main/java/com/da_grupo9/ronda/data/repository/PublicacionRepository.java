@@ -64,13 +64,16 @@ public class PublicacionRepository {
         api.crearBorrador().enqueue(new Callback<Publicacion>() {
             @Override public void onResponse(Call<Publicacion> call, Response<Publicacion> response) {
                 if (!response.isSuccessful() || response.body() == null) {
+
                     resultado.onError("No se pudo crear el borrador (código " + response.code() + ")");
                     return;
                 }
                 String id = response.body().getId();
                 api.actualizarBorrador(id, publicacion).enqueue(new Callback<Publicacion>() {
                     @Override public void onResponse(Call<Publicacion> call, Response<Publicacion> updateResponse) {
-                        if (updateResponse.isSuccessful()) ejecutar(api.publicar(id), resultado);
+                        if (updateResponse.isSuccessful()) {
+                            publicar(id, updateResponse.body() != null ? updateResponse.body() : publicacion, resultado);
+                        }
                         else resultado.onError("No se pudo completar el borrador (código " + updateResponse.code() + ")");
                     }
                     @Override public void onFailure(Call<Publicacion> call, Throwable error) {
@@ -86,6 +89,21 @@ public class PublicacionRepository {
 
     public void cambiarEstadoPublicacion(String id, String estado, Resultado<Publicacion> resultado) {
         ejecutar(api.cambiarEstado(id, Collections.singletonMap("status", estado)), resultado);
+    }
+
+    private void publicar(String id, Publicacion publicacion, Resultado<Publicacion> resultado) {
+        api.publicar(id).enqueue(new Callback<Void>() {
+            @Override public void onResponse(Call<Void> call, Response<Void> response) {
+                if (response.isSuccessful()) resultado.onSuccess(publicacion);
+                else resultado.onError("No se pudo publicar (código " + response.code() + ")");
+            }
+
+            @Override public void onFailure(Call<Void> call, Throwable error) {
+                resultado.onError(error instanceof IOException
+                        ? "No se pudo conectar con el servidor"
+                        : "No se pudo procesar la respuesta del servidor");
+            }
+        });
     }
 
     private <T> void ejecutar(Call<T> call, Resultado<T> resultado) {

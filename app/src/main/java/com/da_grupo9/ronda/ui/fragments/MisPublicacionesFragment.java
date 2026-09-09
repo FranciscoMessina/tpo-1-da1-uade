@@ -3,13 +3,16 @@ package com.da_grupo9.ronda.ui.fragments;
 import com.da_grupo9.ronda.R;
 import com.da_grupo9.ronda.data.model.Publicacion;
 import com.da_grupo9.ronda.data.repository.PublicacionRepository;
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.card.MaterialCardView;
+import com.google.android.material.color.MaterialColors;
 
 import android.graphics.Color;
 import android.os.Bundle;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -71,9 +74,7 @@ public class MisPublicacionesFragment extends Fragment {
             }
             @Override public void onError(String mensaje) {
                 if (!isAdded()) return;
-                TextView error = new TextView(requireContext());
-                error.setText(mensaje);
-                publicacionesContainer.addView(error);
+                publicacionesContainer.addView(crearMensajeVacio(mensaje));
             }
         });
     }
@@ -81,10 +82,7 @@ public class MisPublicacionesFragment extends Fragment {
     private void renderizarPublicaciones(List<Publicacion> publicaciones) {
         publicacionesContainer.removeAllViews();
         if (publicaciones.isEmpty()) {
-            TextView mensaje = new TextView(requireContext());
-            mensaje.setText("Todavía no tenés publicaciones.");
-            mensaje.setTextSize(18);
-            publicacionesContainer.addView(mensaje);
+            publicacionesContainer.addView(crearMensajeVacio("Todavía no tenés publicaciones."));
             return;
         }
 
@@ -94,42 +92,42 @@ public class MisPublicacionesFragment extends Fragment {
     }
 
     private void agregarPublicacion(Publicacion publicacion) {
-        LinearLayout tarjeta = new LinearLayout(requireContext());
-        tarjeta.setOrientation(LinearLayout.VERTICAL);
-        tarjeta.setPadding(20, 20, 20, 20);
-        tarjeta.setBackgroundColor(Color.LTGRAY);
+        MaterialCardView tarjeta = crearTarjeta();
 
-        LinearLayout.LayoutParams parametros =
-                new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT
-                );
+        LinearLayout contenido = new LinearLayout(requireContext());
+        contenido.setOrientation(LinearLayout.VERTICAL);
+        tarjeta.addView(contenido);
 
-        parametros.setMargins(0, 0, 0, 16);
-        tarjeta.setLayoutParams(parametros);
+        int colorOnSurface = MaterialColors.getColor(requireContext(), com.google.android.material.R.attr.colorOnSurface, Color.BLACK);
+        int colorOnSurfaceVariant = MaterialColors.getColor(requireContext(), com.google.android.material.R.attr.colorOnSurfaceVariant, Color.DKGRAY);
+        int colorPrice = androidx.core.content.ContextCompat.getColor(requireContext(), R.color.price);
 
         TextView titulo = new TextView(requireContext());
         titulo.setText(publicacion.getTitulo());
-        titulo.setTextSize(20);
-        titulo.setTextColor(Color.BLACK);
+        titulo.setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_TitleMedium);
+        titulo.setTextColor(colorOnSurface);
 
         TextView precio = new TextView(requireContext());
         precio.setText("Precio: $" + publicacion.getPrecio());
-        precio.setTextSize(16);
-        precio.setTextColor(Color.DKGRAY);
+        precio.setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_TitleSmall);
+        precio.setTextColor(colorPrice);
+        precio.setPaddingRelative(0, dpToPx(4), 0, 0);
 
         TextView estado = new TextView(requireContext());
         estado.setText("Estado de publicación: " + publicacion.getEstadoPublicacionVisible());
-        estado.setTextSize(16);
-        estado.setTextColor(Color.DKGRAY);
+        estado.setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_BodyMedium);
+        estado.setTextColor(colorOnSurfaceVariant);
+        estado.setPaddingRelative(0, dpToPx(4), 0, 0);
 
-        tarjeta.addView(titulo);
-        tarjeta.addView(precio);
-        tarjeta.addView(estado);
+        contenido.addView(titulo);
+        contenido.addView(precio);
+        contenido.addView(estado);
 
         if ("active".equals(publicacion.getEstadoPublicacion())) {
-            Button buttonPausar = new Button(requireContext());
+            MaterialButton buttonPausar = new MaterialButton(requireContext(), null, com.google.android.material.R.attr.materialButtonOutlinedStyle);
             buttonPausar.setText("Pausar");
+            buttonPausar.setIcon(androidx.core.content.ContextCompat.getDrawable(requireContext(), R.drawable.ic_pause));
+            buttonPausar.setLayoutParams(botonAccionParams());
             buttonPausar.setOnClickListener(v -> {
                 publicacionRepository.cambiarEstadoPublicacion(
                         publicacion.getId(),
@@ -137,10 +135,12 @@ public class MisPublicacionesFragment extends Fragment {
                         recargarAlFinalizar()
                 );
             });
-            tarjeta.addView(buttonPausar);
+            contenido.addView(buttonPausar);
         } else if ("paused".equals(publicacion.getEstadoPublicacion())) {
-            Button buttonReactivar = new Button(requireContext());
+            MaterialButton buttonReactivar = new MaterialButton(requireContext(), null, com.google.android.material.R.attr.materialButtonOutlinedStyle);
             buttonReactivar.setText("Reactivar");
+            buttonReactivar.setIcon(androidx.core.content.ContextCompat.getDrawable(requireContext(), R.drawable.ic_play_arrow));
+            buttonReactivar.setLayoutParams(botonAccionParams());
             buttonReactivar.setOnClickListener(v -> {
                 publicacionRepository.cambiarEstadoPublicacion(
                         publicacion.getId(),
@@ -148,10 +148,55 @@ public class MisPublicacionesFragment extends Fragment {
                         recargarAlFinalizar()
                 );
             });
-            tarjeta.addView(buttonReactivar);
+            contenido.addView(buttonReactivar);
         }
 
         publicacionesContainer.addView(tarjeta);
+    }
+
+    private LinearLayout.LayoutParams botonAccionParams() {
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        params.topMargin = dpToPx(12);
+        return params;
+    }
+
+    private MaterialCardView crearTarjeta() {
+        MaterialCardView tarjeta = new MaterialCardView(requireContext());
+
+        tarjeta.setRadius(getResources().getDimension(R.dimen.corner_radius_card));
+        tarjeta.setCardElevation(getResources().getDimension(R.dimen.card_elevation));
+        tarjeta.setContentPadding(dpToPx(16), dpToPx(16), dpToPx(16), dpToPx(16));
+
+        LinearLayout.LayoutParams parametros = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+
+        parametros.setMargins(0, 0, 0, dpToPx(12));
+        tarjeta.setLayoutParams(parametros);
+
+        return tarjeta;
+    }
+
+    private TextView crearMensajeVacio(String texto) {
+        TextView mensaje = new TextView(requireContext());
+
+        mensaje.setText(texto);
+        mensaje.setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_BodyLarge);
+        mensaje.setTextColor(
+                MaterialColors.getColor(requireContext(), com.google.android.material.R.attr.colorOnSurfaceVariant, Color.DKGRAY)
+        );
+        mensaje.setGravity(Gravity.CENTER);
+        mensaje.setPadding(dpToPx(16), dpToPx(32), dpToPx(16), dpToPx(32));
+
+        return mensaje;
+    }
+
+    private int dpToPx(int dp) {
+        return Math.round(dp * getResources().getDisplayMetrics().density);
     }
 
     private PublicacionRepository.Resultado<Publicacion> recargarAlFinalizar() {

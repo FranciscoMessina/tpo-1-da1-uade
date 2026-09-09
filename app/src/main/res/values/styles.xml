@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="Widget.Ronda.Button" parent="Widget.Material3.Button">
+        <item name="cornerRadius">@dimen/corner_radius_button</item>
+        <item name="android:insetTop">4dp</item>
+        <item name="android:insetBottom">4dp</item>
+    </style>
+
+    <style name="Widget.Ronda.Button.Outlined" parent="Widget.Material3.Button.OutlinedButton">
+        <item name="cornerRadius">@dimen/corner_radius_button</item>
+        <item name="android:insetTop">4dp</item>
+        <item name="android:insetBottom">4dp</item>
+    </style>
+
+    <style name="Widget.Ronda.Button.Text" parent="Widget.Material3.Button.TextButton">
+        <item name="android:insetTop">4dp</item>
+        <item name="android:insetBottom">4dp</item>
+    </style>
+
+    <style name="Widget.Ronda.TextInputLayout" parent="Widget.Material3.TextInputLayout.OutlinedBox">
+        <item name="shapeAppearanceOverlay">@style/ShapeAppearance.Ronda.TextField</item>
+    </style>
+
+    <style name="ShapeAppearance.Ronda.TextField" parent="">
+        <item name="cornerSize">12dp</item>
+    </style>
+
+    <style name="Widget.Ronda.Card" parent="Widget.Material3.CardView.Elevated">
+        <item name="cardCornerRadius">@dimen/corner_radius_card</item>
+        <item name="cardElevation">@dimen/card_elevation</item>
+        <item name="contentPadding">@dimen/spacing_md</item>
+        <item name="cardBackgroundColor">?attr/colorSurface</item>
+    </style>
+
+</resources>

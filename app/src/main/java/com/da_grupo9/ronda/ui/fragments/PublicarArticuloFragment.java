@@ -165,8 +165,10 @@ public class PublicarArticuloFragment extends Fragment {
     }
 
     private boolean validarPaso1() {
-        if (editTitulo.getText().toString().trim().isEmpty()
-                || editDescripcion.getText().toString().trim().isEmpty()) {
+        String titulo = editTitulo.getText().toString().trim();
+        String descripcion = editDescripcion.getText().toString().trim();
+
+        if (titulo.isEmpty() || descripcion.isEmpty()) {
 
             Toast.makeText(
                     requireContext(),
@@ -174,6 +176,24 @@ public class PublicarArticuloFragment extends Fragment {
                     Toast.LENGTH_SHORT
             ).show();
 
+            return false;
+        }
+
+        if (titulo.length() < 3 || titulo.length() > 120) {
+            Toast.makeText(
+                    requireContext(),
+                    "El título debe tener entre 3 y 120 caracteres",
+                    Toast.LENGTH_SHORT
+            ).show();
+            return false;
+        }
+
+        if (descripcion.length() < 10 || descripcion.length() > 5000) {
+            Toast.makeText(
+                    requireContext(),
+                    "La descripción debe tener entre 10 y 5000 caracteres",
+                    Toast.LENGTH_SHORT
+            ).show();
             return false;
         }
 
@@ -250,24 +270,16 @@ public class PublicarArticuloFragment extends Fragment {
             return;
         }
 
-        if (email.trim().isEmpty()) {
-            Toast.makeText(
-                    requireContext(),
-                    "No se pudo identificar el email del usuario",
-                    Toast.LENGTH_SHORT
-            ).show();
 
-            return;
-        }
 
         Publicacion publicacion = new Publicacion(
                 editTitulo.getText().toString().trim(),
                 editDescripcion.getText().toString().trim(),
-                (int) Math.round(Double.parseDouble(editPrecio.getText().toString().trim()) * 100),
+                Double.parseDouble(editPrecio.getText().toString().trim()),
                 conditionApiValue(spinnerEstado.getSelectedItemPosition()),
                 categoryApiValue(spinnerCategoria.getSelectedItemPosition()),
                 editZona.getText().toString().trim(),
-                3
+                7
         );
 
         publicacionRepository.agregarPublicacion(publicacion, new PublicacionRepository.Resultado<Publicacion>() {

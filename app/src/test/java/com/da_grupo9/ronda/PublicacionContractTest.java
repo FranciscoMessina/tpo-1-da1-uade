@@ -2,10 +2,14 @@ package com.da_grupo9.ronda;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import com.da_grupo9.ronda.data.model.Publicacion;
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import org.junit.Test;
 
 public class PublicacionContractTest {
@@ -40,5 +44,28 @@ public class PublicacionContractTest {
         Publicacion item = new Gson().fromJson("{\"status\":\"paused\"}", Publicacion.class);
 
         assertFalse(item.isVisibleInPublicFeed());
+    }
+
+    @Test public void deserializaPrecioEnCentavosLegadoMayorQueInteger() {
+        Publicacion item = new Gson().fromJson(
+                "{\"priceCents\":12312321300}", Publicacion.class
+        );
+
+        assertEquals(123123213.0, item.getPrecio(), 0.001);
+    }
+
+    @Test public void serializaActualizacionDeBorradorSegunContrato() {
+        Publicacion item = new Publicacion(
+                "Notebook", "Notebook en excelente estado", 1250.50,
+                "like_new", "electronics", "Palermo", 3
+        );
+
+        JsonObject json = JsonParser.parseString(new Gson().toJson(item)).getAsJsonObject();
+
+        assertEquals(1250.50, json.get("price").getAsDouble(), 0.001);
+        assertEquals("like_new", json.get("condition").getAsString());
+        assertNotNull(json.get("title"));
+        assertNull(json.get("priceCents"));
+        assertNull(json.get("itemCondition"));
     }
 }
