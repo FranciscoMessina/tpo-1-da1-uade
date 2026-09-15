@@ -3,6 +3,7 @@ package com.da_grupo9.ronda.ui.fragments;
 import com.da_grupo9.ronda.R;
 import com.da_grupo9.ronda.data.model.Publicacion;
 import com.da_grupo9.ronda.data.repository.PublicacionRepository;
+import com.da_grupo9.ronda.util.NetworkMonitor;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -14,6 +15,8 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 
@@ -34,8 +37,42 @@ public class DetailFragment extends Fragment {
     private int fotoActualIndex = 0;
     private List<String> listaFotos;
 
+    private String publicacionId = "";
+    private String usuarioActualEmail = "";
+
+    // Vistas
+    private View bannerDetailOffline;
+    private ImageView imageFotoViewer;
+    private TextView textFotoIndicador;
+    private Button buttonFotoAnterior;
+    private Button buttonFotoSiguiente;
+
+    private TextView textDetailTitulo;
+    private TextView textDetailPrecio;
+    private TextView textDetailEstado;
+    private TextView textDetailCategoria;
+    private TextView textDetailZona;
+    private TextView textDetailFecha;
+    private TextView textDetailDescripcion;
+
+    private TextView textVendedorNombre;
+    private TextView textVendedorReputacion;
+    private Button buttonVerPerfilVendedor;
+
+    private LinearLayout containerAccionesComprador;
+    private LinearLayout containerAccionesVendedor;
+
+    private Button buttonPreguntar;
+    private Button buttonOfertar;
+    private Button buttonGuardar;
+
+    private MaterialButton buttonModificar;
+    private MaterialButton buttonPausar;
+
+    private NetworkMonitor.NetworkStatusListener networkListener;
+    private boolean previouslyOffline = false;
+
     public DetailFragment() {
-        // Constructor vacío obligatorio
     }
 
     @Override
@@ -53,76 +90,118 @@ public class DetailFragment extends Fragment {
 
     @Override
     public void onViewCreated(
-            View view,
-            Bundle savedInstanceState) {
+            @NonNull View view,
+            @Nullable Bundle savedInstanceState) {
 
         super.onViewCreated(view, savedInstanceState);
 
         // Vistas generales
         Button buttonBack = view.findViewById(R.id.buttonBack);
+        bannerDetailOffline = view.findViewById(R.id.bannerDetailOffline);
 
-        // Vistas de la galería
-        ImageView imageFotoViewer = view.findViewById(R.id.imageFotoViewer);
-        TextView textFotoIndicador = view.findViewById(R.id.textFotoIndicador);
-        Button buttonFotoAnterior = view.findViewById(R.id.buttonFotoAnterior);
-        Button buttonFotoSiguiente = view.findViewById(R.id.buttonFotoSiguiente);
+        // Galería
+        imageFotoViewer = view.findViewById(R.id.imageFotoViewer);
+        textFotoIndicador = view.findViewById(R.id.textFotoIndicador);
+        buttonFotoAnterior = view.findViewById(R.id.buttonFotoAnterior);
+        buttonFotoSiguiente = view.findViewById(R.id.buttonFotoSiguiente);
 
-        // Vistas de detalle del artículo
-        TextView textDetailTitulo = view.findViewById(R.id.textDetailTitulo);
-        TextView textDetailPrecio = view.findViewById(R.id.textDetailPrecio);
-        TextView textDetailEstado = view.findViewById(R.id.textDetailEstado);
-        TextView textDetailCategoria = view.findViewById(R.id.textDetailCategoria);
-        TextView textDetailZona = view.findViewById(R.id.textDetailZona);
-        TextView textDetailFecha = view.findViewById(R.id.textDetailFecha);
-        TextView textDetailDescripcion = view.findViewById(R.id.textDetailDescripcion);
+        // Detalle
+        textDetailTitulo = view.findViewById(R.id.textDetailTitulo);
+        textDetailPrecio = view.findViewById(R.id.textDetailPrecio);
+        textDetailEstado = view.findViewById(R.id.textDetailEstado);
+        textDetailCategoria = view.findViewById(R.id.textDetailCategoria);
+        textDetailZona = view.findViewById(R.id.textDetailZona);
+        textDetailFecha = view.findViewById(R.id.textDetailFecha);
+        textDetailDescripcion = view.findViewById(R.id.textDetailDescripcion);
 
-        // Vistas del vendedor
-        TextView textVendedorNombre = view.findViewById(R.id.textVendedorNombre);
-        TextView textVendedorReputacion = view.findViewById(R.id.textVendedorReputacion);
-        Button buttonVerPerfilVendedor = view.findViewById(R.id.buttonVerPerfilVendedor);
+        // Vendedor
+        textVendedorNombre = view.findViewById(R.id.textVendedorNombre);
+        textVendedorReputacion = view.findViewById(R.id.textVendedorReputacion);
+        buttonVerPerfilVendedor = view.findViewById(R.id.buttonVerPerfilVendedor);
 
-        // Contenedores de acciones por rol
-        LinearLayout containerAccionesComprador = view.findViewById(R.id.containerAccionesComprador);
-        LinearLayout containerAccionesVendedor = view.findViewById(R.id.containerAccionesVendedor);
+        // Contenedores
+        containerAccionesComprador = view.findViewById(R.id.containerAccionesComprador);
+        containerAccionesVendedor = view.findViewById(R.id.containerAccionesVendedor);
 
-        // Botones de comprador
-        Button buttonPreguntar = view.findViewById(R.id.buttonPreguntar);
-        Button buttonOfertar = view.findViewById(R.id.buttonOfertar);
-        Button buttonGuardar = view.findViewById(R.id.buttonGuardar);
-
-        // Botones de vendedor
-        MaterialButton buttonModificar = view.findViewById(R.id.buttonModificar);
-        MaterialButton buttonPausar = view.findViewById(R.id.buttonPausar);
-
-        // Obtener argumentos pasados por Navigation Component
-        String publicacionId = "";
+        // Botones
+        buttonPreguntar = view.findViewById(R.id.buttonPreguntar);
+        buttonOfertar = view.findViewById(R.id.buttonOfertar);
+        buttonGuardar = view.findViewById(R.id.buttonGuardar);
+        buttonModificar = view.findViewById(R.id.buttonModificar);
+        buttonPausar = view.findViewById(R.id.buttonPausar);
 
         if (getArguments() != null) {
             publicacionId = getArguments().getString("publicacionId", "");
+            usuarioActualEmail = getArguments().getString("usuarioActualEmail", "");
         }
 
-        final String usuarioActualEmail = (getArguments() != null)
-                ? getArguments().getString("usuarioActualEmail", "")
-                : "";
+        buttonBack.setOnClickListener(v -> Navigation.findNavController(v).popBackStack());
 
-        if (publicacionCargada == null) {
-            publicacionRepository.getPublicacionById(publicacionId, new PublicacionRepository.Resultado<Publicacion>() {
-                @Override public void onSuccess(Publicacion data) {
-                    if (!isAdded()) return;
-                    publicacionCargada = data;
-                    onViewCreated(view, savedInstanceState);
-                }
-                @Override public void onError(String mensaje) {
-                    if (!isAdded()) return;
+        configurarListenersBotones();
+        actualizarEstadoConexion(publicacionRepository.isOnline());
+
+        networkListener = isOnline -> {
+            if (!isAdded()) return;
+            actualizarEstadoConexion(isOnline);
+            if (isOnline && previouslyOffline) {
+                previouslyOffline = false;
+                Toast.makeText(requireContext(), "Conexión recuperada. Actualizando publicación...", Toast.LENGTH_SHORT).show();
+                cargarDatosPublicacion(true);
+            } else if (!isOnline) {
+                previouslyOffline = true;
+            }
+        };
+        publicacionRepository.getNetworkMonitor().addListener(networkListener);
+
+        cargarDatosPublicacion(false);
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        if (networkListener != null) {
+            publicacionRepository.getNetworkMonitor().removeListener(networkListener);
+        }
+    }
+
+    private void actualizarEstadoConexion(boolean isOnline) {
+        if (bannerDetailOffline != null) {
+            bannerDetailOffline.setVisibility(isOnline ? View.GONE : View.VISIBLE);
+        }
+        if (buttonPreguntar != null) buttonPreguntar.setEnabled(isOnline);
+        if (buttonOfertar != null) buttonOfertar.setEnabled(isOnline);
+        if (buttonGuardar != null) buttonGuardar.setEnabled(isOnline);
+        if (buttonModificar != null) buttonModificar.setEnabled(isOnline);
+        if (buttonPausar != null) buttonPausar.setEnabled(isOnline);
+        if (buttonVerPerfilVendedor != null) buttonVerPerfilVendedor.setEnabled(isOnline);
+    }
+
+    private void cargarDatosPublicacion(boolean recargaSilenciosa) {
+        if (publicacionId.isEmpty()) return;
+
+        publicacionRepository.getPublicacionById(publicacionId, new PublicacionRepository.Resultado<Publicacion>() {
+            @Override
+            public void onSuccess(Publicacion data) {
+                if (!isAdded()) return;
+                publicacionCargada = data;
+                poblarDatos(data);
+                actualizarEstadoConexion(publicacionRepository.isOnline());
+            }
+
+            @Override
+            public void onError(String mensaje) {
+                if (!isAdded()) return;
+                if (!recargaSilenciosa) {
                     Toast.makeText(requireContext(), mensaje, Toast.LENGTH_LONG).show();
-                    Navigation.findNavController(view).popBackStack();
+                    if (publicacionCargada == null && getView() != null) {
+                        Navigation.findNavController(getView()).popBackStack();
+                    }
                 }
-            });
-            return;
-        }
-        Publicacion publicacion = publicacionCargada;
+            }
+        });
+    }
 
-        // Cargar datos en la UI
+    private void poblarDatos(Publicacion publicacion) {
         textDetailTitulo.setText(publicacion.getTitulo());
         textDetailPrecio.setText("Precio: $" + String.format("%,.0f", publicacion.getPrecio()));
         textDetailEstado.setText("Estado: " + publicacion.getEstado());
@@ -131,31 +210,14 @@ public class DetailFragment extends Fragment {
         textDetailFecha.setText("Fecha de publicación: " + publicacion.getFechaPublicacion());
         textDetailDescripcion.setText(publicacion.getDescripcion());
 
-        // Datos del vendedor
         textVendedorNombre.setText("Vendedor: " + publicacion.getVendedorNombre());
         textVendedorReputacion.setText("Reputación: " + publicacion.getVendedorReputacion());
 
-        // Configurar galería de fotos
         listaFotos = publicacion.getImagenes();
-        actualizarGaleria(imageFotoViewer, textFotoIndicador, buttonFotoAnterior, buttonFotoSiguiente);
+        fotoActualIndex = 0;
+        actualizarGaleria();
 
-        buttonFotoAnterior.setOnClickListener(v -> {
-            if (fotoActualIndex > 0) {
-                fotoActualIndex--;
-                actualizarGaleria(imageFotoViewer, textFotoIndicador, buttonFotoAnterior, buttonFotoSiguiente);
-            }
-        });
-
-        buttonFotoSiguiente.setOnClickListener(v -> {
-            if (fotoActualIndex < listaFotos.size() - 1) {
-                fotoActualIndex++;
-                actualizarGaleria(imageFotoViewer, textFotoIndicador, buttonFotoAnterior, buttonFotoSiguiente);
-            }
-        });
-
-        // Determinar si el usuario actual es el vendedor o un comprador interesado
         boolean esVendedor = publicacion.getActions() != null && publicacion.getActions().canManage();
-
         if (esVendedor) {
             containerAccionesComprador.setVisibility(View.GONE);
             containerAccionesVendedor.setVisibility(View.VISIBLE);
@@ -164,78 +226,90 @@ public class DetailFragment extends Fragment {
             containerAccionesVendedor.setVisibility(View.GONE);
         }
 
-        // Listeners para Comprador
-        buttonPreguntar.setOnClickListener(v ->
-                Toast.makeText(
-                        requireContext(),
-                        "Abriendo chat con " + publicacion.getVendedorNombre(),
-                        Toast.LENGTH_SHORT
-                ).show()
-        );
+        actualizarBotonPausar(buttonPausar, publicacion);
+    }
 
-        buttonOfertar.setOnClickListener(v ->
-                Toast.makeText(
-                        requireContext(),
-                        "Oferta de compra enviada a " + publicacion.getVendedorNombre(),
-                        Toast.LENGTH_SHORT
-                ).show()
-        );
+    private void configurarListenersBotones() {
+        buttonFotoAnterior.setOnClickListener(v -> {
+            if (listaFotos != null && fotoActualIndex > 0) {
+                fotoActualIndex--;
+                actualizarGaleria();
+            }
+        });
 
-        buttonGuardar.setOnClickListener(v ->
-                Toast.makeText(
-                        requireContext(),
-                        "¡Publicación guardada en tus favoritos!",
-                        Toast.LENGTH_SHORT
-                ).show()
-        );
+        buttonFotoSiguiente.setOnClickListener(v -> {
+            if (listaFotos != null && fotoActualIndex < listaFotos.size() - 1) {
+                fotoActualIndex++;
+                actualizarGaleria();
+            }
+        });
+
+        buttonPreguntar.setOnClickListener(v -> {
+            if (!publicacionRepository.isOnline()) {
+                Toast.makeText(requireContext(), "Se necesita conexión a internet para continuar", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            if (publicacionCargada != null) {
+                Toast.makeText(requireContext(), "Abriendo chat con " + publicacionCargada.getVendedorNombre(), Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        buttonOfertar.setOnClickListener(v -> {
+            if (!publicacionRepository.isOnline()) {
+                Toast.makeText(requireContext(), "Se necesita conexión a internet para continuar", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            if (publicacionCargada != null) {
+                Toast.makeText(requireContext(), "Oferta de compra enviada a " + publicacionCargada.getVendedorNombre(), Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        buttonGuardar.setOnClickListener(v -> {
+            if (!publicacionRepository.isOnline()) {
+                Toast.makeText(requireContext(), "Se necesita conexión a internet para continuar", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            Toast.makeText(requireContext(), "¡Publicación guardada en tus favoritos!", Toast.LENGTH_SHORT).show();
+        });
 
         buttonVerPerfilVendedor.setOnClickListener(v -> {
-
+            if (!publicacionRepository.isOnline()) {
+                Toast.makeText(requireContext(), "Se necesita conexión a internet para continuar", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            if (publicacionCargada == null) return;
             Bundle bundle = new Bundle();
+            bundle.putString("vendedorNombre", publicacionCargada.getVendedorNombre());
+            bundle.putString("vendedorEmail", publicacionCargada.getSeller() != null ? publicacionCargada.getSeller().getId() : "");
+            bundle.putString("vendedorReputacion", publicacionCargada.getVendedorReputacion());
 
-            bundle.putString(
-                    "vendedorNombre",
-                    publicacion.getVendedorNombre()
-            );
-
-            bundle.putString(
-                    "vendedorEmail",
-                    publicacion.getSeller() != null ? publicacion.getSeller().getId() : ""
-            );
-
-            bundle.putString(
-                    "vendedorReputacion",
-                    publicacion.getVendedorReputacion()
-            );
-
-            Navigation.findNavController(v)
-                    .navigate(
-                            R.id.action_detailFragment_to_publicProfileFragment,
-                            bundle
-                    );
+            Navigation.findNavController(v).navigate(R.id.action_detailFragment_to_publicProfileFragment, bundle);
         });
 
-        // Listeners para Vendedor
         buttonModificar.setOnClickListener(v -> {
+            if (!publicacionRepository.isOnline()) {
+                Toast.makeText(requireContext(), "Se necesita conexión a internet para continuar", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            if (publicacionCargada == null) return;
             Bundle bundle = new Bundle();
             bundle.putString("email", usuarioActualEmail);
-            bundle.putString("publicacionId", publicacion.getId());
+            bundle.putString("publicacionId", publicacionCargada.getId());
 
-            Navigation.findNavController(v)
-                    .navigate(
-                            R.id.action_detailFragment_to_publicarArticuloFragment,
-                            bundle
-                    );
+            Navigation.findNavController(v).navigate(R.id.action_detailFragment_to_publicarArticuloFragment, bundle);
         });
 
-        actualizarBotonPausar(buttonPausar, publicacion);
-
         buttonPausar.setOnClickListener(v -> {
-            boolean estaPausada = "paused".equalsIgnoreCase(publicacion.getEstadoPublicacion());
+            if (!publicacionRepository.isOnline()) {
+                Toast.makeText(requireContext(), "Se necesita conexión a internet para continuar", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            if (publicacionCargada == null) return;
+            boolean estaPausada = "paused".equalsIgnoreCase(publicacionCargada.getEstadoPublicacion());
             String nuevoEstado = estaPausada ? "active" : "paused";
 
             publicacionRepository.cambiarEstadoPublicacion(
-                    publicacion.getId(),
+                    publicacionCargada.getId(),
                     nuevoEstado,
                     new PublicacionRepository.Resultado<Publicacion>() {
                         @Override public void onSuccess(Publicacion data) {
@@ -254,25 +328,17 @@ public class DetailFragment extends Fragment {
                     }
             );
         });
-
-        // Botón Volver con Navigation Component
-        buttonBack.setOnClickListener(v ->
-                Navigation.findNavController(v).popBackStack()
-        );
     }
 
     private void actualizarBotonPausar(MaterialButton buttonPausar, Publicacion publicacion) {
+        if (buttonPausar == null || publicacion == null) return;
         boolean estaPausada = "paused".equalsIgnoreCase(publicacion.getEstadoPublicacion());
-
         buttonPausar.setText(estaPausada ? "Reanudar publicación" : "Pausar publicación");
         buttonPausar.setIconResource(estaPausada ? R.drawable.ic_play_arrow : R.drawable.ic_pause);
     }
 
-    private void actualizarGaleria(
-            ImageView imageFotoViewer,
-            TextView textFotoIndicador,
-            Button buttonFotoAnterior,
-            Button buttonFotoSiguiente) {
+    private void actualizarGaleria() {
+        if (imageFotoViewer == null || textFotoIndicador == null || buttonFotoAnterior == null || buttonFotoSiguiente == null) return;
 
         if (listaFotos == null || listaFotos.isEmpty()) {
             imageFotoViewer.setImageDrawable(null);
@@ -282,13 +348,13 @@ public class DetailFragment extends Fragment {
             return;
         }
 
+        String fotoItem = listaFotos.get(fotoActualIndex);
         Glide.with(this)
-                .load(listaFotos.get(fotoActualIndex))
+                .load(fotoItem)
                 .centerCrop()
                 .into(imageFotoViewer);
 
         textFotoIndicador.setText("Foto " + (fotoActualIndex + 1) + " de " + listaFotos.size());
-
         buttonFotoAnterior.setEnabled(fotoActualIndex > 0);
         buttonFotoSiguiente.setEnabled(fotoActualIndex < listaFotos.size() - 1);
     }

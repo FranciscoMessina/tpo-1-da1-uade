@@ -31,6 +31,9 @@ public class Publicacion implements Serializable {
     private Boolean isFavorite;
     private Actions actions;
 
+    public Publicacion() {
+    }
+
     public Publicacion(String title, String description, double price,
                        String condition, String category, String zone, int draftStep) {
         this.title = title;
@@ -41,6 +44,9 @@ public class Publicacion implements Serializable {
         this.zone = zone;
         this.draftStep = draftStep;
     }
+
+    public void setCoverImage(String coverImage) { this.coverImage = coverImage; }
+    public void setImages(List<PublicationImage> images) { this.images = images; }
 
     public String getId() { return id; }
     public String getSellerId() { return sellerId; }
