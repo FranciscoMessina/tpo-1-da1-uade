@@ -22,6 +22,44 @@
             app:iconGravity="textStart"
             android:text="Volver a publicaciones" />
 
+        <!-- Banner de modo sin conexión -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/bannerDetailOffline"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/spacing_sm"
+            android:visibility="gone"
+            app:cardBackgroundColor="?attr/colorErrorContainer"
+            app:cardCornerRadius="8dp"
+            app:cardElevation="0dp"
+            app:strokeWidth="1dp"
+            app:strokeColor="?attr/colorError">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:padding="12dp">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@android:drawable/stat_notify_error"
+                    app:tint="?attr/colorOnErrorContainer"
+                    android:contentDescription="Sin conexión" />
+
+                <TextView
+                    android:id="@+id/textBannerDetailOffline"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
+                    android:text="Modo sin conexión: las acciones sobre la publicación están deshabilitadas."
+                    android:textAppearance="@style/TextAppearance.Material3.BodySmall"
+                    android:textColor="?attr/colorOnErrorContainer" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
         <!-- Galería de fotos -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"

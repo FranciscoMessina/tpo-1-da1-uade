@@ -50,6 +50,9 @@ public class HomeFragment extends Fragment {
     private Button botonSiguiente;
 
     private TextView textoPagina;
+    private View bannerOffline;
+    private com.da_grupo9.ronda.util.NetworkMonitor.NetworkStatusListener networkListener;
+    private boolean previouslyOffline = false;
 
     private List<Publicacion> publicaciones;
     private List<Publicacion> publicacionesFiltradas;
@@ -81,6 +84,22 @@ public class HomeFragment extends Fragment {
             Bundle savedInstanceState) {
 
         super.onViewCreated(view, savedInstanceState);
+
+        bannerOffline = view.findViewById(R.id.bannerOffline);
+        actualizarEstadoConexion(publicacionRepository.isOnline());
+
+        networkListener = isOnline -> {
+            if (!isAdded()) return;
+            actualizarEstadoConexion(isOnline);
+            if (isOnline && previouslyOffline) {
+                previouslyOffline = false;
+                android.widget.Toast.makeText(requireContext(), "Conexión recuperada. Actualizando publicaciones...", android.widget.Toast.LENGTH_SHORT).show();
+                cargarDatos();
+            } else if (!isOnline) {
+                previouslyOffline = true;
+            }
+        };
+        publicacionRepository.getNetworkMonitor().addListener(networkListener);
 
         buscador = view.findViewById(R.id.buscador);
         precioMinimo = view.findViewById(R.id.precioMinimo);
@@ -123,11 +142,27 @@ public class HomeFragment extends Fragment {
         );
     }
 
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        if (networkListener != null) {
+            publicacionRepository.getNetworkMonitor().removeListener(networkListener);
+        }
+    }
+
+    private void actualizarEstadoConexion(boolean isOnline) {
+        if (bannerOffline != null) {
+            bannerOffline.setVisibility(isOnline ? View.GONE : View.VISIBLE);
+        }
+    }
+
     private void cargarDatos() {
+        actualizarEstadoConexion(publicacionRepository.isOnline());
         publicacionRepository.getPublicaciones(new PublicacionRepository.Resultado<List<Publicacion>>() {
             @Override
             public void onSuccess(List<Publicacion> data) {
                 if (!isAdded()) return;
+                actualizarEstadoConexion(publicacionRepository.isOnline());
                 publicaciones.clear();
                 for (Publicacion publicacion : data) {
                     if (publicacion.isVisibleInPublicFeed()) {
@@ -141,7 +176,12 @@ public class HomeFragment extends Fragment {
 
             @Override
             public void onError(String mensaje) {
-                if (isAdded()) android.widget.Toast.makeText(requireContext(), mensaje, android.widget.Toast.LENGTH_LONG).show();
+                if (isAdded()) {
+                    android.widget.Toast.makeText(requireContext(), mensaje, android.widget.Toast.LENGTH_LONG).show();
+                    if (!publicacionRepository.isOnline()) {
+                        actualizarEstadoConexion(false);
+                    }
+                }
             }
         });
     }
