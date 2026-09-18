@@ -26,14 +26,6 @@
             android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
             android:textColor="?attr/colorPrimary" />
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/spacing_xs"
-            android:text="La carga de imágenes se incorporará posteriormente."
-            android:textAppearance="@style/TextAppearance.Material3.BodySmall"
-            android:textColor="?attr/colorOnSurfaceVariant" />
-
         <LinearLayout
             android:id="@+id/containerPaso1"
             android:layout_width="match_parent"
@@ -83,6 +75,53 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" />
 
+            <LinearLayout
+                android:id="@+id/containerCargaFotos"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/textCantidadFotos"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_md"
+                android:text="Fotos seleccionadas: 0"
+                android:textAppearance="@style/TextAppearance.Material3.LabelLarge"
+                android:textColor="?attr/colorOnSurfaceVariant" />
+
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_sm"
+                android:fillViewport="false">
+
+                <LinearLayout
+                    android:id="@+id/containerFotosSeleccionadas"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal" />
+
+            </HorizontalScrollView>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/buttonSeleccionarFoto"
+                style="@style/Widget.Ronda.Button.Outlined"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_sm"
+                android:text="Agregar foto desde galería" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/buttonQuitarFotos"
+                style="@style/Widget.Ronda.Button.Outlined"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_xs"
+                android:text="Quitar fotos seleccionadas" />
+
+            </LinearLayout>
+
         </LinearLayout>
 
         <LinearLayout
@@ -92,6 +131,12 @@
             android:layout_marginTop="@dimen/spacing_md"
             android:orientation="vertical"
             android:visibility="gone">
+
+            <LinearLayout
+                android:id="@+id/containerUbicacionExacta"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
 
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
@@ -132,6 +177,59 @@
                     android:inputType="text" />
 
             </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_sm"
+                android:hint="Dirección exacta">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/editDireccionPublicacion"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textPostalAddress" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_sm"
+                android:orientation="horizontal">
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:hint="Latitud">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/editLatitudPublicacion"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="numberDecimal|numberSigned" />
+
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/spacing_sm"
+                    android:layout_weight="1"
+                    android:hint="Longitud">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/editLongitudPublicacion"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="numberDecimal|numberSigned" />
+
+                </com.google.android.material.textfield.TextInputLayout>
+
+            </LinearLayout>
+
+            </LinearLayout>
 
         </LinearLayout>
 
@@ -197,6 +295,14 @@
                 android:text="Siguiente" />
 
         </LinearLayout>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/buttonDescartarBorrador"
+            style="@style/Widget.Ronda.Button.Outlined"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_sm"
+            android:text="Descartar borrador" />
 
     </LinearLayout>
 
