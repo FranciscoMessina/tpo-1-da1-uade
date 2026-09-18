@@ -2,7 +2,6 @@
 
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-
     android:id="@+id/nav_graph"
     app:startDestination="@id/loginFragment">
 
@@ -102,6 +101,21 @@
         <action
             android:id="@+id/action_homeFragment_to_misPublicacionesFragment"
             app:destination="@id/misPublicacionesFragment" />
+
+        <action
+            android:id="@+id/action_homeFragment_to_favoritesFragment"
+            app:destination="@id/favoritesFragment" />
+
+    </fragment>
+
+    <fragment
+        android:id="@+id/favoritesFragment"
+        android:name="com.da_grupo9.ronda.ui.fragments.FavoritesFragment"
+        android:label="Mis favoritos">
+
+        <action
+            android:id="@+id/action_favoritesFragment_to_detailFragment"
+            app:destination="@id/detailFragment" />
 
     </fragment>
 

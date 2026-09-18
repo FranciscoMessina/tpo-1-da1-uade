@@ -4,6 +4,11 @@ import com.da_grupo9.ronda.R;
 import com.da_grupo9.ronda.data.model.Publicacion;
 import com.da_grupo9.ronda.data.repository.PublicacionRepository;
 import com.da_grupo9.ronda.util.NetworkMonitor;
+import com.da_grupo9.ronda.data.remote.FavoritesApi;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -28,9 +33,13 @@ import dagger.hilt.android.AndroidEntryPoint;
 
 import java.util.List;
 
+
+
 @AndroidEntryPoint
 public class DetailFragment extends Fragment {
 
+    @Inject
+    FavoritesApi favoritesApi;
     @Inject PublicacionRepository publicacionRepository;
     private Publicacion publicacionCargada;
 
@@ -217,7 +226,9 @@ public class DetailFragment extends Fragment {
         fotoActualIndex = 0;
         actualizarGaleria();
 
-        boolean esVendedor = publicacion.getActions() != null && publicacion.getActions().canManage();
+        boolean esVendedor = publicacion.getActions() != null
+                && publicacion.getActions().canManage();
+
         if (esVendedor) {
             containerAccionesComprador.setVisibility(View.GONE);
             containerAccionesVendedor.setVisibility(View.VISIBLE);
@@ -226,6 +237,7 @@ public class DetailFragment extends Fragment {
             containerAccionesVendedor.setVisibility(View.GONE);
         }
 
+        actualizarBotonFavorito(publicacion);
         actualizarBotonPausar(buttonPausar, publicacion);
     }
 
@@ -266,10 +278,73 @@ public class DetailFragment extends Fragment {
 
         buttonGuardar.setOnClickListener(v -> {
             if (!publicacionRepository.isOnline()) {
-                Toast.makeText(requireContext(), "Se necesita conexión a internet para continuar", Toast.LENGTH_SHORT).show();
+                Toast.makeText(
+                        requireContext(),
+                        "Se necesita conexión a internet para continuar",
+                        Toast.LENGTH_SHORT
+                ).show();
                 return;
             }
-            Toast.makeText(requireContext(), "¡Publicación guardada en tus favoritos!", Toast.LENGTH_SHORT).show();
+
+            if (publicacionCargada == null) {
+                return;
+            }
+
+            boolean esFavorito = publicacionCargada.isFavorite();
+
+            Call<com.da_grupo9.ronda.data.model.FavoriteResponse> llamada;
+
+            if (esFavorito) {
+                llamada = favoritesApi.removeFavorite(publicacionCargada.getId());
+            } else {
+                llamada = favoritesApi.addFavorite(publicacionCargada.getId());
+            }
+
+            llamada.enqueue(new Callback<>() {
+                @Override
+                public void onResponse(
+                        @NonNull Call<com.da_grupo9.ronda.data.model.FavoriteResponse> call,
+                        @NonNull Response<com.da_grupo9.ronda.data.model.FavoriteResponse> response) {
+
+                    if (!isAdded()) return;
+
+                    if (response.isSuccessful() && response.body() != null) {
+
+                        Toast.makeText(
+                                requireContext(),
+                                esFavorito
+                                        ? "Publicación quitada de favoritos"
+                                        : "¡Publicación guardada en tus favoritos!",
+                                Toast.LENGTH_SHORT
+                        ).show();
+
+                        cargarDatosPublicacion(true);
+
+                    } else {
+                        Toast.makeText(
+                                requireContext(),
+                                esFavorito
+                                        ? "No se pudo quitar de favoritos"
+                                        : "No se pudo guardar la publicación",
+                                Toast.LENGTH_SHORT
+                        ).show();
+                    }
+                }
+
+                @Override
+                public void onFailure(
+                        @NonNull Call<com.da_grupo9.ronda.data.model.FavoriteResponse> call,
+                        @NonNull Throwable t) {
+
+                    if (!isAdded()) return;
+
+                    Toast.makeText(
+                            requireContext(),
+                            "Error de conexión",
+                            Toast.LENGTH_SHORT
+                    ).show();
+                }
+            });
         });
 
         buttonVerPerfilVendedor.setOnClickListener(v -> {
@@ -330,6 +405,15 @@ public class DetailFragment extends Fragment {
         });
     }
 
+    private void actualizarBotonFavorito(Publicacion publicacion) {
+        if (buttonGuardar == null || publicacion == null) return;
+
+        if (publicacion.isFavorite()) {
+            buttonGuardar.setText("Quitar de favoritos");
+        } else {
+            buttonGuardar.setText("Guardar");
+        }
+    }
     private void actualizarBotonPausar(MaterialButton buttonPausar, Publicacion publicacion) {
         if (buttonPausar == null || publicacion == null) return;
         boolean estaPausada = "paused".equalsIgnoreCase(publicacion.getEstadoPublicacion());
