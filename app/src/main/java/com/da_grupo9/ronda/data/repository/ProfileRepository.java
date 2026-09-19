@@ -4,10 +4,8 @@ import com.da_grupo9.ronda.data.model.CreateReviewRequest;
 import com.da_grupo9.ronda.data.model.Operation;
 import com.da_grupo9.ronda.data.model.Perfil;
 import com.da_grupo9.ronda.data.remote.ProfileApi;
-import com.da_grupo9.ronda.data.model.UploadImageResponse;
 import com.da_grupo9.ronda.data.model.OperationsResponse;
 import com.da_grupo9.ronda.util.ApiError;
-import okhttp3.MultipartBody;
 import java.io.IOException;
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -46,10 +44,6 @@ public class ProfileRepository {
         });
     }
     public void updateMe(Perfil perfil, PublicacionRepository.Resultado<Perfil> result) { ejecutar(api.updateMe(perfil), result); }
-    public void uploadAvatar(MultipartBody.Part file, PublicacionRepository.Resultado<UploadImageResponse> result) {
-        ejecutarGenerico(api.uploadImage(file), result);
-    }
-
     private void ejecutar(Call<Perfil> call, PublicacionRepository.Resultado<Perfil> result) {
         call.enqueue(new Callback<Perfil>() {
             @Override public void onResponse(Call<Perfil> call, Response<Perfil> response) {

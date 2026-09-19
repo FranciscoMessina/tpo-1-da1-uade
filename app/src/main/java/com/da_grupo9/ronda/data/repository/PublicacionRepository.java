@@ -13,13 +13,13 @@ import com.da_grupo9.ronda.data.model.PublicacionesResponse;
 import com.da_grupo9.ronda.data.model.PublicUser;
 import com.da_grupo9.ronda.data.model.PublicationRequest;
 import com.da_grupo9.ronda.data.model.ReviewsResponse;
-import com.da_grupo9.ronda.data.model.UploadImageResponse;
 import com.da_grupo9.ronda.data.model.CategoriesResponse;
 import com.da_grupo9.ronda.data.model.ZonesResponse;
 import com.da_grupo9.ronda.data.model.QuestionRequest;
 import com.da_grupo9.ronda.data.model.AnswerQuestionRequest;
 import com.da_grupo9.ronda.data.remote.PublicacionApi;
 import com.da_grupo9.ronda.util.ImageStorageManager;
+import com.da_grupo9.ronda.util.ImageUploadManager;
 import com.da_grupo9.ronda.util.NetworkMonitor;
 import com.da_grupo9.ronda.util.ApiErrorMessage;
 import com.da_grupo9.ronda.util.ApiError;
@@ -30,7 +30,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.io.File;
 import java.util.Comparator;
 import java.util.Locale;
 
@@ -40,9 +39,6 @@ import javax.inject.Singleton;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-import okhttp3.MediaType;
-import okhttp3.MultipartBody;
-import okhttp3.RequestBody;
 
 @Singleton
 public class PublicacionRepository {
@@ -63,6 +59,7 @@ public class PublicacionRepository {
     private final PublicacionDao publicacionDao;
     private final NetworkMonitor networkMonitor;
     private final ImageStorageManager imageStorageManager;
+    private final ImageUploadManager imageUploadManager;
     private final SessionManager sessionManager;
 
     private final ExecutorService dbExecutor = Executors.newSingleThreadExecutor();
@@ -74,11 +71,13 @@ public class PublicacionRepository {
             PublicacionDao publicacionDao,
             NetworkMonitor networkMonitor,
             ImageStorageManager imageStorageManager,
+            ImageUploadManager imageUploadManager,
             SessionManager sessionManager) {
         this.api = api;
         this.publicacionDao = publicacionDao;
         this.networkMonitor = networkMonitor;
         this.imageStorageManager = imageStorageManager;
+        this.imageUploadManager = imageUploadManager;
         this.sessionManager = sessionManager;
     }
 
@@ -345,7 +344,7 @@ public class PublicacionRepository {
             resultado.onError("Se necesita conexión a internet para publicar un artículo");
             return;
         }
-        subirImagenes(rutasImagenes, 0, new ArrayList<>(), new Resultado<List<String>>() {
+        imageUploadManager.uploadFiles(rutasImagenes, new ImageUploadManager.Result<List<String>>() {
             @Override public void onSuccess(List<String> urls) {
                 PublicationRequest request = new PublicationRequest(
                         publicacion.getTitle(), publicacion.getDescription(),
@@ -375,7 +374,7 @@ public class PublicacionRepository {
         }
         List<String> rutas = new ArrayList<>(rutasImagenesNuevas);
         List<String> conservadas = new ArrayList<>(imagenesConservadas);
-        subirImagenes(rutas, 0, new ArrayList<>(), new Resultado<List<String>>() {
+        imageUploadManager.uploadFiles(rutas, new ImageUploadManager.Result<List<String>>() {
             @Override public void onSuccess(List<String> urlsNuevas) {
                 List<String> urlsFinales = new ArrayList<>(conservadas);
                 urlsFinales.addAll(urlsNuevas);
@@ -408,34 +407,6 @@ public class PublicacionRepository {
             return;
         }
         ejecutar(api.responderPregunta(preguntaId, new AnswerQuestionRequest(respuesta)), resultado);
-    }
-
-    private void subirImagenes(List<String> rutas, int indice, List<String> urls,
-                               Resultado<List<String>> resultado) {
-        if (indice >= rutas.size()) {
-            resultado.onSuccess(urls);
-            return;
-        }
-        File archivo = new File(rutas.get(indice));
-        String nombre = archivo.getName();
-        String mime = nombre.endsWith(".png") ? "image/png"
-                : nombre.endsWith(".webp") ? "image/webp" : "image/jpeg";
-        RequestBody body = RequestBody.create(archivo, MediaType.parse(mime));
-        MultipartBody.Part part = MultipartBody.Part.createFormData("file", nombre, body);
-        api.subirImagen(part).enqueue(new Callback<UploadImageResponse>() {
-            @Override public void onResponse(Call<UploadImageResponse> call, Response<UploadImageResponse> response) {
-                if (!response.isSuccessful() || response.body() == null || response.body().getUrl() == null) {
-                    resultado.onError(ApiError.from(response,
-                            "No se pudo subir una imagen (código " + response.code() + ")"));
-                    return;
-                }
-                urls.add(response.body().getUrl());
-                subirImagenes(rutas, indice + 1, urls, resultado);
-            }
-            @Override public void onFailure(Call<UploadImageResponse> call, Throwable error) {
-                resultado.onError("No se pudo subir una imagen");
-            }
-        });
     }
 
     private <T> void ejecutar(Call<T> call, Resultado<T> resultado) {

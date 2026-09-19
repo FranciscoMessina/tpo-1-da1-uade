@@ -7,11 +7,10 @@ import com.da_grupo9.ronda.data.model.Publicacion;
 import com.da_grupo9.ronda.data.model.PublicationRequest;
 import com.da_grupo9.ronda.data.repository.PublicacionRepository;
 import com.da_grupo9.ronda.util.MoneyFormat;
+import com.da_grupo9.ronda.util.ImageUploadManager;
 
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -33,22 +32,18 @@ import com.bumptech.glide.Glide;
 
 import java.math.BigDecimal;
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import javax.inject.Inject;
 import dagger.hilt.android.AndroidEntryPoint;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 @AndroidEntryPoint
 public class PublicarArticuloFragment extends Fragment {
 
     @Inject PublicacionRepository publicacionRepository;
     @Inject SessionManager sessionManager;
+    @Inject ImageUploadManager imageUploadManager;
 
     private LinearLayout containerPaso1;
     private LinearLayout containerPaso2;
@@ -79,8 +74,6 @@ public class PublicarArticuloFragment extends Fragment {
     private BorradorPublicacionStorage borradorStorage;
     private final List<String> fotosSeleccionadas = new ArrayList<>();
     private final List<String> fotosExistentes = new ArrayList<>();
-    private final ExecutorService fileExecutor = Executors.newSingleThreadExecutor();
-    private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private boolean publicacionCreada;
 
     private final ActivityResultLauncher<String> galleryLauncher =
@@ -453,69 +446,26 @@ public class PublicarArticuloFragment extends Fragment {
 
     private void copiarFotoAlAlmacenamientoInterno(Uri uri) {
         android.content.Context context = requireContext().getApplicationContext();
-        fileExecutor.execute(() -> {
-            String mime = context.getContentResolver().getType(uri);
-            if (!("image/jpeg".equals(mime) || "image/png".equals(mime) || "image/webp".equals(mime))) {
-                mostrarErrorFoto("Elegí una imagen JPG, PNG o WebP");
-                return;
-            }
-            File directorio = new File(context.getFilesDir(), "borradores_publicacion");
-            if (!directorio.exists() && !directorio.mkdirs()) {
-                mostrarErrorFoto();
-                return;
-            }
-
-            String extension = "image/png".equals(mime) ? ".png"
-                    : "image/webp".equals(mime) ? ".webp" : ".jpg";
-            File destino = new File(directorio, "foto_" + System.currentTimeMillis() + extension);
-
-            try (InputStream input = context.getContentResolver().openInputStream(uri);
-                 FileOutputStream output = new FileOutputStream(destino)) {
-                if (input == null) {
-                    mostrarErrorFoto();
+        File directorio = new File(context.getFilesDir(), "borradores_publicacion");
+        imageUploadManager.copyToDraft(uri, directorio, "foto_", new ImageUploadManager.Result<File>() {
+            @Override public void onSuccess(File destino) {
+                if (!isAdded()) {
+                    destino.delete();
                     return;
                 }
+                fotosSeleccionadas.add(destino.getAbsolutePath());
+                mostrarFotosSeleccionadas();
+                guardarBorrador();
+            }
 
-                byte[] buffer = new byte[8192];
-                int cantidad;
-                long total = 0;
-                while ((cantidad = input.read(buffer)) != -1) {
-                    output.write(buffer, 0, cantidad);
-                    total += cantidad;
-                    if (total > 5L * 1024L * 1024L) {
-                        output.close();
-                        destino.delete();
-                        mostrarErrorFoto("La imagen no puede superar los 5 MB");
-                        return;
-                    }
-                }
-
-                mainHandler.post(() -> {
-                    if (!isAdded()) {
-                        destino.delete();
-                        return;
-                    }
-                    fotosSeleccionadas.add(destino.getAbsolutePath());
-                    mostrarFotosSeleccionadas();
-                    guardarBorrador();
-                });
-            } catch (IOException e) {
-                destino.delete();
-                mostrarErrorFoto();
+            @Override public void onError(String mensaje) {
+                mostrarErrorFoto(mensaje);
             }
         });
-    }
-
-    private void mostrarErrorFoto() {
-        mostrarErrorFoto("No se pudo guardar la imagen");
     }
 
     private void mostrarErrorFoto(String mensaje) {
-        mainHandler.post(() -> {
-            if (isAdded()) {
-                Toast.makeText(requireContext(), mensaje, Toast.LENGTH_SHORT).show();
-            }
-        });
+        if (isAdded()) Toast.makeText(requireContext(), mensaje, Toast.LENGTH_SHORT).show();
     }
 
     private void mostrarFotosSeleccionadas() {
@@ -627,9 +577,4 @@ public class PublicarArticuloFragment extends Fragment {
         guardarBorrador();
     }
 
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        fileExecutor.shutdown();
-    }
 }
