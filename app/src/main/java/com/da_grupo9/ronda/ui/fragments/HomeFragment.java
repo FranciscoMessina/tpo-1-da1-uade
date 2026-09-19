@@ -35,9 +35,16 @@ import java.util.List;
 import android.app.AlertDialog;
 import android.widget.Toast;
 
+import com.da_grupo9.ronda.data.model.FavoriteResponse;
 import com.da_grupo9.ronda.data.model.SavedSearchRequest;
 import com.da_grupo9.ronda.data.model.SavedSearchItem;
+import com.da_grupo9.ronda.data.remote.FavoritesApi;
 import com.da_grupo9.ronda.data.remote.SavedSearchesApi;
+import com.da_grupo9.ronda.util.ApiErrorMessage;
+
+import android.widget.ImageButton;
+import java.util.HashMap;
+import java.util.Map;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -48,7 +55,13 @@ public class HomeFragment extends Fragment {
 
     @Inject PublicacionRepository publicacionRepository;
     @Inject SavedSearchesApi savedSearchesApi;
+    @Inject FavoritesApi favoritesApi;
     private LinearLayout publicacionesContainer;
+
+    /** Peticiones de favorito en curso: id de publicación -> estado que se está intentando aplicar. */
+    private final Map<String, Boolean> favoritosPendientes = new HashMap<>();
+    /** Botones de favorito de las tarjetas visibles, por id de publicación. */
+    private final Map<String, ImageButton> botonesFavorito = new HashMap<>();
 
     private EditText buscador;
     private EditText precioMinimo;
@@ -182,11 +195,15 @@ public class HomeFragment extends Fragment {
         if (networkListener != null) {
             publicacionRepository.getNetworkMonitor().removeListener(networkListener);
         }
+        botonesFavorito.clear();
     }
 
     private void actualizarEstadoConexion(boolean isOnline) {
         if (bannerOffline != null) {
             bannerOffline.setVisibility(isOnline ? View.GONE : View.VISIBLE);
+        }
+        for (String id : botonesFavorito.keySet()) {
+            actualizarBotonFavorito(id);
         }
     }
 
@@ -514,7 +531,7 @@ public class HomeFragment extends Fragment {
                         } else {
                             Toast.makeText(
                                     requireContext(),
-                                    "Error al guardar: " + response.code(),
+                                    ApiErrorMessage.from(response, "Error al guardar: " + response.code()),
                                     Toast.LENGTH_LONG
                             ).show();
                         }
@@ -848,6 +865,7 @@ public class HomeFragment extends Fragment {
             List<Publicacion> lista) {
 
         publicacionesContainer.removeAllViews();
+        botonesFavorito.clear();
 
         if (lista.isEmpty()) {
 
@@ -963,7 +981,16 @@ public class HomeFragment extends Fragment {
                 0
         );
 
-        contenido.addView(titulo);
+        LinearLayout filaTitulo = new LinearLayout(requireContext());
+        filaTitulo.setOrientation(LinearLayout.HORIZONTAL);
+        filaTitulo.setGravity(Gravity.CENTER_VERTICAL);
+        filaTitulo.addView(titulo, new LinearLayout.LayoutParams(
+                0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+        if (publicacion.getActions() == null || publicacion.getActions().canFavorite()) {
+            filaTitulo.addView(crearBotonFavorito(publicacion));
+        }
+
+        contenido.addView(filaTitulo);
         contenido.addView(descripcion);
         contenido.addView(precio);
         contenido.addView(estado);
@@ -996,6 +1023,105 @@ public class HomeFragment extends Fragment {
         publicacionesContainer.addView(
                 tarjeta
         );
+    }
+
+    private ImageButton crearBotonFavorito(Publicacion publicacion) {
+        ImageButton boton = new ImageButton(requireContext());
+        int lado = dpToPx(40);
+        boton.setLayoutParams(new LinearLayout.LayoutParams(lado, lado));
+
+        android.util.TypedValue fondo = new android.util.TypedValue();
+        requireContext().getTheme().resolveAttribute(
+                android.R.attr.selectableItemBackgroundBorderless, fondo, true);
+        boton.setBackgroundResource(fondo.resourceId);
+        boton.setScaleType(ImageButton.ScaleType.CENTER);
+
+        boton.setOnClickListener(v -> alternarFavorito(publicacion));
+
+        botonesFavorito.put(publicacion.getId(), boton);
+        actualizarBotonFavorito(publicacion.getId());
+        return boton;
+    }
+
+    private Publicacion buscarPublicacion(String id) {
+        if (publicaciones == null) return null;
+        for (Publicacion p : publicaciones) {
+            if (id.equals(p.getId())) return p;
+        }
+        return null;
+    }
+
+    private boolean esFavorito(Publicacion publicacion) {
+        Boolean pendiente = favoritosPendientes.get(publicacion.getId());
+        return pendiente != null ? pendiente : publicacion.isFavorite();
+    }
+
+    private void actualizarBotonFavorito(String id) {
+        ImageButton boton = botonesFavorito.get(id);
+        Publicacion publicacion = buscarPublicacion(id);
+        if (boton == null || publicacion == null) return;
+
+        boolean favorito = esFavorito(publicacion);
+        boton.setImageResource(favorito ? R.drawable.ic_favorite : R.drawable.ic_favorite_border);
+        boton.setImageTintList(android.content.res.ColorStateList.valueOf(
+                favorito
+                        ? MaterialColors.getColor(boton, android.R.attr.colorPrimary, Color.BLUE)
+                        : MaterialColors.getColor(boton, com.google.android.material.R.attr.colorOnSurfaceVariant, Color.DKGRAY)));
+        boton.setContentDescription(favorito ? "Quitar de favoritos" : "Guardar en favoritos");
+
+        boolean habilitado = publicacionRepository.isOnline() && !favoritosPendientes.containsKey(id);
+        boton.setEnabled(habilitado);
+        boton.setAlpha(habilitado ? 1f : 0.4f);
+    }
+
+    private void alternarFavorito(Publicacion publicacion) {
+        String id = publicacion.getId();
+        if (id == null || favoritosPendientes.containsKey(id)) return;
+
+        if (!publicacionRepository.isOnline()) {
+            Toast.makeText(requireContext(),
+                    "Se necesita conexión a internet para continuar", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        boolean nuevoEstado = !publicacion.isFavorite();
+        favoritosPendientes.put(id, nuevoEstado);
+        actualizarBotonFavorito(id);
+
+        Call<FavoriteResponse> llamada = nuevoEstado
+                ? favoritesApi.addFavorite(id)
+                : favoritesApi.removeFavorite(id);
+
+        llamada.enqueue(new Callback<FavoriteResponse>() {
+            @Override
+            public void onResponse(Call<FavoriteResponse> call, Response<FavoriteResponse> response) {
+                if (response.isSuccessful()) {
+                    resolverFavorito(id, nuevoEstado, null);
+                } else {
+                    resolverFavorito(id, !nuevoEstado, ApiErrorMessage.from(response, nuevoEstado
+                            ? "No se pudo guardar la publicación"
+                            : "No se pudo quitar de favoritos"));
+                }
+            }
+
+            @Override
+            public void onFailure(Call<FavoriteResponse> call, Throwable t) {
+                resolverFavorito(id, !nuevoEstado, "Error de conexión");
+            }
+        });
+    }
+
+    /** Cierra la petición en curso dejando {@code estadoFinal} y avisa si hubo error. */
+    private void resolverFavorito(String id, boolean estadoFinal, String error) {
+        favoritosPendientes.remove(id);
+        // La lista pudo recargarse mientras la petición estaba en vuelo, por eso se busca por id.
+        Publicacion actual = buscarPublicacion(id);
+        if (actual != null) actual.setFavorite(estadoFinal);
+        if (!isAdded()) return;
+        actualizarBotonFavorito(id);
+        if (error != null) {
+            Toast.makeText(requireContext(), error, Toast.LENGTH_SHORT).show();
+        }
     }
 
     private MaterialCardView crearTarjeta() {

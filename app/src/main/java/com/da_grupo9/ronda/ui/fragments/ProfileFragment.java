@@ -248,8 +248,11 @@ public class ProfileFragment extends Fragment {
 
                 @Override public void onError(String mensaje) {
                     if (!isAdded()) return;
-                    buttonLogout.setEnabled(true);
                     mostrarError(mensaje);
+                    NavOptions options = new NavOptions.Builder()
+                            .setPopUpTo(R.id.nav_graph, true)
+                            .build();
+                    Navigation.findNavController(v).navigate(R.id.loginFragment, null, options);
                 }
             });
         });

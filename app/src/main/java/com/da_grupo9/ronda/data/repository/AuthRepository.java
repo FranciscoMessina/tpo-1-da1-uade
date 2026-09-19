@@ -5,6 +5,7 @@ import com.da_grupo9.ronda.data.model.LoginResponse;
 import com.da_grupo9.ronda.data.model.Perfil;
 import com.da_grupo9.ronda.data.remote.AuthApi;
 import com.da_grupo9.ronda.data.remote.ProfileApi;
+import com.da_grupo9.ronda.util.ApiErrorMessage;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -77,7 +78,8 @@ public class AuthRepository {
         api.logout().enqueue(new Callback<ResponseBody>() {
             @Override public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
                 sessionManager.clear();
-                result.onSuccess();
+                if (response.isSuccessful()) result.onSuccess();
+                else result.onError(ApiErrorMessage.from(response, "No se pudo cerrar la sesión en el servidor"));
             }
 
             @Override public void onFailure(Call<ResponseBody> call, Throwable error) {
@@ -103,7 +105,7 @@ public class AuthRepository {
                 if (response.code() == 401 || response.code() == 403) {
                     sessionManager.clear();
                 }
-                result.onError("La sesión guardada ya no es válida");
+                result.onError(ApiErrorMessage.from(response, "La sesión guardada ya no es válida"));
             }
 
             @Override public void onFailure(Call<Perfil> call, Throwable error) {
@@ -133,7 +135,7 @@ public class AuthRepository {
                     if (passwordStatus != null) sessionManager.setPasswordStatus(passwordStatus);
                     result.onSuccess();
                 } else {
-                    result.onError("El servidor respondió con código " + response.code());
+                    result.onError(ApiErrorMessage.from(response, "El servidor respondió con código " + response.code()));
                 }
             }
             @Override public void onFailure(Call<LoginResponse> call, Throwable error) {
@@ -146,7 +148,7 @@ public class AuthRepository {
         call.enqueue(new Callback<ResponseBody>() {
             @Override public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
                 if (response.isSuccessful()) result.onSuccess();
-                else result.onError("El servidor respondió con código " + response.code());
+                else result.onError(ApiErrorMessage.from(response, "El servidor respondió con código " + response.code()));
             }
             @Override public void onFailure(Call<ResponseBody> call, Throwable error) {
                 result.onError(error instanceof IOException ? "No se pudo conectar con el servidor" : "Respuesta inválida del servidor");

@@ -4,6 +4,7 @@ import com.da_grupo9.ronda.data.model.Perfil;
 import com.da_grupo9.ronda.data.remote.ProfileApi;
 import com.da_grupo9.ronda.data.model.UploadImageResponse;
 import com.da_grupo9.ronda.data.model.OperationsResponse;
+import com.da_grupo9.ronda.util.ApiErrorMessage;
 import okhttp3.MultipartBody;
 import java.io.IOException;
 import javax.inject.Inject;
@@ -30,7 +31,7 @@ public class ProfileRepository {
         call.enqueue(new Callback<Perfil>() {
             @Override public void onResponse(Call<Perfil> call, Response<Perfil> response) {
                 if (response.isSuccessful() && response.body() != null) result.onSuccess(response.body());
-                else result.onError("El servidor respondió con código " + response.code());
+                else result.onError(ApiErrorMessage.from(response, "El servidor respondió con código " + response.code()));
             }
             @Override public void onFailure(Call<Perfil> call, Throwable error) {
                 result.onError(error instanceof IOException ? "No se pudo conectar con el servidor" : "Respuesta inválida del servidor");
@@ -42,7 +43,7 @@ public class ProfileRepository {
         call.enqueue(new Callback<T>() {
             @Override public void onResponse(Call<T> call, Response<T> response) {
                 if (response.isSuccessful() && response.body() != null) result.onSuccess(response.body());
-                else result.onError("El servidor respondió con código " + response.code());
+                else result.onError(ApiErrorMessage.from(response, "El servidor respondió con código " + response.code()));
             }
             @Override public void onFailure(Call<T> call, Throwable error) {
                 result.onError(error instanceof IOException ? "No se pudo conectar con el servidor" : "Respuesta inválida del servidor");

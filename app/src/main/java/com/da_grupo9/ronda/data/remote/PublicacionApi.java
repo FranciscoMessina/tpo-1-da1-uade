@@ -4,6 +4,7 @@ import com.da_grupo9.ronda.data.model.Publicacion;
 import com.da_grupo9.ronda.data.model.PublicacionesResponse;
 import com.da_grupo9.ronda.data.model.PublicUser;
 import com.da_grupo9.ronda.data.model.PublicationRequest;
+import com.da_grupo9.ronda.data.model.ReviewsResponse;
 import com.da_grupo9.ronda.data.model.UploadImageResponse;
 import com.da_grupo9.ronda.data.model.CategoriesResponse;
 import com.da_grupo9.ronda.data.model.ZonesResponse;
@@ -35,6 +36,11 @@ public interface PublicacionApi {
     @GET("categories") Call<CategoriesResponse> getCategories();
     @GET("zones") Call<ZonesResponse> getZones();
     @GET("users/{id}") Call<PublicUser> getUsuario(@Path("id") String id);
+    @GET("users/{id}/reviews")
+    Call<ReviewsResponse> getResenasUsuario(
+            @Path("id") String id,
+            @Query("page") int page,
+            @Query("pageSize") int pageSize);
     @GET("publications/{id}") Call<Publicacion> getPublicacion(@Path("id") String id);
     @GET("me/publications") Call<PublicacionesResponse> getPublicacionesPropias();
     @POST("publications") Call<Publicacion> crearPublicacion(@Body PublicationRequest publicacion);

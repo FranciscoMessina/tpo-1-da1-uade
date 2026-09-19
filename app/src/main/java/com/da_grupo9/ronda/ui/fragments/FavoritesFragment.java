@@ -19,6 +19,7 @@ import com.da_grupo9.ronda.data.model.FavoriteItem;
 import com.da_grupo9.ronda.data.model.FavoritesResponse;
 import com.da_grupo9.ronda.data.model.FavoritesReadResponse;
 import com.da_grupo9.ronda.data.remote.FavoritesApi;
+import com.da_grupo9.ronda.util.ApiErrorMessage;
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.color.MaterialColors;
 
@@ -92,7 +93,7 @@ public class FavoritesFragment extends Fragment {
 
                     Toast.makeText(
                             requireContext(),
-                            "No se pudieron cargar los favoritos",
+                            ApiErrorMessage.from(response, "No se pudieron cargar los favoritos"),
                             Toast.LENGTH_SHORT
                     ).show();
                 }
@@ -119,7 +120,11 @@ public class FavoritesFragment extends Fragment {
             @Override
             public void onResponse(@NonNull Call<FavoritesReadResponse> call,
                                    @NonNull Response<FavoritesReadResponse> response) {
-                // Las novedades ya fueron mostradas; el contador queda en cero para la próxima visita.
+                if (!response.isSuccessful() && isAdded()) {
+                    Toast.makeText(requireContext(),
+                            ApiErrorMessage.from(response, "No se pudieron marcar los favoritos como leídos"),
+                            Toast.LENGTH_SHORT).show();
+                }
             }
 
             @Override

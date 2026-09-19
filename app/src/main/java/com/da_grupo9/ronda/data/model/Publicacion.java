@@ -114,6 +114,7 @@ public class Publicacion implements Serializable {
     }
     public List<Question> getQuestions() { return questions != null ? questions : Collections.emptyList(); }
     public boolean isFavorite() { return Boolean.TRUE.equals(isFavorite); }
+    public void setFavorite(boolean favorite) { this.isFavorite = favorite; }
     public Actions getActions() { return actions; }
 
     public static class Question implements Serializable {

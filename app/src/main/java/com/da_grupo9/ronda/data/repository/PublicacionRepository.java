@@ -10,6 +10,7 @@ import com.da_grupo9.ronda.data.model.Publicacion;
 import com.da_grupo9.ronda.data.model.PublicacionesResponse;
 import com.da_grupo9.ronda.data.model.PublicUser;
 import com.da_grupo9.ronda.data.model.PublicationRequest;
+import com.da_grupo9.ronda.data.model.ReviewsResponse;
 import com.da_grupo9.ronda.data.model.UploadImageResponse;
 import com.da_grupo9.ronda.data.model.CategoriesResponse;
 import com.da_grupo9.ronda.data.model.ZonesResponse;
@@ -17,6 +18,7 @@ import com.da_grupo9.ronda.data.model.QuestionRequest;
 import com.da_grupo9.ronda.data.remote.PublicacionApi;
 import com.da_grupo9.ronda.util.ImageStorageManager;
 import com.da_grupo9.ronda.util.NetworkMonitor;
+import com.da_grupo9.ronda.util.ApiErrorMessage;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -102,7 +104,7 @@ public class PublicacionRepository {
                     int total = pagination != null ? pagination.getTotal() : items.size();
                     mainHandler.post(() -> resultado.onSuccess(items, responsePage, totalPages, total));
                 } else {
-                    resultado.onError("El servidor respondió con código " + response.code());
+                    resultado.onError(ApiErrorMessage.from(response, "El servidor respondió con código " + response.code()));
                 }
             }
 
@@ -144,7 +146,8 @@ public class PublicacionRepository {
                     guardarConsultaDetalle(publicacion);
                     mainHandler.post(() -> resultado.onSuccess(publicacion));
                 } else {
-                    obtenerPublicacionDeCache(id, resultado, "El servidor respondió con código " + response.code());
+                    obtenerPublicacionDeCache(id, resultado, ApiErrorMessage.from(response,
+                            "El servidor respondió con código " + response.code()));
                 }
             }
 
@@ -273,11 +276,15 @@ public class PublicacionRepository {
         ejecutar(api.getUsuario(id), resultado);
     }
 
+    public void getResenasUsuario(String id, int page, int pageSize, Resultado<ReviewsResponse> resultado) {
+        ejecutar(api.getResenasUsuario(id, page, pageSize), resultado);
+    }
+
     public void getMisPublicaciones(Resultado<List<Publicacion>> resultado) {
         api.getPublicacionesPropias().enqueue(new Callback<PublicacionesResponse>() {
             @Override public void onResponse(Call<PublicacionesResponse> call, Response<PublicacionesResponse> response) {
                 if (response.isSuccessful() && response.body() != null) resultado.onSuccess(response.body().getItems());
-                else resultado.onError("El servidor respondió con código " + response.code());
+                else resultado.onError(ApiErrorMessage.from(response, "El servidor respondió con código " + response.code()));
             }
             @Override public void onFailure(Call<PublicacionesResponse> call, Throwable error) {
                 resultado.onError(error instanceof IOException ? "No se pudo conectar con el servidor" : "No se pudo procesar la respuesta del servidor");
@@ -362,7 +369,8 @@ public class PublicacionRepository {
         api.subirImagen(part).enqueue(new Callback<UploadImageResponse>() {
             @Override public void onResponse(Call<UploadImageResponse> call, Response<UploadImageResponse> response) {
                 if (!response.isSuccessful() || response.body() == null || response.body().getUrl() == null) {
-                    resultado.onError("No se pudo subir una imagen (código " + response.code() + ")");
+                    resultado.onError(ApiErrorMessage.from(response,
+                            "No se pudo subir una imagen (código " + response.code() + ")"));
                     return;
                 }
                 urls.add(response.body().getUrl());
@@ -381,7 +389,7 @@ public class PublicacionRepository {
                 if (response.isSuccessful() && response.body() != null) {
                     resultado.onSuccess(response.body());
                 } else {
-                    resultado.onError("El servidor respondió con código " + response.code());
+                    resultado.onError(ApiErrorMessage.from(response, "El servidor respondió con código " + response.code()));
                 }
             }
 

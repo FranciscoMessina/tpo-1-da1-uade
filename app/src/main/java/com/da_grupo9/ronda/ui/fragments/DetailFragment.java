@@ -5,6 +5,7 @@ import com.da_grupo9.ronda.data.model.Publicacion;
 import com.da_grupo9.ronda.data.repository.PublicacionRepository;
 import com.da_grupo9.ronda.util.NetworkMonitor;
 import com.da_grupo9.ronda.data.remote.FavoritesApi;
+import com.da_grupo9.ronda.util.ApiErrorMessage;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -340,9 +341,9 @@ public class DetailFragment extends Fragment {
                     } else {
                         Toast.makeText(
                                 requireContext(),
-                                esFavorito
+                                ApiErrorMessage.from(response, esFavorito
                                         ? "No se pudo quitar de favoritos"
-                                        : "No se pudo guardar la publicación",
+                                        : "No se pudo guardar la publicación"),
                                 Toast.LENGTH_SHORT
                         ).show();
                     }
