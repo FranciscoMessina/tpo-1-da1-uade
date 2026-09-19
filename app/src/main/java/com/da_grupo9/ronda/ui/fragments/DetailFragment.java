@@ -177,7 +177,12 @@ public class DetailFragment extends Fragment {
         if (bannerDetailOffline != null) {
             bannerDetailOffline.setVisibility(isOnline ? View.GONE : View.VISIBLE);
         }
-        if (buttonPreguntar != null) buttonPreguntar.setEnabled(isOnline);
+        if (buttonPreguntar != null) {
+            boolean puedePreguntar = publicacionCargada == null
+                    || publicacionCargada.getActions() == null
+                    || publicacionCargada.getActions().canAsk();
+            buttonPreguntar.setEnabled(isOnline && puedePreguntar);
+        }
         if (buttonOfertar != null) buttonOfertar.setEnabled(isOnline);
         if (buttonGuardar != null) buttonGuardar.setEnabled(isOnline);
         if (buttonModificar != null) buttonModificar.setEnabled(isOnline);
@@ -262,7 +267,19 @@ public class DetailFragment extends Fragment {
                 return;
             }
             if (publicacionCargada != null) {
-                Toast.makeText(requireContext(), "Abriendo chat con " + publicacionCargada.getVendedorNombre(), Toast.LENGTH_SHORT).show();
+                if (publicacionCargada.getActions() != null
+                        && !publicacionCargada.getActions().canAsk()) {
+                    Toast.makeText(requireContext(), "No podés preguntar en esta publicación", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                Bundle bundle = new Bundle();
+                bundle.putString("publicacionId", publicacionCargada.getId());
+                bundle.putString("publicacionTitulo", publicacionCargada.getTitulo());
+                bundle.putString("vendedorNombre", publicacionCargada.getVendedorNombre());
+                Navigation.findNavController(v).navigate(
+                        R.id.action_detailFragment_to_questionFragment,
+                        bundle
+                );
             }
         });
 
