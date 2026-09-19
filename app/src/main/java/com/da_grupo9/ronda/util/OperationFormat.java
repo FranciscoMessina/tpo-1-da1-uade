@@ -33,6 +33,10 @@ public final class OperationFormat {
         return operation.isPurchase() ? "Vendedor" : "Comprador";
     }
 
+    public static String counterpartyRole(Operation operation) {
+        return operation.isPurchase() ? "Vendedor" : "Comprador";
+    }
+
     public static String stars(int rating) {
         int clamped = Math.max(0, Math.min(5, rating));
         return "★".repeat(clamped) + "☆".repeat(5 - clamped);

@@ -200,7 +200,7 @@ public class OperationsHistoryFragment extends Fragment {
             ((TextView) card.findViewById(R.id.textOperationTitle)).setText(operation.getTitle());
             ((TextView) card.findViewById(R.id.textOperationAmount)).setText(OperationFormat.amount(operation.getAmount()));
             ((TextView) card.findViewById(R.id.textOperationCounterparty)).setText(
-                    (operation.isPurchase() ? "Vendedor: " : "Comprador: ") + OperationFormat.counterpartyLabel(operation));
+                    OperationFormat.counterpartyRole(operation) + ": " + OperationFormat.counterpartyLabel(operation));
             ((TextView) card.findViewById(R.id.textOperationRating)).setText(OperationFormat.ratingStatus(operation));
 
             View.OnClickListener abrirDetalle = v -> {

@@ -1,6 +1,7 @@
 package com.da_grupo9.ronda.data.repository;
 
 import com.da_grupo9.ronda.data.model.CreateReviewRequest;
+import com.da_grupo9.ronda.data.model.Operation;
 import com.da_grupo9.ronda.data.model.Perfil;
 import com.da_grupo9.ronda.data.remote.ProfileApi;
 import com.da_grupo9.ronda.data.model.UploadImageResponse;
@@ -27,6 +28,9 @@ public class ProfileRepository {
     public void getOperations(String type, String from, String to,
                               PublicacionRepository.Resultado<OperationsResponse> result) {
         ejecutarGenerico(api.getOperations(type, from, to), result);
+    }
+    public void getOperation(String operationId, PublicacionRepository.Resultado<Operation> result) {
+        ejecutarGenerico(api.getOperation(operationId), result);
     }
     public void createReview(String operationId, int rating, String comment,
                              PublicacionRepository.Resultado<Void> result) {

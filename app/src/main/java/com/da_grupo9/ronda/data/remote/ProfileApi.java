@@ -1,6 +1,7 @@
 package com.da_grupo9.ronda.data.remote;
 
 import com.da_grupo9.ronda.data.model.CreateReviewRequest;
+import com.da_grupo9.ronda.data.model.Operation;
 import com.da_grupo9.ronda.data.model.Perfil;
 import com.da_grupo9.ronda.data.model.UploadImageResponse;
 import com.da_grupo9.ronda.data.model.OperationsResponse;
@@ -21,6 +22,8 @@ public interface ProfileApi {
     Call<OperationsResponse> getOperations(@Query("type") String type,
                                            @Query("from") String from,
                                            @Query("to") String to);
+    @GET("operations/{id}")
+    Call<Operation> getOperation(@Path("id") String operationId);
     @POST("operations/{id}/reviews")
     Call<Void> createReview(@Path("id") String operationId, @Body CreateReviewRequest request);
     @PATCH("me") Call<Perfil> updateMe(@Body Perfil perfil);

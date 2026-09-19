@@ -19,6 +19,7 @@ import androidx.navigation.Navigation;
 import com.da_grupo9.ronda.R;
 import com.da_grupo9.ronda.data.model.Operation;
 import com.da_grupo9.ronda.data.model.PublicUser;
+import com.da_grupo9.ronda.data.repository.ProfileRepository;
 import com.da_grupo9.ronda.data.repository.PublicacionRepository;
 import com.da_grupo9.ronda.ui.components.RatingBottomSheet;
 import com.da_grupo9.ronda.util.OperationFormat;
@@ -34,6 +35,7 @@ import dagger.hilt.android.AndroidEntryPoint;
 public class OperationDetailFragment extends Fragment {
 
     @Inject PublicacionRepository publicacionRepository;
+    @Inject ProfileRepository profileRepository;
 
     private Operation operation;
     private String counterpartyName;
@@ -107,6 +109,7 @@ public class OperationDetailFragment extends Fragment {
                     operation.setMyRating(result.getInt(RatingBottomSheet.RESULT_RATING));
                     mostrarCalificacion();
                     cargarContraparte();
+                    refrescarOperacion();
                 });
 
         mostrarContraparte();
@@ -114,9 +117,21 @@ public class OperationDetailFragment extends Fragment {
         cargarContraparte();
     }
 
+    /** Sincroniza con el servidor la calificación recién enviada; si falla queda la actualización local. */
+    private void refrescarOperacion() {
+        profileRepository.getOperation(operation.getId(), new PublicacionRepository.Resultado<Operation>() {
+            @Override public void onSuccess(Operation fresh) {
+                if (!isAdded() || getView() == null) return;
+                operation = fresh;
+                mostrarCalificacion();
+            }
+
+            @Override public void onError(String mensaje) { }
+        });
+    }
+
     private void mostrarContraparte() {
-        String rol = operation.isPurchase() ? "Vendedor" : "Comprador";
-        textCounterparty.setText(rol + ": " + counterpartyName);
+        textCounterparty.setText(OperationFormat.counterpartyRole(operation) + ": " + counterpartyName);
         textReputation.setText(counterpartyReputation.isEmpty() ? "Cargando reputación…"
                 : "Reputación: " + counterpartyReputation);
     }
@@ -133,7 +148,6 @@ public class OperationDetailFragment extends Fragment {
         publicacionRepository.getUsuario(id, new PublicacionRepository.Resultado<PublicUser>() {
             @Override public void onSuccess(PublicUser user) {
                 if (!isAdded() || getView() == null) return;
-                if (user.getName() != null && !user.getName().isEmpty()) counterpartyName = user.getName();
                 counterpartyReputation = String.format(Locale.getDefault(), "%.1f (%d calificaciones)",
                         user.getRatingAverage(), user.getRatingCount());
                 mostrarContraparte();
