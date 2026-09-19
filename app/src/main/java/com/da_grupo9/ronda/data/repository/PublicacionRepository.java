@@ -11,6 +11,8 @@ import com.da_grupo9.ronda.data.model.PublicacionesResponse;
 import com.da_grupo9.ronda.data.model.PublicUser;
 import com.da_grupo9.ronda.data.model.PublicationRequest;
 import com.da_grupo9.ronda.data.model.UploadImageResponse;
+import com.da_grupo9.ronda.data.model.CategoriesResponse;
+import com.da_grupo9.ronda.data.model.ZonesResponse;
 import com.da_grupo9.ronda.data.remote.PublicacionApi;
 import com.da_grupo9.ronda.util.ImageStorageManager;
 import com.da_grupo9.ronda.util.NetworkMonitor;
@@ -22,6 +24,8 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.io.File;
+import java.util.Comparator;
+import java.util.Locale;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -38,6 +42,11 @@ public class PublicacionRepository {
 
     public interface Resultado<T> {
         void onSuccess(T data);
+        void onError(String mensaje);
+    }
+
+    public interface ResultadoPagina {
+        void onSuccess(List<Publicacion> items, int page, int totalPages, int total);
         void onError(String mensaje);
     }
 
@@ -69,30 +78,54 @@ public class PublicacionRepository {
         return networkMonitor;
     }
 
-    public void getPublicaciones(Resultado<List<Publicacion>> resultado) {
+    public void getPublicaciones(int page, int pageSize, String query, String category,
+                                 String condition, String zone, Double minPrice, Double maxPrice,
+                                 String sort, ResultadoPagina resultado) {
         if (!networkMonitor.isOnline()) {
-            obtenerPublicacionesDeCache(resultado, "Sin conexión a internet y no hay publicaciones guardadas");
+            obtenerPublicacionesDeCache(page, pageSize, query, category, condition, zone,
+                    minPrice, maxPrice, sort, resultado,
+                    "Sin conexión a internet y no hay publicaciones guardadas");
             return;
         }
 
-        api.getPublicaciones().enqueue(new Callback<PublicacionesResponse>() {
+        api.getPublicaciones(page, pageSize, query, category, condition, zone, minPrice, maxPrice, sort)
+                .enqueue(new Callback<PublicacionesResponse>() {
             @Override
             public void onResponse(Call<PublicacionesResponse> call, Response<PublicacionesResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     List<Publicacion> items = response.body().getItems();
                     guardarPublicacionesEnCache(items);
-                    mainHandler.post(() -> resultado.onSuccess(items));
+                    PublicacionesResponse.Pagination pagination = response.body().getPagination();
+                    int responsePage = pagination != null ? pagination.getPage() : page;
+                    int totalPages = pagination != null ? pagination.getTotalPages() : 1;
+                    int total = pagination != null ? pagination.getTotal() : items.size();
+                    mainHandler.post(() -> resultado.onSuccess(items, responsePage, totalPages, total));
                 } else {
-                    obtenerPublicacionesDeCache(resultado, "El servidor respondió con código " + response.code());
+                    resultado.onError("El servidor respondió con código " + response.code());
                 }
             }
 
             @Override
             public void onFailure(Call<PublicacionesResponse> call, Throwable error) {
-                obtenerPublicacionesDeCache(resultado, error instanceof IOException
-                        ? "No se pudo conectar con el servidor"
-                        : "No se pudo procesar la respuesta del servidor");
+                obtenerPublicacionesDeCache(page, pageSize, query, category, condition, zone,
+                        minPrice, maxPrice, sort, resultado, error instanceof IOException
+                                ? "No se pudo conectar con el servidor"
+                                : "No se pudo procesar la respuesta del servidor");
             }
+        });
+    }
+
+    public void getCategories(Resultado<List<String>> resultado) {
+        ejecutar(api.getCategories(), new Resultado<CategoriesResponse>() {
+            @Override public void onSuccess(CategoriesResponse data) { resultado.onSuccess(data.getItems()); }
+            @Override public void onError(String mensaje) { resultado.onError(mensaje); }
+        });
+    }
+
+    public void getZones(Resultado<List<String>> resultado) {
+        ejecutar(api.getZones(), new Resultado<ZonesResponse>() {
+            @Override public void onSuccess(ZonesResponse data) { resultado.onSuccess(data.getItems()); }
+            @Override public void onError(String mensaje) { resultado.onError(mensaje); }
         });
     }
 
@@ -176,20 +209,49 @@ public class PublicacionRepository {
         });
     }
 
-    private void obtenerPublicacionesDeCache(Resultado<List<Publicacion>> resultado, String fallbackError) {
+    private void obtenerPublicacionesDeCache(int page, int pageSize, String query, String category,
+                                             String condition, String zone, Double minPrice,
+                                             Double maxPrice, String sort, ResultadoPagina resultado,
+                                             String fallbackError) {
         dbExecutor.execute(() -> {
             List<PublicacionEntity> cached = publicacionDao.getPublicacionesHome();
             if (cached != null && !cached.isEmpty()) {
                 List<Publicacion> modelos = new ArrayList<>();
                 for (PublicacionEntity entity : cached) {
                     Publicacion pub = PublicacionMapper.toModel(entity, imageStorageManager);
-                    if (pub != null) modelos.add(pub);
+                    if (pub != null && coincide(pub, query, category, condition, zone, minPrice, maxPrice)) {
+                        modelos.add(pub);
+                    }
                 }
-                mainHandler.post(() -> resultado.onSuccess(modelos));
+                if ("price_asc".equals(sort)) modelos.sort(Comparator.comparingDouble(Publicacion::getPrecio));
+                else if ("price_desc".equals(sort)) modelos.sort(Comparator.comparingDouble(Publicacion::getPrecio).reversed());
+                else modelos.sort(Comparator.comparingInt(Publicacion::getFecha).reversed());
+
+                int total = modelos.size();
+                int totalPages = Math.max(1, (int) Math.ceil((double) total / pageSize));
+                int safePage = Math.min(Math.max(1, page), totalPages);
+                int from = Math.min((safePage - 1) * pageSize, total);
+                int to = Math.min(from + pageSize, total);
+                List<Publicacion> pagina = new ArrayList<>(modelos.subList(from, to));
+                mainHandler.post(() -> resultado.onSuccess(pagina, safePage, totalPages, total));
             } else {
                 mainHandler.post(() -> resultado.onError(fallbackError));
             }
         });
+    }
+
+    private boolean coincide(Publicacion publicacion, String query, String category, String condition,
+                              String zone, Double minPrice, Double maxPrice) {
+        String normalizedQuery = query == null ? null : query.toLowerCase(Locale.ROOT);
+        boolean textMatches = normalizedQuery == null
+                || (publicacion.getTitulo() != null && publicacion.getTitulo().toLowerCase(Locale.ROOT).contains(normalizedQuery))
+                || (publicacion.getDescripcion() != null && publicacion.getDescripcion().toLowerCase(Locale.ROOT).contains(normalizedQuery));
+        return textMatches
+                && (category == null || category.equals(publicacion.getCategoryApiValue()))
+                && (condition == null || condition.equals(publicacion.getConditionApiValue()))
+                && (zone == null || zone.equalsIgnoreCase(publicacion.getZona()))
+                && (minPrice == null || publicacion.getPrecio() >= minPrice)
+                && (maxPrice == null || publicacion.getPrecio() <= maxPrice);
     }
 
     private void obtenerPublicacionDeCache(String id, Resultado<Publicacion> resultado, String fallbackError) {

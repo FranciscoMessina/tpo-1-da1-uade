@@ -65,6 +65,7 @@ public class HomeFragment extends Fragment {
     private Button botonSiguiente;
 
     private TextView textoPagina;
+    private TextView textoResultados;
     private View bannerOffline;
     private com.da_grupo9.ronda.util.NetworkMonitor.NetworkStatusListener networkListener;
     private boolean previouslyOffline = false;
@@ -74,6 +75,11 @@ public class HomeFragment extends Fragment {
 
     private int paginaActual = 1;
     private final int publicacionesPorPagina = 3;
+    private int totalPaginas = 1;
+    private int totalResultados = 0;
+    private final List<String> categoryCodes = new ArrayList<>();
+    private final List<String> zoneValues = new ArrayList<>();
+    private String zonaBusquedaGuardada;
 
     private String usuarioActualEmail = "";
     private boolean aplicarBusquedaGuardada = false;
@@ -131,6 +137,7 @@ public class HomeFragment extends Fragment {
         botonSiguiente = view.findViewById(R.id.botonSiguiente);
 
         textoPagina = view.findViewById(R.id.textoPagina);
+        textoResultados = view.findViewById(R.id.textoResultados);
 
         botonGuardarBusqueda = view.findViewById(R.id.botonGuardarBusqueda);
 
@@ -147,6 +154,8 @@ public class HomeFragment extends Fragment {
         }
 
         configurarSpinners();
+        cargarCategorias();
+        cargarZonas();
         cargarBusquedaGuardada();
         configurarVisibilidadGuardarBusqueda();
 
@@ -184,32 +193,30 @@ public class HomeFragment extends Fragment {
     private void cargarDatos() {
         actualizarEstadoConexion(publicacionRepository.isOnline());
 
-        publicacionRepository.getPublicaciones(
-                new PublicacionRepository.Resultado<List<Publicacion>>() {
+        String query = valorOpcional(buscador.getText().toString());
+        String category = categoriaSeleccionadaApi();
+        String condition = condicionSeleccionadaApi();
+        String zone = zonaSeleccionadaApi();
+        Double minPrice = precioOpcional(precioMinimo.getText().toString());
+        Double maxPrice = precioOpcional(precioMaximo.getText().toString());
+        String sort = ordenSeleccionadoApi();
+
+        publicacionRepository.getPublicaciones(paginaActual, publicacionesPorPagina, query,
+                category, condition, zone, minPrice, maxPrice, sort,
+                new PublicacionRepository.ResultadoPagina() {
 
                     @Override
-                    public void onSuccess(List<Publicacion> data) {
+                    public void onSuccess(List<Publicacion> data, int page, int pages, int total) {
                         if (!isAdded()) return;
 
                         actualizarEstadoConexion(publicacionRepository.isOnline());
-
-                        publicaciones.clear();
-
-                        for (Publicacion publicacion : data) {
-                            if (publicacion.isVisibleInPublicFeed()) {
-                                publicaciones.add(publicacion);
-                            }
-                        }
-
-                        publicacionesFiltradas = new ArrayList<>(publicaciones);
-                        paginaActual = 1;
-
-                        if (aplicarBusquedaGuardada) {
-                            aplicarBusquedaGuardada = false;
-                            aplicarFiltros();
-                        } else {
-                            mostrarPagina();
-                        }
+                        publicaciones = new ArrayList<>(data);
+                        publicacionesFiltradas = new ArrayList<>(data);
+                        paginaActual = page;
+                        totalPaginas = Math.max(1, pages);
+                        totalResultados = total;
+                        aplicarBusquedaGuardada = false;
+                        mostrarPagina();
                     }
 
                     @Override
@@ -230,18 +237,8 @@ public class HomeFragment extends Fragment {
     }
 
     private void configurarSpinners() {
-
-        String[] categorias = {
-                "Todas",
-                "Tecnología",
-                "Hogar",
-                "Deportes",
-                "Ropa y moda",
-                "Vehículos",
-                "Libros",
-                "Juguetes",
-                "Otros"
-        };
+        actualizarCategorias(java.util.Arrays.asList(
+                "electronics", "home", "fashion", "sports", "vehicles", "books", "toys", "other"));
 
         String[] estados = {
                 "Todos",
@@ -250,10 +247,7 @@ public class HomeFragment extends Fragment {
                 "Usado"
         };
 
-        String[] cercania = {
-                "Todas las zonas",
-                "Cerca de mí"
-        };
+        actualizarZonas(Collections.emptyList());
 
         String[] ordenamientos = {
                 "Más recientes",
@@ -261,27 +255,11 @@ public class HomeFragment extends Fragment {
                 "Mayor precio"
         };
 
-        spinnerCategoria.setAdapter(
-                new ArrayAdapter<>(
-                        requireContext(),
-                        android.R.layout.simple_spinner_dropdown_item,
-                        categorias
-                )
-        );
-
         spinnerEstado.setAdapter(
                 new ArrayAdapter<>(
                         requireContext(),
                         android.R.layout.simple_spinner_dropdown_item,
                         estados
-                )
-        );
-
-        spinnerCercania.setAdapter(
-                new ArrayAdapter<>(
-                        requireContext(),
-                        android.R.layout.simple_spinner_dropdown_item,
-                        cercania
                 )
         );
 
@@ -292,6 +270,56 @@ public class HomeFragment extends Fragment {
                         ordenamientos
                 )
         );
+    }
+
+    private void cargarCategorias() {
+        publicacionRepository.getCategories(new PublicacionRepository.Resultado<List<String>>() {
+            @Override public void onSuccess(List<String> data) {
+                if (!isAdded() || data.isEmpty()) return;
+                String selected = categoriaSeleccionadaApi();
+                actualizarCategorias(data);
+                seleccionarCategoriaGuardada(selected);
+            }
+
+            @Override public void onError(String mensaje) {
+                // Se conserva el catálogo conocido para que Home siga disponible offline.
+            }
+        });
+    }
+
+    private void actualizarCategorias(List<String> codes) {
+        categoryCodes.clear();
+        categoryCodes.addAll(codes);
+        List<String> labels = new ArrayList<>();
+        labels.add("Todas");
+        for (String code : codes) labels.add(etiquetaCategoria(code));
+        spinnerCategoria.setAdapter(new ArrayAdapter<>(requireContext(),
+                android.R.layout.simple_spinner_dropdown_item, labels));
+    }
+
+    private void cargarZonas() {
+        publicacionRepository.getZones(new PublicacionRepository.Resultado<List<String>>() {
+            @Override public void onSuccess(List<String> data) {
+                if (!isAdded()) return;
+                String selected = zonaSeleccionadaApi();
+                actualizarZonas(data);
+                seleccionarCercaniaGuardada(selected != null ? selected : zonaBusquedaGuardada);
+            }
+
+            @Override public void onError(String mensaje) {
+                // Se mantiene "Todas las zonas" si no se puede cargar el catálogo.
+            }
+        });
+    }
+
+    private void actualizarZonas(List<String> zones) {
+        zoneValues.clear();
+        zoneValues.addAll(zones);
+        List<String> labels = new ArrayList<>();
+        labels.add("Todas las zonas");
+        labels.addAll(zones);
+        spinnerCercania.setAdapter(new ArrayAdapter<>(requireContext(),
+                android.R.layout.simple_spinner_dropdown_item, labels));
     }
 
     private void configurarVisibilidadGuardarBusqueda() {
@@ -394,8 +422,7 @@ public class HomeFragment extends Fragment {
         String estado =
                 spinnerEstado.getSelectedItem().toString();
 
-        String cercania =
-                spinnerCercania.getSelectedItem().toString();
+        String cercania = zonaSeleccionadaApi();
 
         String orden =
                 spinnerOrden.getSelectedItem().toString();
@@ -444,12 +471,6 @@ public class HomeFragment extends Fragment {
             estado = "like_new";
         } else if (estado.equals("Usado")) {
             estado = "used";
-        }
-
-        if (cercania.equals("Todas las zonas")) {
-            cercania = null;
-        } else if (cercania.equals("Cerca de mí")) {
-            cercania = "Palermo";
         }
 
         if (orden.equals("Más recientes")) {
@@ -559,36 +580,8 @@ public class HomeFragment extends Fragment {
             spinnerCategoria.setSelection(0);
             return;
         }
-
-        switch (category) {
-            case "electronics":
-                spinnerCategoria.setSelection(1);
-                break;
-            case "home":
-                spinnerCategoria.setSelection(2);
-                break;
-            case "sports":
-                spinnerCategoria.setSelection(3);
-                break;
-            case "fashion":
-                spinnerCategoria.setSelection(4);
-                break;
-            case "vehicles":
-                spinnerCategoria.setSelection(5);
-                break;
-            case "books":
-                spinnerCategoria.setSelection(6);
-                break;
-            case "toys":
-                spinnerCategoria.setSelection(7);
-                break;
-            case "other":
-                spinnerCategoria.setSelection(8);
-                break;
-            default:
-                spinnerCategoria.setSelection(0);
-                break;
-        }
+        int index = categoryCodes.indexOf(category);
+        spinnerCategoria.setSelection(index >= 0 ? index + 1 : 0);
     }
 
     private void seleccionarEstadoGuardado(String condition) {
@@ -617,15 +610,14 @@ public class HomeFragment extends Fragment {
     private void seleccionarCercaniaGuardada(String zone) {
 
         if (zone == null) {
+            zonaBusquedaGuardada = null;
             spinnerCercania.setSelection(0);
             return;
         }
 
-        if (zone.equals("Palermo")) {
-            spinnerCercania.setSelection(1);
-        } else {
-            spinnerCercania.setSelection(0);
-        }
+        zonaBusquedaGuardada = zone;
+        int index = zoneValues.indexOf(zone);
+        spinnerCercania.setSelection(index >= 0 ? index + 1 : 0);
     }
 
     private void seleccionarOrdenGuardado(String sort) {
@@ -650,7 +642,7 @@ public class HomeFragment extends Fragment {
                 break;
         }
     }
-    private void aplicarFiltros() {
+    private void aplicarFiltrosLocal() {
 
         String texto =
                 buscador.getText()
@@ -720,7 +712,7 @@ public class HomeFragment extends Fragment {
             boolean coincideCercania =
                     cercaniaSeleccionada
                             .equals("Todas las zonas")
-                            || "Palermo".equals(publicacion.getZona());
+                            || cercaniaSeleccionada.equals(publicacion.getZona());
 
             if (coincideTexto
                     && coincideCategoria
@@ -773,8 +765,30 @@ public class HomeFragment extends Fragment {
         mostrarPagina();
     }
 
-    private void mostrarPagina() {
+    private void aplicarFiltros() {
+        try {
+            if (buscador.getText().toString().trim().length() > 200) {
+                Toast.makeText(requireContext(), "La búsqueda no puede superar los 200 caracteres", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            Double min = precioOpcional(precioMinimo.getText().toString());
+            Double max = precioOpcional(precioMaximo.getText().toString());
+            if (min != null && min < 0 || max != null && max < 0) {
+                Toast.makeText(requireContext(), "Los precios no pueden ser negativos", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            if (min != null && max != null && min > max) {
+                Toast.makeText(requireContext(), "El precio mínimo no puede superar al máximo", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            paginaActual = 1;
+            cargarDatos();
+        } catch (NumberFormatException error) {
+            Toast.makeText(requireContext(), "Ingresá precios válidos", Toast.LENGTH_SHORT).show();
+        }
+    }
 
+    private void mostrarPagina() {
         if (publicacionesFiltradas.isEmpty()) {
 
             mostrarPublicaciones(
@@ -786,6 +800,7 @@ public class HomeFragment extends Fragment {
             textoPagina.setText(
                     "Página 1 de 1"
             );
+            textoResultados.setText("0 resultados");
 
             botonAnterior.setEnabled(false);
             botonSiguiente.setEnabled(false);
@@ -793,32 +808,7 @@ public class HomeFragment extends Fragment {
             return;
         }
 
-        int inicio =
-                (paginaActual - 1)
-                        * publicacionesPorPagina;
-
-        int fin =
-                Math.min(
-                        inicio + publicacionesPorPagina,
-                        publicacionesFiltradas.size()
-                );
-
-        List<Publicacion> publicacionesPagina =
-                publicacionesFiltradas.subList(
-                        inicio,
-                        fin
-                );
-
-        mostrarPublicaciones(
-                publicacionesPagina
-        );
-
-        int totalPaginas =
-                (int) Math.ceil(
-                        (double)
-                                publicacionesFiltradas.size()
-                                / publicacionesPorPagina
-                );
+        mostrarPublicaciones(publicacionesFiltradas);
 
         textoPagina.setText(
                 "Página "
@@ -826,6 +816,7 @@ public class HomeFragment extends Fragment {
                         + " de "
                         + totalPaginas
         );
+        textoResultados.setText(totalResultados + (totalResultados == 1 ? " resultado" : " resultados"));
 
         botonAnterior.setEnabled(
                 paginaActual > 1
@@ -841,25 +832,15 @@ public class HomeFragment extends Fragment {
         if (paginaActual > 1) {
 
             paginaActual--;
-
-            mostrarPagina();
+            cargarDatos();
         }
     }
 
     private void paginaSiguiente() {
-
-        int totalPaginas =
-                (int) Math.ceil(
-                        (double)
-                                publicacionesFiltradas.size()
-                                / publicacionesPorPagina
-                );
-
         if (paginaActual < totalPaginas) {
 
             paginaActual++;
-
-            mostrarPagina();
+            cargarDatos();
         }
     }
 
@@ -1056,6 +1037,57 @@ public class HomeFragment extends Fragment {
         mensaje.setPadding(dpToPx(16), dpToPx(32), dpToPx(16), dpToPx(32));
 
         return mensaje;
+    }
+
+    private String valorOpcional(String value) {
+        String trimmed = value == null ? "" : value.trim();
+        return trimmed.isEmpty() ? null : trimmed;
+    }
+
+    private Double precioOpcional(String value) {
+        String trimmed = value == null ? "" : value.trim();
+        return trimmed.isEmpty() ? null : Double.parseDouble(trimmed);
+    }
+
+    private String categoriaSeleccionadaApi() {
+        int position = spinnerCategoria.getSelectedItemPosition();
+        return position > 0 && position <= categoryCodes.size() ? categoryCodes.get(position - 1) : null;
+    }
+
+    private String condicionSeleccionadaApi() {
+        switch (spinnerEstado.getSelectedItemPosition()) {
+            case 1: return "new";
+            case 2: return "like_new";
+            case 3: return "used";
+            default: return null;
+        }
+    }
+
+    private String zonaSeleccionadaApi() {
+        int position = spinnerCercania.getSelectedItemPosition();
+        return position > 0 && position <= zoneValues.size() ? zoneValues.get(position - 1) : null;
+    }
+
+    private String ordenSeleccionadoApi() {
+        switch (spinnerOrden.getSelectedItemPosition()) {
+            case 1: return "price_asc";
+            case 2: return "price_desc";
+            default: return "recent";
+        }
+    }
+
+    private String etiquetaCategoria(String code) {
+        switch (code) {
+            case "electronics": return "Tecnología";
+            case "home": return "Hogar";
+            case "fashion": return "Ropa y moda";
+            case "sports": return "Deportes";
+            case "vehicles": return "Vehículos";
+            case "books": return "Libros";
+            case "toys": return "Juguetes";
+            case "other": return "Otros";
+            default: return code;
+        }
     }
 
     private int dpToPx(int dp) {

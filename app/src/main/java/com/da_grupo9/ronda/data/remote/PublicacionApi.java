@@ -5,6 +5,8 @@ import com.da_grupo9.ronda.data.model.PublicacionesResponse;
 import com.da_grupo9.ronda.data.model.PublicUser;
 import com.da_grupo9.ronda.data.model.PublicationRequest;
 import com.da_grupo9.ronda.data.model.UploadImageResponse;
+import com.da_grupo9.ronda.data.model.CategoriesResponse;
+import com.da_grupo9.ronda.data.model.ZonesResponse;
 import okhttp3.MultipartBody;
 import java.util.Map;
 import retrofit2.Call;
@@ -18,7 +20,19 @@ import retrofit2.http.Multipart;
 import retrofit2.http.Part;
 
 public interface PublicacionApi {
-    @GET("publications") Call<PublicacionesResponse> getPublicaciones();
+    @GET("publications")
+    Call<PublicacionesResponse> getPublicaciones(
+            @Query("page") int page,
+            @Query("pageSize") int pageSize,
+            @Query("q") String query,
+            @Query("category") String category,
+            @Query("condition") String condition,
+            @Query("zone") String zone,
+            @Query("minPrice") Double minPrice,
+            @Query("maxPrice") Double maxPrice,
+            @Query("sort") String sort);
+    @GET("categories") Call<CategoriesResponse> getCategories();
+    @GET("zones") Call<ZonesResponse> getZones();
     @GET("users/{id}") Call<PublicUser> getUsuario(@Path("id") String id);
     @GET("publications/{id}") Call<Publicacion> getPublicacion(@Path("id") String id);
     @GET("me/publications") Call<PublicacionesResponse> getPublicacionesPropias();
