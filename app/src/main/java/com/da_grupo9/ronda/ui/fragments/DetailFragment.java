@@ -196,7 +196,12 @@ public class DetailFragment extends Fragment {
                     || publicacionCargada.getActions().canAsk();
             buttonPreguntar.setEnabled(isOnline && puedePreguntar);
         }
-        if (buttonOfertar != null) buttonOfertar.setEnabled(isOnline);
+        if (buttonOfertar != null) {
+            boolean puedeOfertar = publicacionCargada == null
+                    || publicacionCargada.getActions() == null
+                    || publicacionCargada.getActions().canOffer();
+            buttonOfertar.setEnabled(isOnline && puedeOfertar);
+        }
         if (buttonGuardar != null) buttonGuardar.setEnabled(isOnline);
         if (buttonModificar != null) buttonModificar.setEnabled(isOnline);
         if (buttonPausar != null) buttonPausar.setEnabled(isOnline);
@@ -309,10 +314,16 @@ public class DetailFragment extends Fragment {
                 return;
             }
             if (publicacionCargada != null) {
+                if (publicacionCargada.getActions() != null
+                        && !publicacionCargada.getActions().canOffer()) {
+                    Toast.makeText(requireContext(), "No podés ofertar en esta publicación", Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 Bundle bundle = new Bundle();
-                bundle.putString("publicacionId", publicacionCargada.getId());
-                bundle.putString("publicacionTitulo", publicacionCargada.getTitulo());
-                bundle.putFloat("precioPublicado", (float) publicacionCargada.getPrecio());
+                bundle.putString("publicationId", publicacionCargada.getId());
+                bundle.putString("publicationTitle", publicacionCargada.getTitulo());
+                bundle.putFloat("publicationPrice", (float) publicacionCargada.getPrecio());
+                bundle.putString("sellerName", publicacionCargada.getVendedorNombre());
                 Navigation.findNavController(v).navigate(
                         R.id.action_detailFragment_to_createOfferFragment,
                         bundle

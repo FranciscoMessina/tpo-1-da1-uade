@@ -1,5 +1,6 @@
 package com.da_grupo9.ronda.data.repository;
 
+import com.da_grupo9.ronda.data.model.CreateReviewRequest;
 import com.da_grupo9.ronda.data.model.Perfil;
 import com.da_grupo9.ronda.data.remote.ProfileApi;
 import com.da_grupo9.ronda.data.model.UploadImageResponse;
@@ -20,7 +21,25 @@ public class ProfileRepository {
 
     public void getMe(PublicacionRepository.Resultado<Perfil> result) { ejecutar(api.getMe(), result); }
     public void getOperations(PublicacionRepository.Resultado<OperationsResponse> result) {
-        ejecutarGenerico(api.getOperations(), result);
+        getOperations(null, null, null, result);
+    }
+    /** {@code type}, {@code from} y {@code to} son opcionales; from/to en ISO-8601. */
+    public void getOperations(String type, String from, String to,
+                              PublicacionRepository.Resultado<OperationsResponse> result) {
+        ejecutarGenerico(api.getOperations(type, from, to), result);
+    }
+    public void createReview(String operationId, int rating, String comment,
+                             PublicacionRepository.Resultado<Void> result) {
+        // La respuesta puede venir sin cuerpo, por eso alcanza con que sea exitosa.
+        api.createReview(operationId, new CreateReviewRequest(rating, comment)).enqueue(new Callback<Void>() {
+            @Override public void onResponse(Call<Void> call, Response<Void> response) {
+                if (response.isSuccessful()) result.onSuccess(null);
+                else result.onError(ApiErrorMessage.from(response, "El servidor respondió con código " + response.code()));
+            }
+            @Override public void onFailure(Call<Void> call, Throwable error) {
+                result.onError(error instanceof IOException ? "No se pudo conectar con el servidor" : "Respuesta inválida del servidor");
+            }
+        });
     }
     public void updateMe(Perfil perfil, PublicacionRepository.Resultado<Perfil> result) { ejecutar(api.updateMe(perfil), result); }
     public void uploadAvatar(MultipartBody.Part file, PublicacionRepository.Resultado<UploadImageResponse> result) {

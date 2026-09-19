@@ -113,6 +113,14 @@ public class ProfileFragment extends Fragment {
         Button buttonLogout =
                 view.findViewById(R.id.buttonLogout);
 
+        view.findViewById(R.id.buttonMyOffers).setOnClickListener(v ->
+                Navigation.findNavController(v).navigate(
+                        R.id.action_profileFragment_to_offersFragment));
+
+        view.findViewById(R.id.buttonOperationsHistory).setOnClickListener(v ->
+                Navigation.findNavController(v).navigate(
+                        R.id.action_profileFragment_to_operationsHistoryFragment));
+
         profileRepository.getMe(new PublicacionRepository.Resultado<Perfil>() {
             @Override public void onSuccess(Perfil perfil) {
                 if (!isAdded()) return;
