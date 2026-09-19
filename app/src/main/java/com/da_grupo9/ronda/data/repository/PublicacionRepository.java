@@ -310,12 +310,31 @@ public class PublicacionRepository {
         ejecutar(api.cambiarEstado(id, Collections.singletonMap("status", estado)), resultado);
     }
 
-    public void actualizarPublicacion(String id, PublicationRequest publicacion, Resultado<Publicacion> resultado) {
+    public void actualizarPublicacion(String id, PublicationRequest publicacion,
+                                      List<String> rutasImagenesNuevas,
+                                      List<String> imagenesConservadas,
+                                      Resultado<Publicacion> resultado) {
         if (!networkMonitor.isOnline()) {
             resultado.onError("Se necesita conexión a internet para actualizar la publicación");
             return;
         }
-        ejecutar(api.actualizarPublicacion(id, publicacion), resultado);
+        List<String> rutas = new ArrayList<>(rutasImagenesNuevas);
+        List<String> conservadas = new ArrayList<>(imagenesConservadas);
+        subirImagenes(rutas, 0, new ArrayList<>(), new Resultado<List<String>>() {
+            @Override public void onSuccess(List<String> urlsNuevas) {
+                List<String> urlsFinales = new ArrayList<>(conservadas);
+                urlsFinales.addAll(urlsNuevas);
+                PublicationRequest request = new PublicationRequest(
+                        publicacion.getTitle(), publicacion.getDescription(),
+                        publicacion.getCategory(), publicacion.getPrice(),
+                        publicacion.getCondition(), publicacion.getAddress(), urlsFinales);
+                ejecutar(api.actualizarPublicacion(id, request), resultado);
+            }
+
+            @Override public void onError(String mensaje) {
+                resultado.onError(mensaje);
+            }
+        });
     }
 
     private void subirImagenes(List<String> rutas, int indice, List<String> urls,

@@ -30,6 +30,7 @@ import androidx.navigation.Navigation;
 
 import com.bumptech.glide.Glide;
 
+import java.math.BigDecimal;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -39,7 +40,6 @@ import java.util.List;
 import javax.inject.Inject;
 import dagger.hilt.android.AndroidEntryPoint;
 
-import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -58,15 +58,13 @@ public class PublicarArticuloFragment extends Fragment {
     private EditText editTitulo;
     private EditText editDescripcion;
     private EditText editPrecio;
-    private EditText editZona;
     private EditText editDireccion;
-    private EditText editLatitud;
-    private EditText editLongitud;
 
     private Spinner spinnerCategoria;
     private Spinner spinnerEstado;
 
     private TextView textPaso;
+    private TextView textTituloFormulario;
     private TextView textResumen;
     private TextView textCantidadFotos;
     private LinearLayout containerFotos;
@@ -79,6 +77,7 @@ public class PublicarArticuloFragment extends Fragment {
     private String publicacionId;
     private BorradorPublicacionStorage borradorStorage;
     private final List<String> fotosSeleccionadas = new ArrayList<>();
+    private final List<String> fotosExistentes = new ArrayList<>();
     private final ExecutorService fileExecutor = Executors.newSingleThreadExecutor();
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private boolean publicacionCreada;
@@ -125,15 +124,13 @@ public class PublicarArticuloFragment extends Fragment {
         editTitulo = view.findViewById(R.id.editTituloPublicacion);
         editDescripcion = view.findViewById(R.id.editDescripcionPublicacion);
         editPrecio = view.findViewById(R.id.editPrecioPublicacion);
-        editZona = view.findViewById(R.id.editZonaPublicacion);
         editDireccion = view.findViewById(R.id.editDireccionPublicacion);
-        editLatitud = view.findViewById(R.id.editLatitudPublicacion);
-        editLongitud = view.findViewById(R.id.editLongitudPublicacion);
 
         spinnerCategoria = view.findViewById(R.id.spinnerCategoriaPublicacion);
         spinnerEstado = view.findViewById(R.id.spinnerEstadoPublicacion);
 
         textPaso = view.findViewById(R.id.textPaso);
+        textTituloFormulario = view.findViewById(R.id.textTituloFormulario);
         textResumen = view.findViewById(R.id.textResumenPublicacion);
         textCantidadFotos = view.findViewById(R.id.textCantidadFotos);
         containerFotos = view.findViewById(R.id.containerFotosSeleccionadas);
@@ -158,10 +155,11 @@ public class PublicarArticuloFragment extends Fragment {
         configurarSpinners();
 
         if (publicacionId != null && !publicacionId.isEmpty()) {
+            textTituloFormulario.setText("Editar publicación");
+            buttonSiguiente.setEnabled(false);
             cargarDatosParaEditar(publicacionId);
             buttonPublicar.setText("Guardar cambios");
             buttonDescartarBorrador.setVisibility(View.GONE);
-            containerCargaFotos.setVisibility(View.GONE);
             containerUbicacionExacta.setVisibility(View.GONE);
         } else {
             restaurarBorrador();
@@ -170,7 +168,7 @@ public class PublicarArticuloFragment extends Fragment {
         mostrarPaso();
 
         buttonSeleccionarFoto.setOnClickListener(v -> {
-            if (fotosSeleccionadas.size() >= 10) {
+            if (fotosSeleccionadas.size() + fotosExistentes.size() >= 10) {
                 Toast.makeText(requireContext(), "Podés subir hasta 10 imágenes", Toast.LENGTH_SHORT).show();
                 return;
             }
@@ -275,7 +273,7 @@ public class PublicarArticuloFragment extends Fragment {
             return false;
         }
 
-        if ((publicacionId == null || publicacionId.isEmpty()) && fotosSeleccionadas.isEmpty()) {
+        if (fotosSeleccionadas.isEmpty() && fotosExistentes.isEmpty()) {
             Toast.makeText(
                     requireContext(),
                     "Seleccioná al menos una foto",
@@ -289,19 +287,14 @@ public class PublicarArticuloFragment extends Fragment {
 
     private boolean validarPaso2() {
         String precioTexto = editPrecio.getText().toString().trim();
-        String zona = editZona.getText().toString().trim();
         String direccion = editDireccion.getText().toString().trim();
-        String latitudTexto = editLatitud.getText().toString().trim();
-        String longitudTexto = editLongitud.getText().toString().trim();
 
         boolean esEdicion = publicacionId != null && !publicacionId.isEmpty();
 
-        if (precioTexto.isEmpty() || zona.isEmpty()
-                || (!esEdicion && (direccion.isEmpty()
-                || latitudTexto.isEmpty() || longitudTexto.isEmpty()))) {
+        if (precioTexto.isEmpty() || (!esEdicion && direccion.isEmpty())) {
             Toast.makeText(
                     requireContext(),
-                    "Completá el precio y los datos de entrega",
+                    "Completá el precio y la dirección",
                     Toast.LENGTH_SHORT
             ).show();
 
@@ -330,29 +323,6 @@ public class PublicarArticuloFragment extends Fragment {
             return false;
         }
 
-        if (!esEdicion) {
-            try {
-                double latitud = Double.parseDouble(latitudTexto);
-                double longitud = Double.parseDouble(longitudTexto);
-
-                if (latitud < -90 || latitud > 90 || longitud < -180 || longitud > 180) {
-                    Toast.makeText(
-                            requireContext(),
-                            "Ingresá coordenadas válidas",
-                            Toast.LENGTH_SHORT
-                    ).show();
-                    return false;
-                }
-            } catch (NumberFormatException e) {
-                Toast.makeText(
-                        requireContext(),
-                        "Ingresá coordenadas válidas",
-                        Toast.LENGTH_SHORT
-                ).show();
-                return false;
-            }
-        }
-
         return true;
     }
 
@@ -376,13 +346,10 @@ public class PublicarArticuloFragment extends Fragment {
                         + "\nDescripción: " + editDescripcion.getText().toString().trim()
                         + "\nCategoría: " + spinnerCategoria.getSelectedItem().toString()
                         + "\nPrecio: $" + editPrecio.getText().toString().trim()
-                        + "\nEstado: " + spinnerEstado.getSelectedItem().toString()
-                        + "\nZona: " + editZona.getText().toString().trim();
+                        + "\nEstado: " + spinnerEstado.getSelectedItem().toString();
 
         if (publicacionId == null || publicacionId.isEmpty()) {
             resumen += "\nDirección: " + editDireccion.getText().toString().trim()
-                    + "\nCoordenadas: " + editLatitud.getText().toString().trim()
-                    + ", " + editLongitud.getText().toString().trim()
                     + "\nFotos seleccionadas: " + fotosSeleccionadas.size();
         }
 
@@ -396,8 +363,14 @@ public class PublicarArticuloFragment extends Fragment {
 
                 editTitulo.setText(p.getTitulo());
                 editDescripcion.setText(p.getDescripcion());
-                editPrecio.setText(String.format(Locale.US, "%.0f", p.getPrecio()));
-                editZona.setText(p.getZona());
+                editPrecio.setText(BigDecimal.valueOf(p.getPrecio()).stripTrailingZeros().toPlainString());
+                fotosExistentes.clear();
+                fotosExistentes.addAll(p.getImagenes());
+                if (fotosExistentes.isEmpty() && p.getCoverImage() != null) {
+                    fotosExistentes.add(p.getCoverImage());
+                }
+                mostrarFotosSeleccionadas();
+                buttonSiguiente.setEnabled(true);
 
                 for (int i = 0; i < spinnerCategoria.getCount(); i++) {
                     if (spinnerCategoria.getItemAtPosition(i).toString().equalsIgnoreCase(p.getCategoria())) {
@@ -414,7 +387,10 @@ public class PublicarArticuloFragment extends Fragment {
                 }
             }
             @Override public void onError(String mensaje) {
-                if (isAdded()) Toast.makeText(requireContext(), mensaje, Toast.LENGTH_LONG).show();
+                if (isAdded()) {
+                    buttonSiguiente.setEnabled(true);
+                    Toast.makeText(requireContext(), mensaje, Toast.LENGTH_LONG).show();
+                }
             }
         });
     }
@@ -432,11 +408,13 @@ public class PublicarArticuloFragment extends Fragment {
                 Double.parseDouble(editPrecio.getText().toString().trim()),
                 conditionApiValue(spinnerEstado.getSelectedItemPosition()),
                 esEdicion ? null : editDireccion.getText().toString().trim(),
-                null
+                esEdicion ? new ArrayList<>(fotosExistentes) : null
         );
 
         if (esEdicion) {
-            publicacionRepository.actualizarPublicacion(publicacionId, publicacion, new PublicacionRepository.Resultado<Publicacion>() {
+            publicacionRepository.actualizarPublicacion(
+                    publicacionId, publicacion, fotosSeleccionadas, fotosExistentes,
+                    new PublicacionRepository.Resultado<Publicacion>() {
                 @Override public void onSuccess(Publicacion data) {
                     if (!isAdded()) return;
                     Toast.makeText(requireContext(), "Publicación modificada con éxito", Toast.LENGTH_SHORT).show();
@@ -445,7 +423,7 @@ public class PublicarArticuloFragment extends Fragment {
                 @Override public void onError(String mensaje) {
                     if (isAdded()) Toast.makeText(requireContext(), mensaje, Toast.LENGTH_LONG).show();
                 }
-            });
+                    });
             return;
         }
 
@@ -540,23 +518,32 @@ public class PublicarArticuloFragment extends Fragment {
 
     private void mostrarFotosSeleccionadas() {
         containerFotos.removeAllViews();
-        textCantidadFotos.setText("Fotos seleccionadas: " + fotosSeleccionadas.size());
+        int cantidadFotos = fotosExistentes.size() + fotosSeleccionadas.size();
+        textCantidadFotos.setText("Fotos: " + cantidadFotos + " de 10");
 
         int size = (int) (96 * getResources().getDisplayMetrics().density);
         int margin = (int) (8 * getResources().getDisplayMetrics().density);
 
-        for (String ruta : fotosSeleccionadas) {
-            ImageView imageView = new ImageView(requireContext());
-            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(size, size);
-            params.setMarginEnd(margin);
-            imageView.setLayoutParams(params);
-            imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
-            containerFotos.addView(imageView);
-
-            Glide.with(this)
-                    .load(new File(ruta))
-                    .into(imageView);
+        for (String url : fotosExistentes) {
+            agregarVistaPreviaFoto(url, false, size, margin);
         }
+
+        for (String ruta : fotosSeleccionadas) {
+            agregarVistaPreviaFoto(ruta, true, size, margin);
+        }
+    }
+
+    private void agregarVistaPreviaFoto(String origen, boolean esArchivoLocal, int size, int margin) {
+        ImageView imageView = new ImageView(requireContext());
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(size, size);
+        params.setMarginEnd(margin);
+        imageView.setLayoutParams(params);
+        imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+        containerFotos.addView(imageView);
+
+        Glide.with(this)
+                .load(esArchivoLocal ? new File(origen) : origen)
+                .into(imageView);
     }
 
     private void quitarFotosSeleccionadas() {
@@ -564,6 +551,7 @@ public class PublicarArticuloFragment extends Fragment {
             new File(ruta).delete();
         }
         fotosSeleccionadas.clear();
+        fotosExistentes.clear();
         mostrarFotosSeleccionadas();
         guardarBorrador();
     }
@@ -576,10 +564,7 @@ public class PublicarArticuloFragment extends Fragment {
         boolean vacio = editTitulo.getText().toString().trim().isEmpty()
                 && editDescripcion.getText().toString().trim().isEmpty()
                 && editPrecio.getText().toString().trim().isEmpty()
-                && editZona.getText().toString().trim().isEmpty()
                 && editDireccion.getText().toString().trim().isEmpty()
-                && editLatitud.getText().toString().trim().isEmpty()
-                && editLongitud.getText().toString().trim().isEmpty()
                 && fotosSeleccionadas.isEmpty()
                 && pasoActual == 1;
 
@@ -592,10 +577,7 @@ public class PublicarArticuloFragment extends Fragment {
         borrador.titulo = editTitulo.getText().toString();
         borrador.descripcion = editDescripcion.getText().toString();
         borrador.precio = editPrecio.getText().toString();
-        borrador.zona = editZona.getText().toString();
         borrador.direccion = editDireccion.getText().toString();
-        borrador.latitud = editLatitud.getText().toString();
-        borrador.longitud = editLongitud.getText().toString();
         borrador.categoria = spinnerCategoria.getSelectedItemPosition();
         borrador.estado = spinnerEstado.getSelectedItemPosition();
         borrador.paso = pasoActual;
@@ -612,10 +594,7 @@ public class PublicarArticuloFragment extends Fragment {
         editTitulo.setText(borrador.titulo);
         editDescripcion.setText(borrador.descripcion);
         editPrecio.setText(borrador.precio);
-        editZona.setText(borrador.zona);
         editDireccion.setText(borrador.direccion);
-        editLatitud.setText(borrador.latitud);
-        editLongitud.setText(borrador.longitud);
         spinnerCategoria.setSelection(borrador.categoria);
         spinnerEstado.setSelection(borrador.estado);
         pasoActual = Math.max(1, Math.min(3, borrador.paso));
@@ -631,10 +610,7 @@ public class PublicarArticuloFragment extends Fragment {
         editTitulo.setText("");
         editDescripcion.setText("");
         editPrecio.setText("");
-        editZona.setText("");
         editDireccion.setText("");
-        editLatitud.setText("");
-        editLongitud.setText("");
         spinnerCategoria.setSelection(0);
         spinnerEstado.setSelection(0);
         pasoActual = 1;
