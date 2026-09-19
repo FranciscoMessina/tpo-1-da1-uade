@@ -6,6 +6,7 @@ import com.da_grupo9.ronda.data.remote.AuthApi;
 import com.da_grupo9.ronda.data.remote.ProfileApi;
 import com.da_grupo9.ronda.data.remote.AuthInterceptor;
 import com.da_grupo9.ronda.data.remote.FavoritesApi;
+import com.da_grupo9.ronda.data.remote.SavedSearchesApi;
 
 import javax.inject.Singleton;
 
@@ -29,6 +30,11 @@ public final class NetworkModule {
     private NetworkModule() {
     }
 
+    @Provides
+    @Singleton
+    public static SavedSearchesApi provideSavedSearchesApi(Retrofit retrofit) {
+        return retrofit.create(SavedSearchesApi.class);
+    }
     @Provides
     @Singleton
     static OkHttpClient provideOkHttpClient(AuthInterceptor authInterceptor) {
