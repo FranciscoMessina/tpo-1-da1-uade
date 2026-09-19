@@ -58,9 +58,7 @@ public class MisPublicacionesFragment extends Fragment {
         publicacionesContainer =
                 view.findViewById(R.id.misPublicacionesContainer);
 
-        view.findViewById(R.id.buttonVolver).setOnClickListener(v ->
-                Navigation.findNavController(v).popBackStack()
-        );
+
 
         if (getArguments() != null) {
             email = getArguments().getString("email", "");

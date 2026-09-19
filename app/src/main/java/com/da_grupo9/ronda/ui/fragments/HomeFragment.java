@@ -8,10 +8,13 @@ import com.google.android.material.color.MaterialColors;
 
 import android.graphics.Color;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -57,6 +60,7 @@ public class HomeFragment extends Fragment {
     private Spinner spinnerOrden;
 
     private Button botonFiltrar;
+    private Button botonGuardarBusqueda;
     private Button botonAnterior;
     private Button botonSiguiente;
 
@@ -128,7 +132,7 @@ public class HomeFragment extends Fragment {
 
         textoPagina = view.findViewById(R.id.textoPagina);
 
-        Button botonGuardarBusqueda = view.findViewById(R.id.botonGuardarBusqueda);
+        botonGuardarBusqueda = view.findViewById(R.id.botonGuardarBusqueda);
 
         botonGuardarBusqueda.setOnClickListener(
                 v -> mostrarDialogoGuardarBusqueda()
@@ -144,6 +148,7 @@ public class HomeFragment extends Fragment {
 
         configurarSpinners();
         cargarBusquedaGuardada();
+        configurarVisibilidadGuardarBusqueda();
 
         publicaciones = new ArrayList<>();
         publicacionesFiltradas = new ArrayList<>();
@@ -286,6 +291,66 @@ public class HomeFragment extends Fragment {
                         android.R.layout.simple_spinner_dropdown_item,
                         ordenamientos
                 )
+        );
+    }
+
+    private void configurarVisibilidadGuardarBusqueda() {
+        TextWatcher observadorTexto = new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                actualizarVisibilidadGuardarBusqueda();
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+            }
+        };
+
+        buscador.addTextChangedListener(observadorTexto);
+        precioMinimo.addTextChangedListener(observadorTexto);
+        precioMaximo.addTextChangedListener(observadorTexto);
+
+        AdapterView.OnItemSelectedListener observadorSeleccion =
+                new AdapterView.OnItemSelectedListener() {
+                    @Override
+                    public void onItemSelected(
+                            AdapterView<?> parent,
+                            View view,
+                            int position,
+                            long id) {
+                        actualizarVisibilidadGuardarBusqueda();
+                    }
+
+                    @Override
+                    public void onNothingSelected(AdapterView<?> parent) {
+                        actualizarVisibilidadGuardarBusqueda();
+                    }
+                };
+
+        spinnerCategoria.setOnItemSelectedListener(observadorSeleccion);
+        spinnerEstado.setOnItemSelectedListener(observadorSeleccion);
+        spinnerCercania.setOnItemSelectedListener(observadorSeleccion);
+        spinnerOrden.setOnItemSelectedListener(observadorSeleccion);
+
+        actualizarVisibilidadGuardarBusqueda();
+    }
+
+    private void actualizarVisibilidadGuardarBusqueda() {
+        boolean hayValoresNoPredeterminados =
+                !buscador.getText().toString().trim().isEmpty()
+                        || !precioMinimo.getText().toString().trim().isEmpty()
+                        || !precioMaximo.getText().toString().trim().isEmpty()
+                        || spinnerCategoria.getSelectedItemPosition() != 0
+                        || spinnerEstado.getSelectedItemPosition() != 0
+                        || spinnerCercania.getSelectedItemPosition() != 0
+                        || spinnerOrden.getSelectedItemPosition() != 0;
+
+        botonGuardarBusqueda.setVisibility(
+                hayValoresNoPredeterminados ? View.VISIBLE : View.GONE
         );
     }
 
