@@ -106,6 +106,10 @@
             android:id="@+id/action_homeFragment_to_favoritesFragment"
             app:destination="@id/favoritesFragment" />
 
+        <action
+            android:id="@+id/action_homeFragment_to_savedSearchesFragment"
+            app:destination="@id/savedSearchesFragment" />
+
     </fragment>
 
     <fragment
@@ -116,6 +120,17 @@
         <action
             android:id="@+id/action_favoritesFragment_to_detailFragment"
             app:destination="@id/detailFragment" />
+
+    </fragment>
+
+    <fragment
+        android:id="@+id/savedSearchesFragment"
+        android:name="com.da_grupo9.ronda.ui.fragments.SavedSearchesFragment"
+        android:label="Búsquedas guardadas">
+
+        <action
+            android:id="@+id/action_savedSearchesFragment_to_homeFragment"
+            app:destination="@id/homeFragment" />
 
     </fragment>
 
