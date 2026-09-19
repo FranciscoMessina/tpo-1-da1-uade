@@ -6,6 +6,8 @@ import com.da_grupo9.ronda.data.model.Publicacion;
 import com.da_grupo9.ronda.data.model.FiltrosPublicaciones;
 import com.da_grupo9.ronda.data.repository.PublicacionRepository;
 import com.google.android.material.color.MaterialColors;
+import com.da_grupo9.ronda.data.model.Perfil;
+import com.da_grupo9.ronda.data.repository.ProfileRepository;
 
 import android.graphics.Color;
 import android.os.Bundle;
@@ -60,7 +62,9 @@ public class HomeFragment extends Fragment {
     @Inject PublicacionRepository publicacionRepository;
     @Inject SavedSearchesApi savedSearchesApi;
     @Inject FavoritesApi favoritesApi;
+    @Inject ProfileRepository profileRepository;
     private LinearLayout publicacionesContainer;
+
 
     /** Peticiones de favorito en curso: id de publicación -> estado que se está intentando aplicar. */
     private final Map<String, Boolean> favoritosPendientes = new HashMap<>();
@@ -99,6 +103,7 @@ public class HomeFragment extends Fragment {
     private final List<String> categoryCodes = new ArrayList<>();
     private final List<String> zoneValues = new ArrayList<>();
     private String zonaBusquedaGuardada;
+    private String zonaUsuario;
 
     private String usuarioActualEmail = "";
     public HomeFragment() {
@@ -174,6 +179,7 @@ public class HomeFragment extends Fragment {
         configurarSpinners();
         cargarCategorias();
         cargarZonas();
+        cargarZonaUsuario();
         cargarBusquedaGuardada();
         configurarVisibilidadGuardarBusqueda();
 
@@ -311,6 +317,29 @@ public class HomeFragment extends Fragment {
         spinnerCategoria.setAdapter(SpinnerAdapters.create(requireContext(), labels));
     }
 
+    private void cargarZonaUsuario() {
+
+        profileRepository.getMe(new RepositoryResult<Perfil>() {
+
+            @Override
+            public void onSuccess(Perfil perfil) {
+                if (!isAdded()) {
+                    return;
+                }
+
+                zonaUsuario = perfil.getZona();
+            }
+
+            @Override
+            public void onError(String mensaje) {
+                if (!isAdded()) {
+                    return;
+                }
+
+                zonaUsuario = null;
+            }
+        });
+    }
     private void cargarZonas() {
         publicacionRepository.getZones(new RepositoryResult<List<String>>() {
             @Override public void onSuccess(List<String> data) {
@@ -329,10 +358,15 @@ public class HomeFragment extends Fragment {
     private void actualizarZonas(List<String> zones) {
         zoneValues.clear();
         zoneValues.addAll(zones);
+
         List<String> labels = new ArrayList<>();
         labels.add("Todas las zonas");
+        labels.add("Cerca de mí");
         labels.addAll(zones);
-        spinnerCercania.setAdapter(SpinnerAdapters.create(requireContext(), labels));
+
+        spinnerCercania.setAdapter(
+                SpinnerAdapters.create(requireContext(), labels)
+        );
     }
 
     private void configurarVisibilidadGuardarBusqueda() {
@@ -569,8 +603,20 @@ public class HomeFragment extends Fragment {
         }
 
         zonaBusquedaGuardada = zone;
+
+        // Si la búsqueda guardada usa la misma zona del usuario mostramos "Cerca de mí".
+        if (zonaUsuario != null && zone.equalsIgnoreCase(zonaUsuario)) {
+            spinnerCercania.setSelection(1);
+            return;
+        }
+
         int index = zoneValues.indexOf(zone);
-        spinnerCercania.setSelection(index >= 0 ? index + 1 : 0);
+
+        // +2 porque:
+        // posición 0 = "Todas las zonas"
+        // posición 1 = "Cerca de mí"
+        // posición 2 en adelante = zonas reales
+        spinnerCercania.setSelection(index >= 0 ? index + 2 : 0);
     }
 
     private void seleccionarOrdenGuardado(String sort) {
@@ -835,7 +881,26 @@ public class HomeFragment extends Fragment {
 
     private String zonaSeleccionadaApi() {
         int position = spinnerCercania.getSelectedItemPosition();
-        return position > 0 && position <= zoneValues.size() ? zoneValues.get(position - 1) : null;
+
+        if (position == 0) {
+            return null;
+        }
+
+        if (position == 1) {
+            if (zonaUsuario == null || zonaUsuario.trim().isEmpty()) {
+                throw new IllegalArgumentException(
+                        "Configurá tu zona en el perfil para usar Cerca de mí"
+                );
+            }
+
+            return zonaUsuario;
+        }
+
+        int zoneIndex = position - 2;
+
+        return zoneIndex >= 0 && zoneIndex < zoneValues.size()
+                ? zoneValues.get(zoneIndex)
+                : null;
     }
 
     private String ordenSeleccionadoApi() {
