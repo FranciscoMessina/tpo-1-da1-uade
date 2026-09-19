@@ -167,6 +167,14 @@
             android:defaultValue=""
             app:argType="string" />
 
+        <action
+            android:id="@+id/action_misPublicacionesFragment_to_publicarArticuloFragment"
+            app:destination="@id/publicarArticuloFragment" />
+
+        <action
+            android:id="@+id/action_misPublicacionesFragment_to_detailFragment"
+            app:destination="@id/detailFragment" />
+
     </fragment>
 
     <fragment
