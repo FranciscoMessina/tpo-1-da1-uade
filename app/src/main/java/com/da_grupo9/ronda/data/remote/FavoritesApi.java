@@ -2,6 +2,7 @@ package com.da_grupo9.ronda.data.remote;
 
 import com.da_grupo9.ronda.data.model.FavoriteResponse;
 import com.da_grupo9.ronda.data.model.FavoritesResponse;
+import com.da_grupo9.ronda.data.model.FavoritesReadResponse;
 
 import retrofit2.Call;
 import retrofit2.http.DELETE;
@@ -19,4 +20,7 @@ public interface FavoritesApi {
 
     @GET("me/favorites")
     Call<FavoritesResponse> getFavorites();
+
+    @POST("me/favorites/read")
+    Call<FavoritesReadResponse> markFavoritesAsRead();
 }
