@@ -1,6 +1,7 @@
 package com.da_grupo9.ronda.data.remote;
 
 import com.da_grupo9.ronda.data.local.SessionManager;
+import com.da_grupo9.ronda.data.local.SessionExpirationNotifier;
 
 import java.io.IOException;
 
@@ -14,10 +15,15 @@ import okhttp3.Response;
 @Singleton
 public class AuthInterceptor implements Interceptor {
     private final SessionManager sessionManager;
+    private final SessionExpirationNotifier sessionExpirationNotifier;
 
     @Inject
-    public AuthInterceptor(SessionManager sessionManager) {
+    public AuthInterceptor(
+            SessionManager sessionManager,
+            SessionExpirationNotifier sessionExpirationNotifier
+    ) {
         this.sessionManager = sessionManager;
+        this.sessionExpirationNotifier = sessionExpirationNotifier;
     }
 
     @Override
@@ -32,6 +38,10 @@ public class AuthInterceptor implements Interceptor {
         Request authorized = original.newBuilder()
                 .header("Authorization", sessionManager.getTokenType() + " " + token)
                 .build();
-        return chain.proceed(authorized);
+        Response response = chain.proceed(authorized);
+        if (response.code() == 401 && sessionManager.clearIfTokenMatches(token)) {
+            sessionExpirationNotifier.notifySessionExpired();
+        }
+        return response;
     }
 }
