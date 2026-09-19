@@ -49,8 +49,8 @@ public class RegisterFragment extends Fragment {
             String passwordValue = password.getText().toString();
             String passwordConfirmValue = passwordConfirm.getText().toString();
 
-            if (emailValue.isEmpty() || nameValue.length() < 2 || usernameValue.length() < 3) {
-                Toast.makeText(requireContext(), "Completá email, nombre y usuario", Toast.LENGTH_SHORT).show();
+            if (emailValue.isEmpty() || nameValue.length() < 2 || usernameValue.length() < 3 || zoneValue.isEmpty()) {
+                Toast.makeText(requireContext(), "Completá email, nombre, usuario y zona", Toast.LENGTH_SHORT).show();
                 return;
             }
             if (!usernameValue.matches("[a-zA-Z0-9_.-]{3,30}")) {
