@@ -20,12 +20,26 @@
             app:iconGravity="textStart"
             android:text="Volver" />
 
+        <ImageView
+            android:id="@+id/imagePerfilPublicoAvatar"
+            android:layout_width="96dp"
+            android:layout_height="96dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="@dimen/spacing_md"
+            android:background="@drawable/bg_avatar"
+            android:clipToOutline="true"
+            android:contentDescription="Foto de perfil del vendedor"
+            android:scaleType="centerCrop"
+            android:src="@drawable/ic_photo_camera" />
+
         <TextView
             android:id="@+id/textPerfilPublicoNombre"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/spacing_md"
+            android:layout_marginTop="@dimen/spacing_sm"
+            android:gravity="center"
             android:text="Perfil del vendedor"
+            android:textAlignment="center"
             android:textAppearance="@style/TextAppearance.Material3.HeadlineSmall"
             android:textColor="?attr/colorOnSurface" />
 
@@ -33,8 +47,10 @@
             android:id="@+id/textPerfilPublicoEmail"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/spacing_sm"
-            android:text="Email"
+            android:layout_marginTop="@dimen/spacing_xs"
+            android:gravity="center"
+            android:text="Zona"
+            android:textAlignment="center"
             android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
             android:textColor="?attr/colorOnSurfaceVariant" />
 
@@ -62,6 +78,15 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/spacing_sm"
                     android:text="Antigüedad"
+                    android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+                    android:textColor="?attr/colorOnSurfaceVariant" />
+
+                <TextView
+                    android:id="@+id/textPerfilPublicoOperaciones"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_sm"
+                    android:text="Operaciones"
                     android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
                     android:textColor="?attr/colorOnSurfaceVariant" />
 

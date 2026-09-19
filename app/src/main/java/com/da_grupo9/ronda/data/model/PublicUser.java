@@ -5,13 +5,14 @@ import java.util.Collections;
 import java.util.List;
 
 public class PublicUser implements Serializable {
-    private String id, name, zone, memberSince;
+    private String id, name, zone, avatarUrl, memberSince;
     private double ratingAverage;
     private int ratingCount, purchasesCompleted, salesCompleted;
     private List<Publicacion> activePublications;
     public String getId() { return id; }
     public String getName() { return name; }
     public String getZone() { return zone; }
+    public String getAvatarUrl() { return avatarUrl; }
     public String getMemberSince() { return memberSince; }
     public double getRatingAverage() { return ratingAverage; }
     public int getRatingCount() { return ratingCount; }
