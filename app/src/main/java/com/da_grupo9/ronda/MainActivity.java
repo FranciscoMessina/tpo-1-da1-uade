@@ -94,6 +94,7 @@ public class MainActivity extends AppCompatActivity {
                     destinationId == R.id.homeFragment
                             || destinationId == R.id.misPublicacionesFragment
                             || destinationId == R.id.publicarArticuloFragment
+                            || destinationId == R.id.savedItemsFragment
                             || destinationId == R.id.profileFragment;
 
             bottomNavigationView.setVisibility(

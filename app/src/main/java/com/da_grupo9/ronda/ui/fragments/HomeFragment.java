@@ -128,24 +128,10 @@ public class HomeFragment extends Fragment {
 
         textoPagina = view.findViewById(R.id.textoPagina);
 
-        Button botonFavoritos = view.findViewById(R.id.botonFavoritos);
         Button botonGuardarBusqueda = view.findViewById(R.id.botonGuardarBusqueda);
-        Button botonBusquedasGuardadas =view.findViewById(R.id.botonBusquedasGuardadas);
-
-        botonFavoritos.setOnClickListener(v ->
-                Navigation.findNavController(v).navigate(
-                        R.id.action_homeFragment_to_favoritesFragment
-                )
-        );
 
         botonGuardarBusqueda.setOnClickListener(
                 v -> mostrarDialogoGuardarBusqueda()
-        );
-
-        botonBusquedasGuardadas.setOnClickListener(v ->
-                Navigation.findNavController(v).navigate(
-                        R.id.action_homeFragment_to_savedSearchesFragment
-                )
         );
 
         publicacionesContainer =

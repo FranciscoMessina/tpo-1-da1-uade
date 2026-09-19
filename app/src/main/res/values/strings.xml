@@ -6,5 +6,6 @@
     <string name="nav_home">Inicio</string>
     <string name="nav_mis_publicaciones">Mis publicaciones</string>
     <string name="nav_publicar">Publicar</string>
+    <string name="nav_guardados">Guardados</string>
     <string name="nav_perfil">Perfil</string>
 </resources>

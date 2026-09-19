@@ -56,15 +56,6 @@
         android:textColor="?attr/colorOnSurface" />
 
     <com.google.android.material.button.MaterialButton
-        android:id="@+id/botonFavoritos"
-        style="@style/Widget.Ronda.Button.Text"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="end"
-        android:layout_marginBottom="@dimen/spacing_sm"
-        android:text="Mis favoritos" />
-
-    <com.google.android.material.button.MaterialButton
         android:id="@+id/botonGuardarBusqueda"
         style="@style/Widget.Ronda.Button.Text"
         android:layout_width="wrap_content"
@@ -72,15 +63,6 @@
         android:layout_gravity="end"
         android:layout_marginBottom="@dimen/spacing_sm"
         android:text="Guardar búsqueda" />
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/botonBusquedasGuardadas"
-        style="@style/Widget.Ronda.Button.Text"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="end"
-        android:layout_marginBottom="@dimen/spacing_sm"
-        android:text="Búsquedas guardadas" />
 
     <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"

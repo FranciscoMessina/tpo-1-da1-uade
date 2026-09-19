@@ -17,6 +17,11 @@
         android:title="@string/nav_publicar" />
 
     <item
+        android:id="@+id/savedItemsFragment"
+        android:icon="@drawable/ic_star"
+        android:title="@string/nav_guardados" />
+
+    <item
         android:id="@+id/profileFragment"
         android:icon="@drawable/ic_nav_perfil"
         android:title="@string/nav_perfil" />
