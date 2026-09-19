@@ -12,6 +12,7 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.util.TypedValue;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -144,6 +145,28 @@ public class PublicProfileFragment extends Fragment {
                 publicacionView.setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_BodyLarge);
                 publicacionView.setTextColor(colorOnSurface);
                 publicacionView.setPaddingRelative(0, dpToPx(6), 0, dpToPx(6));
+                publicacionView.setCompoundDrawablesRelativeWithIntrinsicBounds(
+                        0, 0, R.drawable.ic_chevron_right, 0);
+                publicacionView.setCompoundDrawablePadding(dpToPx(8));
+                publicacionView.setClickable(true);
+                publicacionView.setFocusable(true);
+                publicacionView.setContentDescription("Ver detalle de " + publicacion.getTitulo());
+
+                TypedValue selectableBackground = new TypedValue();
+                if (requireContext().getTheme().resolveAttribute(
+                        android.R.attr.selectableItemBackground, selectableBackground, true)) {
+                    publicacionView.setBackgroundResource(selectableBackground.resourceId);
+                }
+
+                publicacionView.setOnClickListener(v -> {
+                    if (publicacion.getId() == null || publicacion.getId().isEmpty()) return;
+                    Bundle arguments = new Bundle();
+                    arguments.putString("publicacionId", publicacion.getId());
+                    Navigation.findNavController(v).navigate(
+                            R.id.action_publicProfileFragment_to_detailFragment,
+                            arguments
+                    );
+                });
 
                 container.addView(publicacionView);
 

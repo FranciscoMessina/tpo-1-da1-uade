@@ -20,7 +20,7 @@
             android:layout_marginBottom="@dimen/spacing_sm"
             app:icon="@drawable/ic_arrow_back"
             app:iconGravity="textStart"
-            android:text="Volver a publicaciones" />
+            android:text="Volver " />
 
         <!-- Banner de modo sin conexión -->
         <com.google.android.material.card.MaterialCardView

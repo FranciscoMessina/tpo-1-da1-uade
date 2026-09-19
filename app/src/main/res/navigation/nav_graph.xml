@@ -209,6 +209,10 @@
             android:defaultValue=""
             app:argType="string" />
 
+        <action
+            android:id="@+id/action_publicProfileFragment_to_detailFragment"
+            app:destination="@id/detailFragment" />
+
     </fragment>
 
 </navigation>
