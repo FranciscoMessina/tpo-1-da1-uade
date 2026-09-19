@@ -1,6 +1,7 @@
 package com.da_grupo9.ronda.ui.fragments;
 
 import com.da_grupo9.ronda.R;
+import com.da_grupo9.ronda.data.local.SessionManager;
 import com.da_grupo9.ronda.data.repository.AuthRepository;
 
 import android.os.Bundle;
@@ -12,13 +13,22 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import androidx.fragment.app.Fragment;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
+import androidx.biometric.BiometricManager;
+import androidx.biometric.BiometricManager.Authenticators;
+import androidx.biometric.BiometricPrompt;
 import androidx.navigation.Navigation;
 import javax.inject.Inject;
 import dagger.hilt.android.AndroidEntryPoint;
 
 @AndroidEntryPoint
 public class LoginFragment extends Fragment {
+    private static final int AUTHENTICATORS =
+            Authenticators.BIOMETRIC_STRONG | Authenticators.DEVICE_CREDENTIAL;
+
     @Inject AuthRepository authRepository;
+    @Inject SessionManager sessionManager;
 
     public LoginFragment() {
     }
@@ -77,8 +87,15 @@ public class LoginFragment extends Fragment {
                 ).show();
 
             } else {
+                authRepository.login(email, password, new AuthRepository.Resultado() {
+                    @Override public void onSuccess() {
+                        ofrecerBiometria(v, email);
+                    }
 
-                authRepository.login(email, password, navegarAlHome(v, email));
+                    @Override public void onError(String mensaje) {
+                        mostrarError(mensaje);
+                    }
+                });
             }
         });
 
@@ -117,18 +134,86 @@ public class LoginFragment extends Fragment {
 
         buttonCreateAccount.setOnClickListener(v -> Navigation.findNavController(v)
                 .navigate(R.id.action_loginFragment_to_registerFragment));
+
+        if (sessionManager.isLoggedIn() && sessionManager.isBiometricEnabled()) {
+            mostrarBiometria(view);
+        }
+    }
+
+    private void ofrecerBiometria(View view, String email) {
+        if (sessionManager.isBiometricEnabled()
+                || BiometricManager.from(requireContext()).canAuthenticate(AUTHENTICATORS)
+                != BiometricManager.BIOMETRIC_SUCCESS) {
+            irAlHome(view, email);
+            return;
+        }
+
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Activar acceso biométrico")
+                .setMessage("¿Querés usar la biometría la próxima vez que ingreses?")
+                .setPositiveButton("Activar", (dialog, which) -> {
+                    sessionManager.setBiometricEnabled(true);
+                    irAlHome(view, email);
+                })
+                .setNegativeButton("Ahora no", (dialog, which) ->
+                        irAlHome(view, email))
+                .show();
+    }
+
+    private void mostrarBiometria(View view) {
+        BiometricManager manager = BiometricManager.from(requireContext());
+        if (manager.canAuthenticate(AUTHENTICATORS) != BiometricManager.BIOMETRIC_SUCCESS) {
+            mostrarError("La autenticación biométrica no está disponible");
+            return;
+        }
+
+        BiometricPrompt.PromptInfo promptInfo = new BiometricPrompt.PromptInfo.Builder()
+                .setTitle("Ingresar a Ronda")
+                .setSubtitle("Confirmá tu identidad para continuar")
+                .setAllowedAuthenticators(AUTHENTICATORS)
+                .build();
+
+        BiometricPrompt prompt = new BiometricPrompt(this,
+                new BiometricPrompt.AuthenticationCallback() {
+                    @Override
+                    public void onAuthenticationSucceeded(
+                            @NonNull BiometricPrompt.AuthenticationResult result) {
+                        super.onAuthenticationSucceeded(result);
+                        authRepository.validarSesionGuardada(navegarAlHome(view, ""));
+                    }
+
+                    @Override
+                    public void onAuthenticationFailed() {
+                        super.onAuthenticationFailed();
+                        mostrarError("No se pudo verificar la identidad");
+                    }
+
+                    @Override
+                    public void onAuthenticationError(
+                            int errorCode,
+                            @NonNull CharSequence errString) {
+                        super.onAuthenticationError(errorCode, errString);
+                    }
+                });
+
+        prompt.authenticate(promptInfo);
     }
 
     private AuthRepository.Resultado navegarAlHome(View view, String email) {
         return new AuthRepository.Resultado() {
             @Override public void onSuccess() {
-                if (!isAdded()) return;
-                Bundle bundle = new Bundle();
-                bundle.putString("email", email);
-                Navigation.findNavController(view).navigate(R.id.action_loginFragment_to_homeFragment, bundle);
+                irAlHome(view, email);
             }
             @Override public void onError(String mensaje) { mostrarError(mensaje); }
         };
+    }
+
+    private void irAlHome(View view, String email) {
+        if (!isAdded()) return;
+        Bundle bundle = new Bundle();
+        bundle.putString("email", email);
+        Navigation.findNavController(view)
+                .navigate(R.id.action_loginFragment_to_homeFragment, bundle);
     }
 
     private void mostrarError(String mensaje) {

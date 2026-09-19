@@ -24,6 +24,7 @@ public class SessionManager {
     private static final String KEY_USER_ID = "user_id";
     private static final String KEY_PASSWORD_KNOWN_PREFIX = "password_known_";
     private static final String KEY_HAS_PASSWORD_PREFIX = "has_password_";
+    private static final String KEY_BIOMETRIC_ENABLED = "biometric_enabled";
 
     private final SharedPreferences prefs;
 
@@ -90,6 +91,14 @@ public class SessionManager {
     public boolean hasPassword() {
         String userId = getUserId();
         return userId != null && prefs.getBoolean(KEY_HAS_PASSWORD_PREFIX + userId, false);
+    }
+
+    public boolean isBiometricEnabled() {
+        return prefs.getBoolean(KEY_BIOMETRIC_ENABLED, false);
+    }
+
+    public void setBiometricEnabled(boolean enabled) {
+        prefs.edit().putBoolean(KEY_BIOMETRIC_ENABLED, enabled).apply();
     }
 
     public void clear() {
