@@ -22,6 +22,8 @@ public class SessionManager {
     private static final String KEY_TOKEN = "token";
     private static final String KEY_TOKEN_TYPE = "token_type";
     private static final String KEY_USER_ID = "user_id";
+    private static final String KEY_PASSWORD_KNOWN_PREFIX = "password_known_";
+    private static final String KEY_HAS_PASSWORD_PREFIX = "has_password_";
 
     private final SharedPreferences prefs;
 
@@ -71,7 +73,30 @@ public class SessionManager {
         return getToken() != null;
     }
 
+    public void setPasswordStatus(boolean hasPassword) {
+        String userId = getUserId();
+        if (userId == null) return;
+        prefs.edit()
+                .putBoolean(KEY_PASSWORD_KNOWN_PREFIX + userId, true)
+                .putBoolean(KEY_HAS_PASSWORD_PREFIX + userId, hasPassword)
+                .apply();
+    }
+
+    public boolean isPasswordStatusKnown() {
+        String userId = getUserId();
+        return userId != null && prefs.getBoolean(KEY_PASSWORD_KNOWN_PREFIX + userId, false);
+    }
+
+    public boolean hasPassword() {
+        String userId = getUserId();
+        return userId != null && prefs.getBoolean(KEY_HAS_PASSWORD_PREFIX + userId, false);
+    }
+
     public void clear() {
-        prefs.edit().clear().apply();
+        prefs.edit()
+                .remove(KEY_TOKEN)
+                .remove(KEY_TOKEN_TYPE)
+                .remove(KEY_USER_ID)
+                .apply();
     }
 }

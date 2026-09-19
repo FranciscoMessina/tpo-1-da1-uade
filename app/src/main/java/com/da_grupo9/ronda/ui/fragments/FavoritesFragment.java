@@ -17,6 +17,7 @@ import androidx.navigation.Navigation;
 import com.da_grupo9.ronda.R;
 import com.da_grupo9.ronda.data.model.FavoriteItem;
 import com.da_grupo9.ronda.data.model.FavoritesResponse;
+import com.da_grupo9.ronda.data.model.FavoritesReadResponse;
 import com.da_grupo9.ronda.data.remote.FavoritesApi;
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.color.MaterialColors;
@@ -81,7 +82,11 @@ public class FavoritesFragment extends Fragment {
 
                 if (response.isSuccessful() && response.body() != null) {
 
-                    mostrarFavoritos(response.body().getItems());
+                    FavoritesResponse favorites = response.body();
+                    mostrarFavoritos(favorites.getItems());
+                    if (favorites.getUnreadCount() > 0) {
+                        marcarFavoritosComoLeidos();
+                    }
 
                 } else {
 
@@ -105,6 +110,22 @@ public class FavoritesFragment extends Fragment {
                         "Error de conexión",
                         Toast.LENGTH_SHORT
                 ).show();
+            }
+        });
+    }
+
+    private void marcarFavoritosComoLeidos() {
+        favoritesApi.markFavoritesAsRead().enqueue(new Callback<>() {
+            @Override
+            public void onResponse(@NonNull Call<FavoritesReadResponse> call,
+                                   @NonNull Response<FavoritesReadResponse> response) {
+                // Las novedades ya fueron mostradas; el contador queda en cero para la próxima visita.
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<FavoritesReadResponse> call,
+                                  @NonNull Throwable error) {
+                // No se ocultan las novedades ni se interrumpe la pantalla si falla el acuse de lectura.
             }
         });
     }

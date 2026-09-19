@@ -3,6 +3,7 @@ package com.da_grupo9.ronda.data.model;
 public class Perfil {
     private String id, email, username, name, phone, zone, avatarUrl, createdAt;
     private PublicUser reputation;
+    private Boolean hasPassword;
 
     public Perfil(String name, String email, String phone, String zone) {
         this.name = name;
@@ -23,4 +24,5 @@ public class Perfil {
     public String getAvatarUrl() { return avatarUrl; }
     public String getCreatedAt() { return createdAt; }
     public PublicUser getReputation() { return reputation; }
+    public Boolean getHasPassword() { return hasPassword; }
 }

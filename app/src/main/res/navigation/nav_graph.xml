@@ -24,6 +24,20 @@
             android:id="@+id/action_loginFragment_to_forgotPasswordFragment"
             app:destination="@id/forgotPasswordFragment" />
 
+        <action
+            android:id="@+id/action_loginFragment_to_registerFragment"
+            app:destination="@id/registerFragment" />
+
+    </fragment>
+
+    <fragment
+        android:id="@+id/registerFragment"
+        android:name="com.da_grupo9.ronda.ui.fragments.RegisterFragment"
+        android:label="Crear cuenta">
+
+        <action
+            android:id="@+id/action_registerFragment_to_otpFragment"
+            app:destination="@id/otpFragment" />
     </fragment>
 
     <fragment
@@ -46,9 +60,20 @@
             android:name="email"
             app:argType="string" />
 
+        <argument
+            android:name="returnToProfile"
+            android:defaultValue="false"
+            app:argType="boolean" />
+
         <action
             android:id="@+id/action_resetPasswordFragment_to_loginFragment"
             app:destination="@id/loginFragment"
+            app:popUpTo="@id/loginFragment"
+            app:popUpToInclusive="true" />
+
+        <action
+            android:id="@+id/action_resetPasswordFragment_to_homeFragment"
+            app:destination="@id/homeFragment"
             app:popUpTo="@id/loginFragment"
             app:popUpToInclusive="true" />
 
@@ -61,6 +86,11 @@
 
         <argument
             android:name="email"
+            app:argType="string" />
+
+        <argument
+            android:name="purpose"
+            android:defaultValue="login"
             app:argType="string" />
 
         <action
@@ -137,6 +167,14 @@
             android:defaultValue=""
             app:argType="string" />
 
+        <action
+            android:id="@+id/action_misPublicacionesFragment_to_publicarArticuloFragment"
+            app:destination="@id/publicarArticuloFragment" />
+
+        <action
+            android:id="@+id/action_misPublicacionesFragment_to_detailFragment"
+            app:destination="@id/detailFragment" />
+
     </fragment>
 
     <fragment
@@ -162,6 +200,31 @@
             android:id="@+id/action_detailFragment_to_publicarArticuloFragment"
             app:destination="@id/publicarArticuloFragment" />
 
+        <action
+            android:id="@+id/action_detailFragment_to_questionFragment"
+            app:destination="@id/questionFragment" />
+
+    </fragment>
+
+    <fragment
+        android:id="@+id/questionFragment"
+        android:name="com.da_grupo9.ronda.ui.fragments.QuestionFragment"
+        android:label="Preguntar al vendedor">
+
+        <argument
+            android:name="publicacionId"
+            android:defaultValue=""
+            app:argType="string" />
+
+        <argument
+            android:name="publicacionTitulo"
+            android:defaultValue=""
+            app:argType="string" />
+
+        <argument
+            android:name="vendedorNombre"
+            android:defaultValue=""
+            app:argType="string" />
     </fragment>
 
     <fragment

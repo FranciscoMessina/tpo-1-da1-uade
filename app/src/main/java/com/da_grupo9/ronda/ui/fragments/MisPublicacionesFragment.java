@@ -58,15 +58,18 @@ public class MisPublicacionesFragment extends Fragment {
         publicacionesContainer =
                 view.findViewById(R.id.misPublicacionesContainer);
 
-        view.findViewById(R.id.buttonVolver).setOnClickListener(v ->
-                Navigation.findNavController(v).popBackStack()
-        );
+
 
         if (getArguments() != null) {
             email = getArguments().getString("email", "");
         }
 
-        mostrarPublicaciones();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (publicacionesContainer != null) mostrarPublicaciones();
     }
 
     private void mostrarPublicaciones() {
@@ -101,6 +104,7 @@ public class MisPublicacionesFragment extends Fragment {
 
         LinearLayout contenido = new LinearLayout(requireContext());
         contenido.setOrientation(LinearLayout.VERTICAL);
+        contenido.setPadding(0, 0, 0, dpToPx(12));
         tarjeta.addView(contenido);
 
         int colorOnSurface = MaterialColors.getColor(requireContext(), com.google.android.material.R.attr.colorOnSurface, Color.BLACK);
@@ -128,11 +132,50 @@ public class MisPublicacionesFragment extends Fragment {
         contenido.addView(precio);
         contenido.addView(estado);
 
-        if ("active".equals(publicacion.getEstadoPublicacion())) {
+        MaterialButton buttonDetalle = new MaterialButton(requireContext(), null,
+                com.google.android.material.R.attr.materialButtonOutlinedStyle);
+        buttonDetalle.setText("Ver detalle");
+        buttonDetalle.setIcon(androidx.core.content.ContextCompat.getDrawable(requireContext(), R.drawable.ic_chevron_right));
+        LinearLayout.LayoutParams detalleParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT);
+        detalleParams.topMargin = dpToPx(12);
+        buttonDetalle.setLayoutParams(detalleParams);
+        buttonDetalle.setOnClickListener(v -> {
+            Bundle args = new Bundle();
+            args.putString("publicacionId", publicacion.getId());
+            args.putString("usuarioActualEmail", email);
+            Navigation.findNavController(v).navigate(
+                    R.id.action_misPublicacionesFragment_to_detailFragment, args);
+        });
+        contenido.addView(buttonDetalle);
+
+        String estadoPublicacion = publicacion.getEstadoPublicacion();
+        LinearLayout acciones = new LinearLayout(requireContext());
+        acciones.setOrientation(LinearLayout.HORIZONTAL);
+        acciones.setGravity(Gravity.CENTER_VERTICAL);
+
+        if (!"sold".equals(estadoPublicacion)) {
+            MaterialButton buttonEditar = new MaterialButton(requireContext(), null,
+                    com.google.android.material.R.attr.materialButtonOutlinedStyle);
+            buttonEditar.setText("Editar");
+            buttonEditar.setIcon(androidx.core.content.ContextCompat.getDrawable(requireContext(), R.drawable.ic_edit));
+            buttonEditar.setLayoutParams(botonAccionParams(false));
+            buttonEditar.setOnClickListener(v -> {
+                Bundle args = new Bundle();
+                args.putString("email", email);
+                args.putString("publicacionId", publicacion.getId());
+                Navigation.findNavController(v).navigate(
+                        R.id.action_misPublicacionesFragment_to_publicarArticuloFragment, args);
+            });
+            acciones.addView(buttonEditar);
+        }
+
+        if ("active".equals(estadoPublicacion)) {
             MaterialButton buttonPausar = new MaterialButton(requireContext(), null, com.google.android.material.R.attr.materialButtonOutlinedStyle);
             buttonPausar.setText("Pausar");
             buttonPausar.setIcon(androidx.core.content.ContextCompat.getDrawable(requireContext(), R.drawable.ic_pause));
-            buttonPausar.setLayoutParams(botonAccionParams());
+            buttonPausar.setLayoutParams(botonAccionParams(true));
             buttonPausar.setOnClickListener(v -> {
                 publicacionRepository.cambiarEstadoPublicacion(
                         publicacion.getId(),
@@ -140,25 +183,13 @@ public class MisPublicacionesFragment extends Fragment {
                         recargarAlFinalizar()
                 );
             });
-            contenido.addView(buttonPausar);
+            acciones.addView(buttonPausar);
 
-            MaterialButton buttonVendida = new MaterialButton(requireContext(), null, com.google.android.material.R.attr.materialButtonOutlinedStyle);
-            buttonVendida.setText("Marcar como vendida");
-            buttonVendida.setIcon(androidx.core.content.ContextCompat.getDrawable(requireContext(), R.drawable.ic_local_offer));
-            buttonVendida.setLayoutParams(botonAccionParams());
-            buttonVendida.setOnClickListener(v -> {
-                publicacionRepository.cambiarEstadoPublicacion(
-                        publicacion.getId(),
-                        "sold",
-                        recargarAlFinalizar()
-                );
-            });
-            contenido.addView(buttonVendida);
-        } else if ("paused".equals(publicacion.getEstadoPublicacion())) {
+        } else if ("paused".equals(estadoPublicacion)) {
             MaterialButton buttonReactivar = new MaterialButton(requireContext(), null, com.google.android.material.R.attr.materialButtonOutlinedStyle);
             buttonReactivar.setText("Reactivar");
             buttonReactivar.setIcon(androidx.core.content.ContextCompat.getDrawable(requireContext(), R.drawable.ic_play_arrow));
-            buttonReactivar.setLayoutParams(botonAccionParams());
+            buttonReactivar.setLayoutParams(botonAccionParams(true));
             buttonReactivar.setOnClickListener(v -> {
                 publicacionRepository.cambiarEstadoPublicacion(
                         publicacion.getId(),
@@ -166,18 +197,22 @@ public class MisPublicacionesFragment extends Fragment {
                         recargarAlFinalizar()
                 );
             });
-            contenido.addView(buttonReactivar);
+            acciones.addView(buttonReactivar);
         }
+
+        if (acciones.getChildCount() > 0) contenido.addView(acciones);
 
         publicacionesContainer.addView(tarjeta);
     }
 
-    private LinearLayout.LayoutParams botonAccionParams() {
+    private LinearLayout.LayoutParams botonAccionParams(boolean conMargenInicial) {
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                0,
                 LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
+                1f
         );
         params.topMargin = dpToPx(12);
+        if (conMargenInicial) params.setMarginStart(dpToPx(8));
         return params;
     }
 

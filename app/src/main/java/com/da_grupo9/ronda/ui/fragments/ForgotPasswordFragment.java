@@ -14,8 +14,13 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
+import com.da_grupo9.ronda.data.repository.AuthRepository;
+import javax.inject.Inject;
+import dagger.hilt.android.AndroidEntryPoint;
 
+@AndroidEntryPoint
 public class ForgotPasswordFragment extends Fragment {
+    @Inject AuthRepository authRepository;
 
     public ForgotPasswordFragment() {
     }
@@ -56,19 +61,20 @@ public class ForgotPasswordFragment extends Fragment {
                 return;
             }
 
-            Toast.makeText(
-                    requireContext(),
-                    "Código de recuperación enviado a " + email,
-                    Toast.LENGTH_SHORT
-            ).show();
+            authRepository.requestOtp(email, "set_password", new AuthRepository.Resultado() {
+                @Override public void onSuccess() {
+                    if (!isAdded()) return;
+                    Bundle arguments = new Bundle();
+                    arguments.putString("email", email);
+                    arguments.putBoolean("returnToProfile", false);
+                    Navigation.findNavController(v).navigate(
+                            R.id.action_forgotPasswordFragment_to_resetPasswordFragment, arguments);
+                }
 
-            Bundle arguments = new Bundle();
-            arguments.putString("email", email);
-
-            Navigation.findNavController(v).navigate(
-                    R.id.action_forgotPasswordFragment_to_resetPasswordFragment,
-                    arguments
-            );
+                @Override public void onError(String mensaje) {
+                    if (isAdded()) Toast.makeText(requireContext(), mensaje, Toast.LENGTH_LONG).show();
+                }
+            });
         });
     }
 }

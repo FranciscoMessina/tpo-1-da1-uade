@@ -58,6 +58,8 @@ public class LoginFragment extends Fragment {
         Button buttonForgotPassword =
                 view.findViewById(R.id.buttonForgotPassword);
 
+        Button buttonCreateAccount = view.findViewById(R.id.buttonCreateAccount);
+
         buttonLogin.setOnClickListener(v -> {
 
             String email =
@@ -95,11 +97,12 @@ public class LoginFragment extends Fragment {
 
             } else {
 
-                authRepository.requestOtp(email, new AuthRepository.Resultado() {
+                authRepository.requestOtp(email, "login", new AuthRepository.Resultado() {
                     @Override public void onSuccess() {
                         if (!isAdded()) return;
                         Bundle bundle = new Bundle();
                         bundle.putString("email", email);
+                        bundle.putString("purpose", "login");
                         Navigation.findNavController(v).navigate(R.id.action_loginFragment_to_otpFragment, bundle);
                     }
                     @Override public void onError(String mensaje) { mostrarError(mensaje); }
@@ -111,6 +114,9 @@ public class LoginFragment extends Fragment {
             Navigation.findNavController(v)
                     .navigate(R.id.action_loginFragment_to_forgotPasswordFragment);
         });
+
+        buttonCreateAccount.setOnClickListener(v -> Navigation.findNavController(v)
+                .navigate(R.id.action_loginFragment_to_registerFragment));
     }
 
     private AuthRepository.Resultado navegarAlHome(View view, String email) {

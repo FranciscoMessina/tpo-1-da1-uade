@@ -74,6 +74,14 @@
             android:layout_marginTop="@dimen/spacing_sm"
             android:text="¿Olvidaste tu contraseña?" />
 
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/buttonCreateAccount"
+            style="@style/Widget.Ronda.Button.Text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_sm"
+            android:text="Crear una cuenta" />
+
     </LinearLayout>
 
 </ScrollView>

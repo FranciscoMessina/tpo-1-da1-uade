@@ -77,6 +77,8 @@ public class Publicacion implements Serializable {
         }
     }
     public String getZona() { return zone; }
+    public String getCategoryApiValue() { return category; }
+    public String getConditionApiValue() { return itemCondition != null ? itemCondition : condition; }
     public String getEstadoPublicacion() { return status; }
     public boolean isVisibleInPublicFeed() { return status == null || "active".equals(status); }
     public String getEstadoPublicacionVisible() {

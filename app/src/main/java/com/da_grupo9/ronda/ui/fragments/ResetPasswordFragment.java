@@ -15,8 +15,13 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
+import com.da_grupo9.ronda.data.repository.AuthRepository;
+import javax.inject.Inject;
+import dagger.hilt.android.AndroidEntryPoint;
 
+@AndroidEntryPoint
 public class ResetPasswordFragment extends Fragment {
+    @Inject AuthRepository authRepository;
 
     public ResetPasswordFragment() {
     }
@@ -43,6 +48,7 @@ public class ResetPasswordFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         String email = requireArguments().getString("email", "");
+        boolean returnToProfile = requireArguments().getBoolean("returnToProfile", false);
 
         TextView textEmail = view.findViewById(R.id.textResetEmail);
         EditText editCode = view.findViewById(R.id.editResetCode);
@@ -61,12 +67,14 @@ public class ResetPasswordFragment extends Fragment {
             String newPassword = editNewPassword.getText().toString();
             String confirmPassword = editConfirmPassword.getText().toString();
 
-            if (code.isEmpty() || newPassword.isEmpty() || confirmPassword.isEmpty()) {
+            if (!code.matches("\\d{6}") || newPassword.isEmpty() || confirmPassword.isEmpty()) {
                 Toast.makeText(
                         requireContext(),
-                        "Todos los campos son obligatorios",
+                        "Ingresá el código de 6 dígitos y la contraseña",
                         Toast.LENGTH_SHORT
                 ).show();
+            } else if (newPassword.length() < 8 || newPassword.length() > 72) {
+                Toast.makeText(requireContext(), "La contraseña debe tener entre 8 y 72 caracteres", Toast.LENGTH_SHORT).show();
             } else if (!newPassword.equals(confirmPassword)) {
                 Toast.makeText(
                         requireContext(),
@@ -74,24 +82,31 @@ public class ResetPasswordFragment extends Fragment {
                         Toast.LENGTH_SHORT
                 ).show();
             } else {
-                Toast.makeText(
-                        requireContext(),
-                        "Contraseña actualizada correctamente",
-                        Toast.LENGTH_LONG
-                ).show();
+                buttonReset.setEnabled(false);
+                authRepository.setPassword(email, code, newPassword, new AuthRepository.Resultado() {
+                    @Override public void onSuccess() {
+                        if (!isAdded()) return;
+                        Toast.makeText(requireContext(), "Contraseña guardada correctamente", Toast.LENGTH_LONG).show();
+                        if (returnToProfile) Navigation.findNavController(v).popBackStack();
+                        else Navigation.findNavController(v).navigate(R.id.action_resetPasswordFragment_to_homeFragment);
+                    }
 
-                Navigation.findNavController(v).navigate(
-                        R.id.action_resetPasswordFragment_to_loginFragment
-                );
+                    @Override public void onError(String mensaje) {
+                        if (!isAdded()) return;
+                        buttonReset.setEnabled(true);
+                        Toast.makeText(requireContext(), mensaje, Toast.LENGTH_LONG).show();
+                    }
+                });
             }
         });
 
-        buttonResend.setOnClickListener(v ->
-                Toast.makeText(
-                        requireContext(),
-                        "Código reenviado a " + email,
-                        Toast.LENGTH_SHORT
-                ).show()
-        );
+        buttonResend.setOnClickListener(v -> authRepository.resendOtp(email, "set_password", new AuthRepository.Resultado() {
+            @Override public void onSuccess() {
+                if (isAdded()) Toast.makeText(requireContext(), "Código reenviado", Toast.LENGTH_SHORT).show();
+            }
+            @Override public void onError(String mensaje) {
+                if (isAdded()) Toast.makeText(requireContext(), mensaje, Toast.LENGTH_LONG).show();
+            }
+        }));
     }
 }

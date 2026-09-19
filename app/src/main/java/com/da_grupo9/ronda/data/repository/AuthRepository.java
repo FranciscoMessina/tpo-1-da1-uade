@@ -32,14 +32,38 @@ public class AuthRepository {
     public void login(String email, String password, Resultado result) {
         Map<String, String> body = emailBody(email);
         body.put("password", password);
-        ejecutarConSesion(api.login(body), result);
+        ejecutarConSesion(api.login(body), true, result);
     }
-    public void requestOtp(String email, Resultado result) { ejecutar(api.requestOtp(emailBody(email)), result); }
-    public void resendOtp(String email, Resultado result) { ejecutar(api.resendOtp(emailBody(email)), result); }
-    public void verifyOtp(String email, String code, Resultado result) {
+    public void requestOtp(String email, String purpose, Resultado result) {
+        ejecutar(api.requestOtp(otpBody(email, purpose)), result);
+    }
+    public void resendOtp(String email, String purpose, Resultado result) {
+        ejecutar(api.resendOtp(otpBody(email, purpose)), result);
+    }
+    public void verifyLoginOtp(String email, String code, Resultado result) {
         Map<String, String> body = emailBody(email);
         body.put("code", code);
-        ejecutarConSesion(api.verifyOtp(body), result);
+        body.put("purpose", "login");
+        ejecutarConSesion(api.verifyOtp(body), null, result);
+    }
+
+    public void verifyRegistration(String email, String code, String name, String username,
+                                   String phone, String zone, String password, Resultado result) {
+        Map<String, String> body = otpBody(email, "registration");
+        body.put("code", code);
+        body.put("name", name);
+        body.put("username", username);
+        if (phone != null && !phone.isEmpty()) body.put("phone", phone);
+        if (zone != null && !zone.isEmpty()) body.put("zone", zone);
+        if (password != null && !password.isEmpty()) body.put("password", password);
+        ejecutarConSesion(api.verifyOtp(body), password != null && !password.isEmpty(), result);
+    }
+
+    public void setPassword(String email, String code, String password, Resultado result) {
+        Map<String, String> body = otpBody(email, "set_password");
+        body.put("code", code);
+        body.put("password", password);
+        ejecutarConSesion(api.verifyOtp(body), true, result);
     }
 
     public void logout(Resultado result) {
@@ -94,12 +118,19 @@ public class AuthRepository {
         return body;
     }
 
-    private void ejecutarConSesion(Call<LoginResponse> call, Resultado result) {
+    private Map<String, String> otpBody(String email, String purpose) {
+        Map<String, String> body = emailBody(email);
+        body.put("purpose", purpose);
+        return body;
+    }
+
+    private void ejecutarConSesion(Call<LoginResponse> call, Boolean passwordStatus, Resultado result) {
         call.enqueue(new Callback<LoginResponse>() {
             @Override public void onResponse(Call<LoginResponse> call, Response<LoginResponse> response) {
                 LoginResponse body = response.body();
                 if (response.isSuccessful() && body != null && body.getSession() != null) {
                     sessionManager.saveSession(body);
+                    if (passwordStatus != null) sessionManager.setPasswordStatus(passwordStatus);
                     result.onSuccess();
                 } else {
                     result.onError("El servidor respondió con código " + response.code());

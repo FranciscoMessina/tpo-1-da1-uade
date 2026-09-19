@@ -11,6 +11,7 @@
         android:padding="@dimen/spacing_md">
 
         <TextView
+            android:id="@+id/textTituloFormulario"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Publicar artículo"
@@ -132,12 +133,6 @@
             android:orientation="vertical"
             android:visibility="gone">
 
-            <LinearLayout
-                android:id="@+id/containerUbicacionExacta"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical">
-
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -164,19 +159,11 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" />
 
-            <com.google.android.material.textfield.TextInputLayout
+            <LinearLayout
+                android:id="@+id/containerUbicacionExacta"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/spacing_sm"
-                android:hint="Zona de entrega">
-
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/editZonaPublicacion"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:inputType="text" />
-
-            </com.google.android.material.textfield.TextInputLayout>
+                android:orientation="vertical">
 
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
@@ -191,43 +178,6 @@
                     android:inputType="textPostalAddress" />
 
             </com.google.android.material.textfield.TextInputLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/spacing_sm"
-                android:orientation="horizontal">
-
-                <com.google.android.material.textfield.TextInputLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:hint="Latitud">
-
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/editLatitudPublicacion"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:inputType="numberDecimal|numberSigned" />
-
-                </com.google.android.material.textfield.TextInputLayout>
-
-                <com.google.android.material.textfield.TextInputLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/spacing_sm"
-                    android:layout_weight="1"
-                    android:hint="Longitud">
-
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/editLongitudPublicacion"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:inputType="numberDecimal|numberSigned" />
-
-                </com.google.android.material.textfield.TextInputLayout>
-
-            </LinearLayout>
 
             </LinearLayout>
 

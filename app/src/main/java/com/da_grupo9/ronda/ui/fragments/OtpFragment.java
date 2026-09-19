@@ -58,9 +58,21 @@ public class OtpFragment extends Fragment {
                 view.findViewById(R.id.buttonResendOtp);
 
         String email = "";
+        String purpose = "login";
+        String name = "";
+        String username = "";
+        String phone = "";
+        String zone = "";
+        String password = "";
 
         if (getArguments() != null) {
             email = getArguments().getString("email", "");
+            purpose = getArguments().getString("purpose", "login");
+            name = getArguments().getString("name", "");
+            username = getArguments().getString("username", "");
+            phone = getArguments().getString("phone", "");
+            zone = getArguments().getString("zone", "");
+            password = getArguments().getString("password", "");
         }
 
         textEmail.setText(
@@ -68,23 +80,29 @@ public class OtpFragment extends Fragment {
         );
 
         String finalEmail = email;
+        String finalPurpose = purpose;
+        String finalName = name;
+        String finalUsername = username;
+        String finalPhone = phone;
+        String finalZone = zone;
+        String finalPassword = password;
 
         buttonConfirm.setOnClickListener(v -> {
 
             String code =
                     editOtp.getText().toString();
 
-            if (code.isEmpty()) {
+            if (!code.matches("\\d{6}")) {
 
                 Toast.makeText(
                         requireContext(),
-                        "Ingresá el código recibido",
+                        "Ingresá los 6 dígitos del código",
                         Toast.LENGTH_SHORT
                 ).show();
 
             } else {
 
-                authRepository.verifyOtp(finalEmail, code, new AuthRepository.Resultado() {
+                AuthRepository.Resultado resultado = new AuthRepository.Resultado() {
                     @Override public void onSuccess() {
                         if (!isAdded()) return;
                         Bundle bundle = new Bundle();
@@ -92,11 +110,17 @@ public class OtpFragment extends Fragment {
                         Navigation.findNavController(v).navigate(R.id.action_otpFragment_to_homeFragment, bundle);
                     }
                     @Override public void onError(String mensaje) { mostrarError(mensaje); }
-                });
+                };
+                if ("registration".equals(finalPurpose)) {
+                    authRepository.verifyRegistration(finalEmail, code, finalName, finalUsername,
+                            finalPhone, finalZone, finalPassword, resultado);
+                } else {
+                    authRepository.verifyLoginOtp(finalEmail, code, resultado);
+                }
             }
         });
 
-        buttonResend.setOnClickListener(v -> authRepository.resendOtp(finalEmail, new AuthRepository.Resultado() {
+        buttonResend.setOnClickListener(v -> authRepository.resendOtp(finalEmail, finalPurpose, new AuthRepository.Resultado() {
             @Override public void onSuccess() {
                 if (isAdded()) Toast.makeText(requireContext(), "Código reenviado", Toast.LENGTH_SHORT).show();
             }

@@ -4,6 +4,7 @@ import com.da_grupo9.ronda.R;
 import com.da_grupo9.ronda.data.repository.ProfileRepository;
 import com.da_grupo9.ronda.data.repository.PublicacionRepository;
 import com.da_grupo9.ronda.data.repository.AuthRepository;
+import com.da_grupo9.ronda.data.local.SessionManager;
 
 import android.os.Bundle;
 import android.net.Uri;
@@ -47,9 +48,13 @@ public class ProfileFragment extends Fragment {
     @Inject ProfileRepository profileRepository;
     @Inject AuthRepository authRepository;
     @Inject PublicacionRepository publicacionRepository;
+    @Inject SessionManager sessionManager;
     private ImageView imageAvatar;
     private Button buttonCambiarAvatar;
     private String avatarUrlActual;
+    private String currentEmail;
+    private TextView textPasswordStatus;
+    private Button buttonSetPassword;
 
     private final ActivityResultLauncher<String> galleryLauncher = registerForActivityResult(
             new ActivityResultContracts.GetContent(), uri -> {
@@ -101,6 +106,9 @@ public class ProfileFragment extends Fragment {
         TextView textCompradorVendedor = view.findViewById(R.id.textCompradorVendedor);
         TextView textAntiguedad = view.findViewById(R.id.textAntiguedad);
         TextView textPublicacionesActivas = view.findViewById(R.id.textPublicacionesActivas);
+        textPasswordStatus = view.findViewById(R.id.textPasswordStatus);
+        buttonSetPassword = view.findViewById(R.id.buttonSetPassword);
+        mostrarEstadoPassword(textPasswordStatus, buttonSetPassword);
 
         Button buttonLogout =
                 view.findViewById(R.id.buttonLogout);
@@ -110,6 +118,12 @@ public class ProfileFragment extends Fragment {
                 if (!isAdded()) return;
                 editNombre.setText(perfil.getNombre());
                 editEmail.setText(perfil.getEmail());
+                currentEmail = perfil.getEmail();
+                buttonSetPassword.setEnabled(currentEmail != null && !currentEmail.isEmpty());
+                if (perfil.getHasPassword() != null) {
+                    sessionManager.setPasswordStatus(perfil.getHasPassword());
+                    mostrarEstadoPassword(textPasswordStatus, buttonSetPassword);
+                }
                 editTelefono.setText(perfil.getTelefono());
                 editZona.setText(perfil.getZona());
                 avatarUrlActual = perfil.getAvatarUrl();
@@ -162,6 +176,27 @@ public class ProfileFragment extends Fragment {
         });
 
         buttonCambiarAvatar.setOnClickListener(v -> galleryLauncher.launch("image/*"));
+
+        buttonSetPassword.setOnClickListener(v -> {
+            if (currentEmail == null || currentEmail.isEmpty()) return;
+            buttonSetPassword.setEnabled(false);
+            authRepository.requestOtp(currentEmail, "set_password", new AuthRepository.Resultado() {
+                @Override public void onSuccess() {
+                    if (!isAdded()) return;
+                    buttonSetPassword.setEnabled(true);
+                    Bundle args = new Bundle();
+                    args.putString("email", currentEmail);
+                    args.putBoolean("returnToProfile", true);
+                    Navigation.findNavController(v).navigate(R.id.resetPasswordFragment, args);
+                }
+
+                @Override public void onError(String mensaje) {
+                    if (!isAdded()) return;
+                    buttonSetPassword.setEnabled(true);
+                    mostrarError(mensaje);
+                }
+            });
+        });
 
         buttonGuardar.setOnClickListener(v -> {
 
@@ -222,6 +257,27 @@ public class ProfileFragment extends Fragment {
 
     private void mostrarError(String mensaje) {
         if (isAdded()) Toast.makeText(requireContext(), mensaje, Toast.LENGTH_LONG).show();
+    }
+
+    private void mostrarEstadoPassword(TextView status, Button button) {
+        if (!sessionManager.isPasswordStatusKnown()) {
+            status.setText("No podemos confirmar si esta cuenta tiene contraseña. Podés agregar una nueva para asegurar el acceso.");
+            button.setText("Agregar contraseña");
+        } else if (sessionManager.hasPassword()) {
+            status.setText("Tu cuenta tiene una contraseña configurada.");
+            button.setText("Cambiar contraseña");
+        } else {
+            status.setText("Sólo podrás entrar con OTP hasta que agregues una contraseña.");
+            button.setText("Agregar contraseña");
+        }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (textPasswordStatus != null && buttonSetPassword != null) {
+            mostrarEstadoPassword(textPasswordStatus, buttonSetPassword);
+        }
     }
 
     private void subirAvatar(Uri uri) {
