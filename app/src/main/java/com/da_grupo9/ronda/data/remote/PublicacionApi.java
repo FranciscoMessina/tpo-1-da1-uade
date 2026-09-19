@@ -4,11 +4,11 @@ import com.da_grupo9.ronda.data.model.Publicacion;
 import com.da_grupo9.ronda.data.model.PublicacionesResponse;
 import com.da_grupo9.ronda.data.model.PublicUser;
 import com.da_grupo9.ronda.data.model.PublicationRequest;
-import com.da_grupo9.ronda.data.model.UploadImageResponse;
+import com.da_grupo9.ronda.data.model.ReviewsResponse;
 import com.da_grupo9.ronda.data.model.CategoriesResponse;
 import com.da_grupo9.ronda.data.model.ZonesResponse;
 import com.da_grupo9.ronda.data.model.QuestionRequest;
-import okhttp3.MultipartBody;
+import com.da_grupo9.ronda.data.model.AnswerQuestionRequest;
 import java.util.Map;
 import retrofit2.Call;
 import retrofit2.http.Body;
@@ -17,8 +17,6 @@ import retrofit2.http.PATCH;
 import retrofit2.http.POST;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
-import retrofit2.http.Multipart;
-import retrofit2.http.Part;
 
 public interface PublicacionApi {
     @GET("publications")
@@ -35,14 +33,21 @@ public interface PublicacionApi {
     @GET("categories") Call<CategoriesResponse> getCategories();
     @GET("zones") Call<ZonesResponse> getZones();
     @GET("users/{id}") Call<PublicUser> getUsuario(@Path("id") String id);
+    @GET("users/{id}/reviews")
+    Call<ReviewsResponse> getResenasUsuario(
+            @Path("id") String id,
+            @Query("page") int page,
+            @Query("pageSize") int pageSize);
     @GET("publications/{id}") Call<Publicacion> getPublicacion(@Path("id") String id);
     @GET("me/publications") Call<PublicacionesResponse> getPublicacionesPropias();
     @POST("publications") Call<Publicacion> crearPublicacion(@Body PublicationRequest publicacion);
     @PATCH("publications/{id}") Call<Publicacion> actualizarPublicacion(@Path("id") String id, @Body PublicationRequest publicacion);
-    @Multipart
-    @POST("uploads/images") Call<UploadImageResponse> subirImagen(@Part MultipartBody.Part file);
     @PATCH("publications/{id}/status")
     Call<Publicacion> cambiarEstado(@Path("id") String id, @Body Map<String, String> estado);
     @POST("publications/{id}/questions")
     Call<Publicacion.Question> crearPregunta(@Path("id") String id, @Body QuestionRequest pregunta);
+    @POST("questions/{id}/answer")
+    Call<Publicacion.Question> responderPregunta(
+            @Path("id") String id,
+            @Body AnswerQuestionRequest respuesta);
 }

@@ -2,12 +2,15 @@ package com.da_grupo9.ronda.data.local;
 
 import androidx.annotation.NonNull;
 import androidx.room.Entity;
-import androidx.room.PrimaryKey;
 
-@Entity(tableName = "publicaciones")
+/** Caché por cuenta: el mismo artículo puede tener datos personalizados distintos según quién lo consulta. */
+@Entity(tableName = "publicaciones", primaryKeys = {"accountId", "id"})
 public class PublicacionEntity {
 
-    @PrimaryKey
+    /** Id de la cuenta que obtuvo estos datos; vacío para consultas sin sesión. */
+    @NonNull
+    private String accountId = "";
+
     @NonNull
     private String id = "";
 
@@ -24,10 +27,21 @@ public class PublicacionEntity {
     private String coverImage;
     private String localCoverImagePath;
     private String fullJson;
+    /** Verdadero si fullJson proviene del detalle y no sólo del resumen del feed. */
+    private boolean hasDetail;
     private long lastConsultedAt;
     private long cachedAt;
 
     public PublicacionEntity() {
+    }
+
+    @NonNull
+    public String getAccountId() {
+        return accountId;
+    }
+
+    public void setAccountId(@NonNull String accountId) {
+        this.accountId = accountId;
     }
 
     @NonNull
@@ -141,6 +155,14 @@ public class PublicacionEntity {
 
     public void setFullJson(String fullJson) {
         this.fullJson = fullJson;
+    }
+
+    public boolean isHasDetail() {
+        return hasDetail;
+    }
+
+    public void setHasDetail(boolean hasDetail) {
+        this.hasDetail = hasDetail;
     }
 
     public long getLastConsultedAt() {

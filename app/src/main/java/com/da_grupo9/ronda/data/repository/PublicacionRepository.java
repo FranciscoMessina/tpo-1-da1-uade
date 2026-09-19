@@ -6,17 +6,22 @@ import android.os.Looper;
 import com.da_grupo9.ronda.data.local.PublicacionDao;
 import com.da_grupo9.ronda.data.local.PublicacionEntity;
 import com.da_grupo9.ronda.data.local.PublicacionMapper;
+import com.da_grupo9.ronda.data.local.SessionManager;
 import com.da_grupo9.ronda.data.model.Publicacion;
+import com.da_grupo9.ronda.data.model.FiltrosPublicaciones;
 import com.da_grupo9.ronda.data.model.PublicacionesResponse;
 import com.da_grupo9.ronda.data.model.PublicUser;
 import com.da_grupo9.ronda.data.model.PublicationRequest;
-import com.da_grupo9.ronda.data.model.UploadImageResponse;
+import com.da_grupo9.ronda.data.model.ReviewsResponse;
 import com.da_grupo9.ronda.data.model.CategoriesResponse;
 import com.da_grupo9.ronda.data.model.ZonesResponse;
 import com.da_grupo9.ronda.data.model.QuestionRequest;
+import com.da_grupo9.ronda.data.model.AnswerQuestionRequest;
 import com.da_grupo9.ronda.data.remote.PublicacionApi;
 import com.da_grupo9.ronda.util.ImageStorageManager;
+import com.da_grupo9.ronda.util.ImageUploadManager;
 import com.da_grupo9.ronda.util.NetworkMonitor;
+import com.da_grupo9.ronda.util.ApiError;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -24,7 +29,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.io.File;
 import java.util.Comparator;
 import java.util.Locale;
 
@@ -34,27 +38,27 @@ import javax.inject.Singleton;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-import okhttp3.MediaType;
-import okhttp3.MultipartBody;
-import okhttp3.RequestBody;
 
 @Singleton
 public class PublicacionRepository {
 
-    public interface Resultado<T> {
-        void onSuccess(T data);
-        void onError(String mensaje);
-    }
-
     public interface ResultadoPagina {
         void onSuccess(List<Publicacion> items, int page, int totalPages, int total);
+        /** Permite a Home advertir cuando la página procede de la caché local. */
+        default void onSuccess(List<Publicacion> items, int page, int totalPages, int total,
+                               boolean desdeCache) {
+            onSuccess(items, page, totalPages, total);
+        }
         void onError(String mensaje);
+        default void onError(ApiError error) { onError(error.getMessage()); }
     }
 
     private final PublicacionApi api;
     private final PublicacionDao publicacionDao;
     private final NetworkMonitor networkMonitor;
     private final ImageStorageManager imageStorageManager;
+    private final ImageUploadManager imageUploadManager;
+    private final SessionManager sessionManager;
 
     private final ExecutorService dbExecutor = Executors.newSingleThreadExecutor();
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
@@ -64,11 +68,21 @@ public class PublicacionRepository {
             PublicacionApi api,
             PublicacionDao publicacionDao,
             NetworkMonitor networkMonitor,
-            ImageStorageManager imageStorageManager) {
+            ImageStorageManager imageStorageManager,
+            ImageUploadManager imageUploadManager,
+            SessionManager sessionManager) {
         this.api = api;
         this.publicacionDao = publicacionDao;
         this.networkMonitor = networkMonitor;
         this.imageStorageManager = imageStorageManager;
+        this.imageUploadManager = imageUploadManager;
+        this.sessionManager = sessionManager;
+    }
+
+    /** La caché se separa por cuenta; sin sesión se usa el espacio anónimo. */
+    private String cuentaActual() {
+        String userId = sessionManager.getUserId();
+        return userId != null && sessionManager.isLoggedIn() ? userId : "";
     }
 
     public boolean isOnline() {
@@ -79,9 +93,15 @@ public class PublicacionRepository {
         return networkMonitor;
     }
 
-    public void getPublicaciones(int page, int pageSize, String query, String category,
-                                 String condition, String zone, Double minPrice, Double maxPrice,
-                                 String sort, ResultadoPagina resultado) {
+    public void getPublicaciones(int page, int pageSize, FiltrosPublicaciones filtros,
+                                 ResultadoPagina resultado) {
+        String query = filtros.getQuery();
+        String category = filtros.getCategory();
+        String condition = filtros.getCondition();
+        String zone = filtros.getZone();
+        Double minPrice = filtros.getMinPrice();
+        Double maxPrice = filtros.getMaxPrice();
+        String sort = filtros.getSort();
         if (!networkMonitor.isOnline()) {
             obtenerPublicacionesDeCache(page, pageSize, query, category, condition, zone,
                     minPrice, maxPrice, sort, resultado,
@@ -89,20 +109,24 @@ public class PublicacionRepository {
             return;
         }
 
+        // Las escrituras pendientes se guardan bajo la cuenta que hizo la petición,
+        // aunque la sesión cambie antes de que llegue la respuesta.
+        String cuenta = cuentaActual();
         api.getPublicaciones(page, pageSize, query, category, condition, zone, minPrice, maxPrice, sort)
                 .enqueue(new Callback<PublicacionesResponse>() {
             @Override
             public void onResponse(Call<PublicacionesResponse> call, Response<PublicacionesResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     List<Publicacion> items = response.body().getItems();
-                    guardarPublicacionesEnCache(items);
+                    guardarPublicacionesEnCache(cuenta, items);
                     PublicacionesResponse.Pagination pagination = response.body().getPagination();
                     int responsePage = pagination != null ? pagination.getPage() : page;
                     int totalPages = pagination != null ? pagination.getTotalPages() : 1;
                     int total = pagination != null ? pagination.getTotal() : items.size();
-                    mainHandler.post(() -> resultado.onSuccess(items, responsePage, totalPages, total));
+                    mainHandler.post(() -> resultado.onSuccess(
+                            items, responsePage, totalPages, total, false));
                 } else {
-                    resultado.onError("El servidor respondió con código " + response.code());
+                    resultado.onError(ApiError.from(response, "El servidor respondió con código " + response.code()));
                 }
             }
 
@@ -116,35 +140,39 @@ public class PublicacionRepository {
         });
     }
 
-    public void getCategories(Resultado<List<String>> resultado) {
-        ejecutar(api.getCategories(), new Resultado<CategoriesResponse>() {
+    public void getCategories(RepositoryResult<List<String>> resultado) {
+        ejecutar(api.getCategories(), new RepositoryResult<CategoriesResponse>() {
             @Override public void onSuccess(CategoriesResponse data) { resultado.onSuccess(data.getItems()); }
             @Override public void onError(String mensaje) { resultado.onError(mensaje); }
         });
     }
 
-    public void getZones(Resultado<List<String>> resultado) {
-        ejecutar(api.getZones(), new Resultado<ZonesResponse>() {
+    public void getZones(RepositoryResult<List<String>> resultado) {
+        ejecutar(api.getZones(), new RepositoryResult<ZonesResponse>() {
             @Override public void onSuccess(ZonesResponse data) { resultado.onSuccess(data.getItems()); }
             @Override public void onError(String mensaje) { resultado.onError(mensaje); }
         });
     }
 
-    public void getPublicacionById(String id, Resultado<Publicacion> resultado) {
+    public void getPublicacionById(String id, RepositoryResult<Publicacion> resultado) {
         if (!networkMonitor.isOnline()) {
             obtenerPublicacionDeCache(id, resultado, "Sin conexión a internet y esta publicación no está guardada");
             return;
         }
 
+        String cuenta = cuentaActual();
         api.getPublicacion(id).enqueue(new Callback<Publicacion>() {
             @Override
             public void onResponse(Call<Publicacion> call, Response<Publicacion> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     Publicacion publicacion = response.body();
-                    guardarConsultaDetalle(publicacion);
-                    mainHandler.post(() -> resultado.onSuccess(publicacion));
+                    guardarConsultaDetalle(cuenta, publicacion);
+                    mainHandler.post(() -> resultado.onSuccess(publicacion, false));
                 } else {
-                    obtenerPublicacionDeCache(id, resultado, "El servidor respondió con código " + response.code());
+                    // Un rechazo vigente (sesión, permisos o publicación inexistente) no debe
+                    // quedar oculto detrás de una copia local anterior.
+                    resultado.onError(ApiError.from(response,
+                            "El servidor respondió con código " + response.code()));
                 }
             }
 
@@ -157,9 +185,10 @@ public class PublicacionRepository {
         });
     }
 
-    public void getUltimasConsultadas(int limit, Resultado<List<Publicacion>> resultado) {
+    public void getUltimasConsultadas(int limit, RepositoryResult<List<Publicacion>> resultado) {
+        String cuenta = cuentaActual();
         dbExecutor.execute(() -> {
-            List<PublicacionEntity> entities = publicacionDao.getUltimasConsultadas(limit);
+            List<PublicacionEntity> entities = publicacionDao.getUltimasConsultadas(cuenta, limit);
             List<Publicacion> modelos = new ArrayList<>();
             for (PublicacionEntity entity : entities) {
                 Publicacion pub = PublicacionMapper.toModel(entity, imageStorageManager);
@@ -169,13 +198,15 @@ public class PublicacionRepository {
         });
     }
 
-    private void guardarPublicacionesEnCache(List<Publicacion> items) {
+    private void guardarPublicacionesEnCache(String cuenta, List<Publicacion> items) {
         if (items == null || items.isEmpty()) return;
         dbExecutor.execute(() -> {
             List<PublicacionEntity> entities = new ArrayList<>();
             for (Publicacion pub : items) {
-                PublicacionEntity entity = PublicacionMapper.toEntity(pub, imageStorageManager);
-                if (entity != null) entities.add(entity);
+                PublicacionEntity entity = PublicacionMapper.toEntity(cuenta, pub, imageStorageManager);
+                if (entity == null) continue;
+                conservarDetalle(entity, pub);
+                entities.add(entity);
             }
             publicacionDao.insertOrUpdateAll(entities);
 
@@ -188,11 +219,28 @@ public class PublicacionRepository {
         });
     }
 
-    private void guardarConsultaDetalle(Publicacion publicacion) {
+    /**
+     * El resumen del feed no debe reemplazar un detalle ya consultado: se actualizan
+     * sólo los campos compartidos y se conservan galería, permisos y marca de consulta.
+     * Debe ejecutarse en dbExecutor.
+     */
+    private void conservarDetalle(PublicacionEntity nueva, Publicacion resumen) {
+        PublicacionEntity existente = publicacionDao.getById(nueva.getAccountId(), nueva.getId());
+        if (existente == null || !existente.isHasDetail()) return;
+        Publicacion detalle = PublicacionMapper.toModel(existente, null);
+        if (detalle == null) return;
+        detalle.actualizarDesdeResumen(resumen);
+        nueva.setFullJson(PublicacionMapper.toJson(detalle));
+        nueva.setHasDetail(true);
+        nueva.setLastConsultedAt(existente.getLastConsultedAt());
+    }
+
+    private void guardarConsultaDetalle(String cuenta, Publicacion publicacion) {
         if (publicacion == null || publicacion.getId() == null) return;
         dbExecutor.execute(() -> {
-            PublicacionEntity entity = PublicacionMapper.toEntity(publicacion, imageStorageManager);
+            PublicacionEntity entity = PublicacionMapper.toEntity(cuenta, publicacion, imageStorageManager);
             if (entity != null) {
+                entity.setHasDetail(true);
                 entity.setLastConsultedAt(System.currentTimeMillis());
                 publicacionDao.insertOrUpdate(entity);
             }
@@ -214,8 +262,9 @@ public class PublicacionRepository {
                                              String condition, String zone, Double minPrice,
                                              Double maxPrice, String sort, ResultadoPagina resultado,
                                              String fallbackError) {
+        String cuenta = cuentaActual();
         dbExecutor.execute(() -> {
-            List<PublicacionEntity> cached = publicacionDao.getPublicacionesHome();
+            List<PublicacionEntity> cached = publicacionDao.getPublicacionesHome(cuenta);
             if (cached != null && !cached.isEmpty()) {
                 List<Publicacion> modelos = new ArrayList<>();
                 for (PublicacionEntity entity : cached) {
@@ -234,7 +283,8 @@ public class PublicacionRepository {
                 int from = Math.min((safePage - 1) * pageSize, total);
                 int to = Math.min(from + pageSize, total);
                 List<Publicacion> pagina = new ArrayList<>(modelos.subList(from, to));
-                mainHandler.post(() -> resultado.onSuccess(pagina, safePage, totalPages, total));
+                mainHandler.post(() -> resultado.onSuccess(
+                        pagina, safePage, totalPages, total, true));
             } else {
                 mainHandler.post(() -> resultado.onError(fallbackError));
             }
@@ -255,29 +305,38 @@ public class PublicacionRepository {
                 && (maxPrice == null || publicacion.getPrecio() <= maxPrice);
     }
 
-    private void obtenerPublicacionDeCache(String id, Resultado<Publicacion> resultado, String fallbackError) {
+    private void obtenerPublicacionDeCache(String id, RepositoryResult<Publicacion> resultado, String fallbackError) {
+        String cuenta = cuentaActual();
         dbExecutor.execute(() -> {
-            PublicacionEntity entity = publicacionDao.getById(id);
+            PublicacionEntity entity = publicacionDao.getById(cuenta, id);
             if (entity != null) {
                 // Registrar consulta
-                publicacionDao.actualizarUltimaConsulta(id, System.currentTimeMillis());
+                publicacionDao.actualizarUltimaConsulta(cuenta, id, System.currentTimeMillis());
                 Publicacion pub = PublicacionMapper.toModel(entity, imageStorageManager);
-                mainHandler.post(() -> resultado.onSuccess(pub));
+                if (pub != null) {
+                    mainHandler.post(() -> resultado.onSuccess(pub, true));
+                } else {
+                    mainHandler.post(() -> resultado.onError(fallbackError));
+                }
             } else {
                 mainHandler.post(() -> resultado.onError(fallbackError));
             }
         });
     }
 
-    public void getUsuario(String id, Resultado<PublicUser> resultado) {
+    public void getUsuario(String id, RepositoryResult<PublicUser> resultado) {
         ejecutar(api.getUsuario(id), resultado);
     }
 
-    public void getMisPublicaciones(Resultado<List<Publicacion>> resultado) {
+    public void getResenasUsuario(String id, int page, int pageSize, RepositoryResult<ReviewsResponse> resultado) {
+        ejecutar(api.getResenasUsuario(id, page, pageSize), resultado);
+    }
+
+    public void getMisPublicaciones(RepositoryResult<List<Publicacion>> resultado) {
         api.getPublicacionesPropias().enqueue(new Callback<PublicacionesResponse>() {
             @Override public void onResponse(Call<PublicacionesResponse> call, Response<PublicacionesResponse> response) {
                 if (response.isSuccessful() && response.body() != null) resultado.onSuccess(response.body().getItems());
-                else resultado.onError("El servidor respondió con código " + response.code());
+                else resultado.onError(ApiError.from(response, "El servidor respondió con código " + response.code()));
             }
             @Override public void onFailure(Call<PublicacionesResponse> call, Throwable error) {
                 resultado.onError(error instanceof IOException ? "No se pudo conectar con el servidor" : "No se pudo procesar la respuesta del servidor");
@@ -286,12 +345,12 @@ public class PublicacionRepository {
     }
 
     public void agregarPublicacion(PublicationRequest publicacion, List<String> rutasImagenes,
-                                   Resultado<Publicacion> resultado) {
+                                   RepositoryResult<Publicacion> resultado) {
         if (!networkMonitor.isOnline()) {
             resultado.onError("Se necesita conexión a internet para publicar un artículo");
             return;
         }
-        subirImagenes(rutasImagenes, 0, new ArrayList<>(), new Resultado<List<String>>() {
+        imageUploadManager.uploadFiles(rutasImagenes, new ImageUploadManager.Result<List<String>>() {
             @Override public void onSuccess(List<String> urls) {
                 PublicationRequest request = new PublicationRequest(
                         publicacion.getTitle(), publicacion.getDescription(),
@@ -303,7 +362,7 @@ public class PublicacionRepository {
         });
     }
 
-    public void cambiarEstadoPublicacion(String id, String estado, Resultado<Publicacion> resultado) {
+    public void cambiarEstadoPublicacion(String id, String estado, RepositoryResult<Publicacion> resultado) {
         if (!networkMonitor.isOnline()) {
             resultado.onError("Se necesita conexión a internet para modificar el estado");
             return;
@@ -314,14 +373,14 @@ public class PublicacionRepository {
     public void actualizarPublicacion(String id, PublicationRequest publicacion,
                                       List<String> rutasImagenesNuevas,
                                       List<String> imagenesConservadas,
-                                      Resultado<Publicacion> resultado) {
+                                      RepositoryResult<Publicacion> resultado) {
         if (!networkMonitor.isOnline()) {
             resultado.onError("Se necesita conexión a internet para actualizar la publicación");
             return;
         }
         List<String> rutas = new ArrayList<>(rutasImagenesNuevas);
         List<String> conservadas = new ArrayList<>(imagenesConservadas);
-        subirImagenes(rutas, 0, new ArrayList<>(), new Resultado<List<String>>() {
+        imageUploadManager.uploadFiles(rutas, new ImageUploadManager.Result<List<String>>() {
             @Override public void onSuccess(List<String> urlsNuevas) {
                 List<String> urlsFinales = new ArrayList<>(conservadas);
                 urlsFinales.addAll(urlsNuevas);
@@ -339,7 +398,7 @@ public class PublicacionRepository {
     }
 
     public void crearPregunta(String publicacionId, String texto,
-                              Resultado<Publicacion.Question> resultado) {
+                              RepositoryResult<Publicacion.Question> resultado) {
         if (!networkMonitor.isOnline()) {
             resultado.onError("Se necesita conexión a internet para enviar una pregunta");
             return;
@@ -347,41 +406,23 @@ public class PublicacionRepository {
         ejecutar(api.crearPregunta(publicacionId, new QuestionRequest(texto)), resultado);
     }
 
-    private void subirImagenes(List<String> rutas, int indice, List<String> urls,
-                               Resultado<List<String>> resultado) {
-        if (indice >= rutas.size()) {
-            resultado.onSuccess(urls);
+    public void responderPregunta(String preguntaId, String respuesta,
+                                  RepositoryResult<Publicacion.Question> resultado) {
+        if (!networkMonitor.isOnline()) {
+            resultado.onError("Se necesita conexión a internet para responder la pregunta");
             return;
         }
-        File archivo = new File(rutas.get(indice));
-        String nombre = archivo.getName();
-        String mime = nombre.endsWith(".png") ? "image/png"
-                : nombre.endsWith(".webp") ? "image/webp" : "image/jpeg";
-        RequestBody body = RequestBody.create(archivo, MediaType.parse(mime));
-        MultipartBody.Part part = MultipartBody.Part.createFormData("file", nombre, body);
-        api.subirImagen(part).enqueue(new Callback<UploadImageResponse>() {
-            @Override public void onResponse(Call<UploadImageResponse> call, Response<UploadImageResponse> response) {
-                if (!response.isSuccessful() || response.body() == null || response.body().getUrl() == null) {
-                    resultado.onError("No se pudo subir una imagen (código " + response.code() + ")");
-                    return;
-                }
-                urls.add(response.body().getUrl());
-                subirImagenes(rutas, indice + 1, urls, resultado);
-            }
-            @Override public void onFailure(Call<UploadImageResponse> call, Throwable error) {
-                resultado.onError("No se pudo subir una imagen");
-            }
-        });
+        ejecutar(api.responderPregunta(preguntaId, new AnswerQuestionRequest(respuesta)), resultado);
     }
 
-    private <T> void ejecutar(Call<T> call, Resultado<T> resultado) {
+    private <T> void ejecutar(Call<T> call, RepositoryResult<T> resultado) {
         call.enqueue(new Callback<T>() {
             @Override
             public void onResponse(Call<T> call, Response<T> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     resultado.onSuccess(response.body());
                 } else {
-                    resultado.onError("El servidor respondió con código " + response.code());
+                    resultado.onError(ApiError.from(response, "El servidor respondió con código " + response.code()));
                 }
             }
 

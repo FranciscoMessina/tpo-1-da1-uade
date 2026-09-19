@@ -106,6 +106,13 @@ public class SessionManager {
                 .remove(KEY_TOKEN)
                 .remove(KEY_TOKEN_TYPE)
                 .remove(KEY_USER_ID)
+                .remove(KEY_BIOMETRIC_ENABLED)
                 .apply();
+    }
+
+    public synchronized boolean clearIfTokenMatches(String token) {
+        if (token == null || !token.equals(getToken())) return false;
+        clear();
+        return true;
     }
 }

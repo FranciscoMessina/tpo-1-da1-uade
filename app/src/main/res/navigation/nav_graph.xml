@@ -104,7 +104,37 @@
     <fragment
         android:id="@+id/profileFragment"
         android:name="com.da_grupo9.ronda.ui.fragments.ProfileFragment"
-        android:label="Perfil" />
+        android:label="Perfil">
+        <action
+            android:id="@+id/action_profileFragment_to_offersFragment"
+            app:destination="@id/offersFragment" />
+        <action
+            android:id="@+id/action_profileFragment_to_operationsHistoryFragment"
+            app:destination="@id/operationsHistoryFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/operationsHistoryFragment"
+        android:name="com.da_grupo9.ronda.ui.fragments.OperationsHistoryFragment"
+        android:label="Historial de operaciones">
+        <action
+            android:id="@+id/action_operationsHistoryFragment_to_operationDetailFragment"
+            app:destination="@id/operationDetailFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/operationDetailFragment"
+        android:name="com.da_grupo9.ronda.ui.fragments.OperationDetailFragment"
+        android:label="Detalle de operación">
+        <argument
+            android:name="operation"
+            app:argType="com.da_grupo9.ronda.data.model.Operation"
+            app:nullable="true"
+            android:defaultValue="@null" />
+        <action
+            android:id="@+id/action_operationDetailFragment_to_publicProfileFragment"
+            app:destination="@id/publicProfileFragment" />
+    </fragment>
 
     <fragment
         android:id="@+id/homeFragment"
@@ -204,6 +234,45 @@
             android:id="@+id/action_detailFragment_to_questionFragment"
             app:destination="@id/questionFragment" />
 
+        <action
+            android:id="@+id/action_detailFragment_to_createOfferFragment"
+            app:destination="@id/createOfferFragment" />
+
+    </fragment>
+
+    <fragment
+        android:id="@+id/createOfferFragment"
+        android:name="com.da_grupo9.ronda.ui.fragments.CreateOfferFragment"
+        android:label="Hacer una oferta">
+
+        <argument
+            android:name="publicationId"
+            android:defaultValue=""
+            app:argType="string" />
+
+        <argument
+            android:name="publicationTitle"
+            android:defaultValue=""
+            app:argType="string" />
+
+        <argument
+            android:name="publicationPrice"
+            android:defaultValue="0.0"
+            app:argType="float" />
+        <argument
+            android:name="sellerName"
+            android:defaultValue=""
+            app:argType="string" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/offersFragment"
+        android:name="com.da_grupo9.ronda.ui.fragments.OffersFragment"
+        android:label="Mis ofertas">
+        <argument
+            android:name="selectedRole"
+            android:defaultValue="buyer"
+            app:argType="string" />
     </fragment>
 
     <fragment

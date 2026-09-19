@@ -2,6 +2,7 @@ package com.da_grupo9.ronda;
 
 import android.os.Bundle;
 import android.view.View;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -10,11 +11,13 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.FragmentManager;
 import androidx.navigation.NavController;
+import androidx.navigation.NavOptions;
 import androidx.navigation.fragment.NavHostFragment;
 import androidx.navigation.ui.NavigationUI;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.da_grupo9.ronda.data.local.SessionManager;
+import com.da_grupo9.ronda.data.local.SessionExpirationNotifier;
 import com.da_grupo9.ronda.data.repository.AuthRepository;
 
 import javax.inject.Inject;
@@ -25,6 +28,11 @@ import dagger.hilt.android.AndroidEntryPoint;
 public class MainActivity extends AppCompatActivity {
     @Inject AuthRepository authRepository;
     @Inject SessionManager sessionManager;
+    @Inject SessionExpirationNotifier sessionExpirationNotifier;
+
+    private NavController navController;
+    private final SessionExpirationNotifier.Listener sessionExpirationListener =
+            this::redirectToLoginIfSessionExpired;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,7 +79,7 @@ public class MainActivity extends AppCompatActivity {
         FragmentManager fragmentManager = getSupportFragmentManager();
         NavHostFragment navHostFragment =
                 (NavHostFragment) fragmentManager.findFragmentById(R.id.nav_host_fragment);
-        NavController navController = navHostFragment.getNavController();
+        navController = navHostFragment.getNavController();
 
         NavigationUI.setupWithNavController(bottomNavigationView, navController);
 
@@ -107,5 +115,30 @@ public class MainActivity extends AppCompatActivity {
                     esDestinoConBottomNav ? View.VISIBLE : View.GONE
             );
         });
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        sessionExpirationNotifier.addListener(sessionExpirationListener);
+        redirectToLoginIfSessionExpired();
+    }
+
+    @Override
+    protected void onStop() {
+        sessionExpirationNotifier.removeListener(sessionExpirationListener);
+        super.onStop();
+    }
+
+    private void redirectToLoginIfSessionExpired() {
+        if (!sessionExpirationNotifier.consumeExpiration()) return;
+        if (navController.getCurrentDestination() != null
+                && navController.getCurrentDestination().getId() == R.id.loginFragment) return;
+
+        NavOptions options = new NavOptions.Builder()
+                .setPopUpTo(navController.getGraph().getId(), true)
+                .build();
+        navController.navigate(R.id.loginFragment, null, options);
+        Toast.makeText(this, R.string.session_expired_message, Toast.LENGTH_LONG).show();
     }
 }

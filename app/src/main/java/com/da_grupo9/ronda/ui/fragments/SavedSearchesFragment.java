@@ -17,6 +17,7 @@ import com.da_grupo9.ronda.R;
 import com.da_grupo9.ronda.data.model.SavedSearchItem;
 import com.da_grupo9.ronda.data.model.SavedSearchesResponse;
 import com.da_grupo9.ronda.data.remote.SavedSearchesApi;
+import com.da_grupo9.ronda.util.ApiErrorMessage;
 
 import javax.inject.Inject;
 
@@ -89,7 +90,7 @@ public class SavedSearchesFragment extends Fragment {
 
                             Toast.makeText(
                                     requireContext(),
-                                    "No se pudieron cargar las búsquedas",
+                                    ApiErrorMessage.from(response, "No se pudieron cargar las búsquedas"),
                                     Toast.LENGTH_SHORT
                             ).show();
                         }
@@ -189,7 +190,7 @@ public class SavedSearchesFragment extends Fragment {
                         } else {
                             Toast.makeText(
                                     requireContext(),
-                                    "No se pudo abrir la búsqueda",
+                                    ApiErrorMessage.from(response, "No se pudo abrir la búsqueda"),
                                     Toast.LENGTH_SHORT
                             ).show();
                         }
@@ -266,7 +267,7 @@ public class SavedSearchesFragment extends Fragment {
 
                             Toast.makeText(
                                     requireContext(),
-                                    "No se pudo eliminar la búsqueda",
+                                    ApiErrorMessage.from(response, "No se pudo eliminar la búsqueda"),
                                     Toast.LENGTH_SHORT
                             ).show();
                         }

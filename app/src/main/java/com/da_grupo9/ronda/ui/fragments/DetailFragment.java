@@ -1,16 +1,22 @@
 package com.da_grupo9.ronda.ui.fragments;
 
 import com.da_grupo9.ronda.R;
+import com.da_grupo9.ronda.data.repository.RepositoryResult;
 import com.da_grupo9.ronda.data.model.Publicacion;
 import com.da_grupo9.ronda.data.repository.PublicacionRepository;
 import com.da_grupo9.ronda.util.NetworkMonitor;
+import com.da_grupo9.ronda.util.MoneyFormat;
 import com.da_grupo9.ronda.data.remote.FavoritesApi;
+import com.da_grupo9.ronda.util.ApiError;
+import com.da_grupo9.ronda.util.ApiErrorMessage;
 
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
 import android.os.Bundle;
+import android.text.InputFilter;
+import android.text.InputType;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,11 +28,15 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 
 import com.bumptech.glide.Glide;
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.textfield.TextInputLayout;
 
 import javax.inject.Inject;
 import dagger.hilt.android.AndroidEntryPoint;
@@ -51,6 +61,8 @@ public class DetailFragment extends Fragment {
 
     // Vistas
     private View bannerDetailOffline;
+    private TextView textBannerDetailOffline;
+    private boolean mostrandoCache;
     private ImageView imageFotoViewer;
     private TextView textFotoIndicador;
     private Button buttonFotoAnterior;
@@ -61,6 +73,7 @@ public class DetailFragment extends Fragment {
     private TextView textDetailEstado;
     private TextView textDetailCategoria;
     private TextView textDetailZona;
+    private TextView textDetailDireccion;
     private TextView textDetailFecha;
     private TextView textDetailDescripcion;
 
@@ -70,6 +83,8 @@ public class DetailFragment extends Fragment {
 
     private LinearLayout containerAccionesComprador;
     private LinearLayout containerAccionesVendedor;
+    private LinearLayout containerPreguntasComprador;
+    private LinearLayout containerPreguntasRecibidas;
 
     private Button buttonPreguntar;
     private Button buttonOfertar;
@@ -107,6 +122,7 @@ public class DetailFragment extends Fragment {
         // Vistas generales
         Button buttonBack = view.findViewById(R.id.buttonBack);
         bannerDetailOffline = view.findViewById(R.id.bannerDetailOffline);
+        textBannerDetailOffline = view.findViewById(R.id.textBannerDetailOffline);
 
         // Galería
         imageFotoViewer = view.findViewById(R.id.imageFotoViewer);
@@ -120,6 +136,7 @@ public class DetailFragment extends Fragment {
         textDetailEstado = view.findViewById(R.id.textDetailEstado);
         textDetailCategoria = view.findViewById(R.id.textDetailCategoria);
         textDetailZona = view.findViewById(R.id.textDetailZona);
+        textDetailDireccion = view.findViewById(R.id.textDetailDireccion);
         textDetailFecha = view.findViewById(R.id.textDetailFecha);
         textDetailDescripcion = view.findViewById(R.id.textDetailDescripcion);
 
@@ -131,6 +148,8 @@ public class DetailFragment extends Fragment {
         // Contenedores
         containerAccionesComprador = view.findViewById(R.id.containerAccionesComprador);
         containerAccionesVendedor = view.findViewById(R.id.containerAccionesVendedor);
+        containerPreguntasComprador = view.findViewById(R.id.containerPreguntasComprador);
+        containerPreguntasRecibidas = view.findViewById(R.id.containerPreguntasRecibidas);
 
         // Botones
         buttonPreguntar = view.findViewById(R.id.buttonPreguntar);
@@ -175,7 +194,12 @@ public class DetailFragment extends Fragment {
 
     private void actualizarEstadoConexion(boolean isOnline) {
         if (bannerDetailOffline != null) {
-            bannerDetailOffline.setVisibility(isOnline ? View.GONE : View.VISIBLE);
+            bannerDetailOffline.setVisibility(isOnline && !mostrandoCache ? View.GONE : View.VISIBLE);
+        }
+        if (textBannerDetailOffline != null) {
+            textBannerDetailOffline.setText(isOnline
+                    ? "No se pudo consultar el servidor: mostrando una copia guardada. La información podría no estar actualizada."
+                    : "Modo sin conexión: mostrando una copia guardada. Las acciones están deshabilitadas.");
         }
         if (buttonPreguntar != null) {
             boolean puedePreguntar = publicacionCargada == null
@@ -183,7 +207,12 @@ public class DetailFragment extends Fragment {
                     || publicacionCargada.getActions().canAsk();
             buttonPreguntar.setEnabled(isOnline && puedePreguntar);
         }
-        if (buttonOfertar != null) buttonOfertar.setEnabled(isOnline);
+        if (buttonOfertar != null) {
+            boolean puedeOfertar = publicacionCargada == null
+                    || publicacionCargada.getActions() == null
+                    || publicacionCargada.getActions().canOffer();
+            buttonOfertar.setEnabled(isOnline && puedeOfertar);
+        }
         if (buttonGuardar != null) buttonGuardar.setEnabled(isOnline);
         if (buttonModificar != null) buttonModificar.setEnabled(isOnline);
         if (buttonPausar != null) buttonPausar.setEnabled(isOnline);
@@ -193,10 +222,16 @@ public class DetailFragment extends Fragment {
     private void cargarDatosPublicacion(boolean recargaSilenciosa) {
         if (publicacionId.isEmpty()) return;
 
-        publicacionRepository.getPublicacionById(publicacionId, new PublicacionRepository.Resultado<Publicacion>() {
+        publicacionRepository.getPublicacionById(publicacionId, new RepositoryResult<Publicacion>() {
             @Override
             public void onSuccess(Publicacion data) {
+                onSuccess(data, false);
+            }
+
+            @Override
+            public void onSuccess(Publicacion data, boolean desdeCache) {
                 if (!isAdded()) return;
+                mostrandoCache = desdeCache;
                 publicacionCargada = data;
                 poblarDatos(data);
                 actualizarEstadoConexion(publicacionRepository.isOnline());
@@ -206,21 +241,38 @@ public class DetailFragment extends Fragment {
             public void onError(String mensaje) {
                 if (!isAdded()) return;
                 if (!recargaSilenciosa) {
-                    Toast.makeText(requireContext(), mensaje, Toast.LENGTH_LONG).show();
-                    if (publicacionCargada == null && getView() != null) {
-                        Navigation.findNavController(getView()).popBackStack();
-                    }
+                    mostrarErrorDetalle(mensaje);
                 }
+            }
+
+            @Override
+            public void onError(ApiError error) {
+                if (!isAdded()) return;
+                // Los rechazos HTTP siempre se presentan, incluso durante la recarga automática:
+                // la copia local ya no es válida para representar este detalle.
+                mostrarErrorDetalle(error.getMessage());
             }
         });
     }
 
+    private void mostrarErrorDetalle(String mensaje) {
+        Toast.makeText(requireContext(), mensaje, Toast.LENGTH_LONG).show();
+        if (getView() != null) {
+            Navigation.findNavController(getView()).popBackStack();
+        }
+    }
+
     private void poblarDatos(Publicacion publicacion) {
         textDetailTitulo.setText(publicacion.getTitulo());
-        textDetailPrecio.setText("Precio: $" + String.format("%,.0f", publicacion.getPrecio()));
+        textDetailPrecio.setText("Precio: " + MoneyFormat.amount(publicacion.getPrecio()));
         textDetailEstado.setText("Estado: " + publicacion.getEstado());
         textDetailCategoria.setText("Categoría: " + publicacion.getCategoria());
         textDetailZona.setText("Zona de entrega: " + publicacion.getZona());
+        boolean mostrarDireccion = publicacion.getAddress() != null && !publicacion.isAddressLocked();
+        textDetailDireccion.setVisibility(mostrarDireccion ? View.VISIBLE : View.GONE);
+        if (mostrarDireccion) {
+            textDetailDireccion.setText("Dirección: " + publicacion.getAddress());
+        }
         textDetailFecha.setText("Fecha de publicación: " + publicacion.getFechaPublicacion());
         textDetailDescripcion.setText(publicacion.getDescripcion());
 
@@ -237,9 +289,11 @@ public class DetailFragment extends Fragment {
         if (esVendedor) {
             containerAccionesComprador.setVisibility(View.GONE);
             containerAccionesVendedor.setVisibility(View.VISIBLE);
+            poblarPreguntasRecibidas(publicacion.getQuestions());
         } else {
             containerAccionesComprador.setVisibility(View.VISIBLE);
             containerAccionesVendedor.setVisibility(View.GONE);
+            poblarPreguntasComprador(publicacion.getQuestions());
         }
 
         actualizarBotonFavorito(publicacion);
@@ -289,7 +343,20 @@ public class DetailFragment extends Fragment {
                 return;
             }
             if (publicacionCargada != null) {
-                Toast.makeText(requireContext(), "Oferta de compra enviada a " + publicacionCargada.getVendedorNombre(), Toast.LENGTH_SHORT).show();
+                if (publicacionCargada.getActions() != null
+                        && !publicacionCargada.getActions().canOffer()) {
+                    Toast.makeText(requireContext(), "No podés ofertar en esta publicación", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                Bundle bundle = new Bundle();
+                bundle.putString("publicationId", publicacionCargada.getId());
+                bundle.putString("publicationTitle", publicacionCargada.getTitulo());
+                bundle.putDouble("publicationPrice", publicacionCargada.getPrecio());
+                bundle.putString("sellerName", publicacionCargada.getVendedorNombre());
+                Navigation.findNavController(v).navigate(
+                        R.id.action_detailFragment_to_createOfferFragment,
+                        bundle
+                );
             }
         });
 
@@ -340,9 +407,9 @@ public class DetailFragment extends Fragment {
                     } else {
                         Toast.makeText(
                                 requireContext(),
-                                esFavorito
+                                ApiErrorMessage.from(response, esFavorito
                                         ? "No se pudo quitar de favoritos"
-                                        : "No se pudo guardar la publicación",
+                                        : "No se pudo guardar la publicación"),
                                 Toast.LENGTH_SHORT
                         ).show();
                     }
@@ -403,7 +470,7 @@ public class DetailFragment extends Fragment {
             publicacionRepository.cambiarEstadoPublicacion(
                     publicacionCargada.getId(),
                     nuevoEstado,
-                    new PublicacionRepository.Resultado<Publicacion>() {
+                    new RepositoryResult<Publicacion>() {
                         @Override public void onSuccess(Publicacion data) {
                             if (!isAdded()) return;
                             publicacionCargada = data;
@@ -430,6 +497,163 @@ public class DetailFragment extends Fragment {
         } else {
             buttonGuardar.setText("Guardar");
         }
+    }
+
+    private void poblarPreguntasRecibidas(List<Publicacion.Question> preguntas) {
+        containerPreguntasRecibidas.removeAllViews();
+        if (preguntas.isEmpty()) {
+            TextView vacio = crearTexto("Todavía no recibiste preguntas");
+            containerPreguntasRecibidas.addView(vacio);
+            return;
+        }
+
+        for (Publicacion.Question pregunta : preguntas) {
+            LinearLayout bloque = new LinearLayout(requireContext());
+            bloque.setOrientation(LinearLayout.VERTICAL);
+            int padding = dp(12);
+            bloque.setPadding(padding, padding, padding, padding);
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            params.bottomMargin = dp(8);
+            bloque.setLayoutParams(params);
+            bloque.setBackgroundResource(R.drawable.bg_rounded_primary_container);
+
+            bloque.addView(crearTexto("Pregunta: " + valorOBlanco(pregunta.getText())));
+            if (pregunta.getAnswer() == null) {
+                MaterialButton responder = new MaterialButton(requireContext(), null,
+                        com.google.android.material.R.attr.materialButtonOutlinedStyle);
+                responder.setText("Responder");
+                responder.setEnabled(publicacionRepository.isOnline());
+                responder.setOnClickListener(v -> abrirDialogoRespuesta(pregunta));
+                bloque.addView(responder);
+            } else {
+                TextView respuesta = crearTexto("Respuesta: " + pregunta.getAnswer());
+                respuesta.setPadding(0, dp(8), 0, 0);
+                bloque.addView(respuesta);
+                String fecha = pregunta.getAnsweredAt();
+                if (fecha != null) {
+                    TextView fechaRespuesta = crearTexto("Respondida: " + fecha);
+                    fechaRespuesta.setPadding(0, dp(4), 0, 0);
+                    bloque.addView(fechaRespuesta);
+                }
+            }
+            containerPreguntasRecibidas.addView(bloque);
+        }
+    }
+
+    private void poblarPreguntasComprador(List<Publicacion.Question> preguntas) {
+        containerPreguntasComprador.removeAllViews();
+        if (preguntas.isEmpty()) {
+            containerPreguntasComprador.addView(crearTextoSuperficie("Todavía no hay preguntas"));
+            return;
+        }
+
+        for (Publicacion.Question pregunta : preguntas) {
+            LinearLayout bloque = new LinearLayout(requireContext());
+            bloque.setOrientation(LinearLayout.VERTICAL);
+            int padding = dp(12);
+            bloque.setPadding(padding, padding, padding, padding);
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            params.bottomMargin = dp(8);
+            bloque.setLayoutParams(params);
+            bloque.setBackgroundResource(R.drawable.bg_rounded_primary_container);
+
+            bloque.addView(crearTextoSuperficie("Pregunta: " + valorOBlanco(pregunta.getText())));
+            TextView respuesta;
+            if (pregunta.getAnswer() == null) {
+                respuesta = crearTextoSuperficie("Aún no fue respondida");
+            } else {
+                respuesta = crearTextoSuperficie("Respuesta: " + pregunta.getAnswer());
+            }
+            respuesta.setPadding(0, dp(8), 0, 0);
+            bloque.addView(respuesta);
+
+            if (pregunta.getAnswer() != null && pregunta.getAnsweredAt() != null) {
+                TextView fecha = crearTextoSuperficie("Respondida: " + pregunta.getAnsweredAt());
+                fecha.setPadding(0, dp(4), 0, 0);
+                bloque.addView(fecha);
+            }
+            containerPreguntasComprador.addView(bloque);
+        }
+    }
+
+    private void abrirDialogoRespuesta(Publicacion.Question pregunta) {
+        TextInputLayout inputLayout = new TextInputLayout(requireContext());
+        int margen = dp(20);
+        inputLayout.setPadding(margen, 0, margen, 0);
+        inputLayout.setHint("Respuesta");
+        inputLayout.setCounterEnabled(true);
+        inputLayout.setCounterMaxLength(1000);
+
+        TextInputEditText input = new TextInputEditText(inputLayout.getContext());
+        input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
+                | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
+        input.setMinLines(3);
+        input.setMaxLines(8);
+        input.setFilters(new InputFilter[]{new InputFilter.LengthFilter(1000)});
+        inputLayout.addView(input);
+
+        AlertDialog dialog = new MaterialAlertDialogBuilder(requireContext())
+                .setTitle("Responder pregunta")
+                .setMessage(pregunta.getText())
+                .setView(inputLayout)
+                .setNegativeButton("Cancelar", null)
+                .setPositiveButton("Enviar", null)
+                .create();
+        dialog.setOnShowListener(ignored -> dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+                .setOnClickListener(v -> enviarRespuesta(dialog, inputLayout, input, pregunta)));
+        dialog.show();
+    }
+
+    private void enviarRespuesta(AlertDialog dialog, TextInputLayout inputLayout,
+                                 TextInputEditText input, Publicacion.Question pregunta) {
+        String respuesta = input.getText() == null ? "" : input.getText().toString().trim();
+        if (respuesta.isEmpty()) {
+            inputLayout.setError("Escribí una respuesta antes de enviarla");
+            return;
+        }
+        inputLayout.setError(null);
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
+        publicacionRepository.responderPregunta(pregunta.getId(), respuesta,
+                new RepositoryResult<Publicacion.Question>() {
+                    @Override public void onSuccess(Publicacion.Question data) {
+                        if (!isAdded()) return;
+                        dialog.dismiss();
+                        Toast.makeText(requireContext(), "Respuesta enviada", Toast.LENGTH_SHORT).show();
+                        cargarDatosPublicacion(true);
+                    }
+
+                    @Override public void onError(String mensaje) {
+                        if (!isAdded()) return;
+                        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(true);
+                        Toast.makeText(requireContext(), mensaje, Toast.LENGTH_LONG).show();
+                    }
+                });
+    }
+
+    private TextView crearTexto(String contenido) {
+        TextView textView = new TextView(requireContext());
+        textView.setText(contenido);
+        textView.setTextColor(com.google.android.material.color.MaterialColors.getColor(
+                textView, com.google.android.material.R.attr.colorOnPrimaryContainer));
+        return textView;
+    }
+
+    private TextView crearTextoSuperficie(String contenido) {
+        TextView textView = new TextView(requireContext());
+        textView.setText(contenido);
+        textView.setTextColor(com.google.android.material.color.MaterialColors.getColor(
+                textView, com.google.android.material.R.attr.colorOnPrimaryContainer));
+        return textView;
+    }
+
+    private String valorOBlanco(String valor) {
+        return valor == null ? "" : valor;
+    }
+
+    private int dp(int valor) {
+        return Math.round(valor * getResources().getDisplayMetrics().density);
     }
     private void actualizarBotonPausar(MaterialButton buttonPausar, Publicacion publicacion) {
         if (buttonPausar == null || publicacion == null) return;

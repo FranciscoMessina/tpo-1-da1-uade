@@ -1,9 +1,10 @@
 package com.da_grupo9.ronda.ui.fragments;
 
 import com.da_grupo9.ronda.R;
+import com.da_grupo9.ronda.data.repository.RepositoryResult;
 import com.da_grupo9.ronda.data.model.Publicacion;
+import com.da_grupo9.ronda.data.model.FiltrosPublicaciones;
 import com.da_grupo9.ronda.data.repository.PublicacionRepository;
-import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.color.MaterialColors;
 
 import android.graphics.Color;
@@ -35,9 +36,18 @@ import java.util.List;
 import android.app.AlertDialog;
 import android.widget.Toast;
 
+import com.da_grupo9.ronda.data.model.FavoriteResponse;
 import com.da_grupo9.ronda.data.model.SavedSearchRequest;
 import com.da_grupo9.ronda.data.model.SavedSearchItem;
+import com.da_grupo9.ronda.data.remote.FavoritesApi;
 import com.da_grupo9.ronda.data.remote.SavedSearchesApi;
+import com.da_grupo9.ronda.util.ApiErrorMessage;
+import com.da_grupo9.ronda.util.MoneyFormat;
+import com.da_grupo9.ronda.ui.components.PublicationCardBinder;
+
+import android.widget.ImageButton;
+import java.util.HashMap;
+import java.util.Map;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -48,7 +58,13 @@ public class HomeFragment extends Fragment {
 
     @Inject PublicacionRepository publicacionRepository;
     @Inject SavedSearchesApi savedSearchesApi;
+    @Inject FavoritesApi favoritesApi;
     private LinearLayout publicacionesContainer;
+
+    /** Peticiones de favorito en curso: id de publicación -> estado que se está intentando aplicar. */
+    private final Map<String, Boolean> favoritosPendientes = new HashMap<>();
+    /** Botones de favorito de las tarjetas visibles, por id de publicación. */
+    private final Map<String, ImageButton> botonesFavorito = new HashMap<>();
 
     private EditText buscador;
     private EditText precioMinimo;
@@ -67,11 +83,13 @@ public class HomeFragment extends Fragment {
     private TextView textoPagina;
     private TextView textoResultados;
     private View bannerOffline;
+    private TextView textBannerOffline;
+    private boolean mostrandoCache;
     private com.da_grupo9.ronda.util.NetworkMonitor.NetworkStatusListener networkListener;
     private boolean previouslyOffline = false;
 
-    private List<Publicacion> publicaciones;
     private List<Publicacion> publicacionesFiltradas;
+    private FiltrosPublicaciones filtrosAplicados;
 
     private int paginaActual = 1;
     private final int publicacionesPorPagina = 3;
@@ -82,8 +100,6 @@ public class HomeFragment extends Fragment {
     private String zonaBusquedaGuardada;
 
     private String usuarioActualEmail = "";
-    private boolean aplicarBusquedaGuardada = false;
-
     public HomeFragment() {
     }
 
@@ -108,6 +124,7 @@ public class HomeFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         bannerOffline = view.findViewById(R.id.bannerOffline);
+        textBannerOffline = view.findViewById(R.id.textBannerOffline);
         actualizarEstadoConexion(publicacionRepository.isOnline());
 
         networkListener = isOnline -> {
@@ -159,8 +176,8 @@ public class HomeFragment extends Fragment {
         cargarBusquedaGuardada();
         configurarVisibilidadGuardarBusqueda();
 
-        publicaciones = new ArrayList<>();
         publicacionesFiltradas = new ArrayList<>();
+        filtrosAplicados = filtrosIniciales();
         cargarDatos();
 
         botonFiltrar.setOnClickListener(
@@ -182,40 +199,45 @@ public class HomeFragment extends Fragment {
         if (networkListener != null) {
             publicacionRepository.getNetworkMonitor().removeListener(networkListener);
         }
+        botonesFavorito.clear();
     }
 
     private void actualizarEstadoConexion(boolean isOnline) {
         if (bannerOffline != null) {
-            bannerOffline.setVisibility(isOnline ? View.GONE : View.VISIBLE);
+            bannerOffline.setVisibility(isOnline && !mostrandoCache ? View.GONE : View.VISIBLE);
+        }
+        if (textBannerOffline != null) {
+            textBannerOffline.setText(isOnline
+                    ? "No se pudo consultar el servidor: mostrando publicaciones guardadas. La información podría no estar actualizada."
+                    : "Modo sin conexión: mostrando publicaciones guardadas. La información podría no estar actualizada.");
+        }
+        for (String id : botonesFavorito.keySet()) {
+            actualizarBotonFavorito(id);
         }
     }
 
     private void cargarDatos() {
         actualizarEstadoConexion(publicacionRepository.isOnline());
 
-        String query = valorOpcional(buscador.getText().toString());
-        String category = categoriaSeleccionadaApi();
-        String condition = condicionSeleccionadaApi();
-        String zone = zonaSeleccionadaApi();
-        Double minPrice = precioOpcional(precioMinimo.getText().toString());
-        Double maxPrice = precioOpcional(precioMaximo.getText().toString());
-        String sort = ordenSeleccionadoApi();
-
-        publicacionRepository.getPublicaciones(paginaActual, publicacionesPorPagina, query,
-                category, condition, zone, minPrice, maxPrice, sort,
+        publicacionRepository.getPublicaciones(paginaActual, publicacionesPorPagina, filtrosAplicados,
                 new PublicacionRepository.ResultadoPagina() {
 
                     @Override
                     public void onSuccess(List<Publicacion> data, int page, int pages, int total) {
+                        onSuccess(data, page, pages, total, false);
+                    }
+
+                    @Override
+                    public void onSuccess(List<Publicacion> data, int page, int pages, int total,
+                                          boolean desdeCache) {
                         if (!isAdded()) return;
 
+                        mostrandoCache = desdeCache;
                         actualizarEstadoConexion(publicacionRepository.isOnline());
-                        publicaciones = new ArrayList<>(data);
                         publicacionesFiltradas = new ArrayList<>(data);
                         paginaActual = page;
                         totalPaginas = Math.max(1, pages);
                         totalResultados = total;
-                        aplicarBusquedaGuardada = false;
                         mostrarPagina();
                     }
 
@@ -273,7 +295,7 @@ public class HomeFragment extends Fragment {
     }
 
     private void cargarCategorias() {
-        publicacionRepository.getCategories(new PublicacionRepository.Resultado<List<String>>() {
+        publicacionRepository.getCategories(new RepositoryResult<List<String>>() {
             @Override public void onSuccess(List<String> data) {
                 if (!isAdded() || data.isEmpty()) return;
                 String selected = categoriaSeleccionadaApi();
@@ -298,7 +320,7 @@ public class HomeFragment extends Fragment {
     }
 
     private void cargarZonas() {
-        publicacionRepository.getZones(new PublicacionRepository.Resultado<List<String>>() {
+        publicacionRepository.getZones(new RepositoryResult<List<String>>() {
             @Override public void onSuccess(List<String> data) {
                 if (!isAdded()) return;
                 String selected = zonaSeleccionadaApi();
@@ -414,83 +436,24 @@ public class HomeFragment extends Fragment {
 
     private void guardarBusqueda(String nombre) {
 
-        String query = buscador.getText().toString().trim();
-
-        String categoria =
-                spinnerCategoria.getSelectedItem().toString();
-
-        String estado =
-                spinnerEstado.getSelectedItem().toString();
-
-        String cercania = zonaSeleccionadaApi();
-
-        String orden =
-                spinnerOrden.getSelectedItem().toString();
-
-        String textoMin =
-                precioMinimo.getText().toString().trim();
-
-        String textoMax =
-                precioMaximo.getText().toString().trim();
-
-        Double minPrice =
-                textoMin.isEmpty() ? null : Double.parseDouble(textoMin);
-
-        Double maxPrice =
-                textoMax.isEmpty() ? null : Double.parseDouble(textoMax);
-
-        if (query.isEmpty()) {
-            query = null;
-        }
-
-        if (categoria.equals("Todas")) {
-            categoria = null;
-        } else if (categoria.equals("Tecnología")) {
-            categoria = "electronics";
-        } else if (categoria.equals("Hogar")) {
-            categoria = "home";
-        } else if (categoria.equals("Ropa y moda")) {
-            categoria = "fashion";
-        } else if (categoria.equals("Deportes")) {
-            categoria = "sports";
-        } else if (categoria.equals("Vehículos")) {
-            categoria = "vehicles";
-        } else if (categoria.equals("Libros")) {
-            categoria = "books";
-        } else if (categoria.equals("Juguetes")) {
-            categoria = "toys";
-        } else if (categoria.equals("Otros")) {
-            categoria = "other";
-        }
-
-        if (estado.equals("Todos")) {
-            estado = null;
-        } else if (estado.equals("Nuevo")) {
-            estado = "new";
-        } else if (estado.equals("Como nuevo")) {
-            estado = "like_new";
-        } else if (estado.equals("Usado")) {
-            estado = "used";
-        }
-
-        if (orden.equals("Más recientes")) {
-            orden = "recent";
-        } else if (orden.equals("Menor precio")) {
-            orden = "price_asc";
-        } else if (orden.equals("Mayor precio")) {
-            orden = "price_desc";
+        final FiltrosPublicaciones filtros;
+        try {
+            filtros = leerFiltrosEnEdicion();
+        } catch (IllegalArgumentException error) {
+            Toast.makeText(requireContext(), error.getMessage(), Toast.LENGTH_SHORT).show();
+            return;
         }
 
         SavedSearchRequest request =
                 new SavedSearchRequest(
                         nombre,
-                        query,
-                        categoria,
-                        minPrice,
-                        maxPrice,
-                        estado,
-                        cercania,
-                        orden
+                        filtros.getQuery(),
+                        filtros.getCategory(),
+                        filtros.getMinPrice(),
+                        filtros.getMaxPrice(),
+                        filtros.getCondition(),
+                        filtros.getZone(),
+                        filtros.getSort()
                 );
 
         savedSearchesApi.createSavedSearch(request)
@@ -514,7 +477,7 @@ public class HomeFragment extends Fragment {
                         } else {
                             Toast.makeText(
                                     requireContext(),
-                                    "Error al guardar: " + response.code(),
+                                    ApiErrorMessage.from(response, "Error al guardar: " + response.code()),
                                     Toast.LENGTH_LONG
                             ).show();
                         }
@@ -545,7 +508,6 @@ public class HomeFragment extends Fragment {
         if (args == null) {
             return;
         }
-        aplicarBusquedaGuardada = true;
         String query = args.getString("query");
         String category = args.getString("category");
         String condition = args.getString("condition");
@@ -642,149 +604,13 @@ public class HomeFragment extends Fragment {
                 break;
         }
     }
-    private void aplicarFiltrosLocal() {
-
-        String texto =
-                buscador.getText()
-                        .toString()
-                        .toLowerCase()
-                        .trim();
-
-        String categoriaSeleccionada =
-                spinnerCategoria.getSelectedItem().toString();
-
-        String estadoSeleccionado =
-                spinnerEstado.getSelectedItem().toString();
-
-        String cercaniaSeleccionada =
-                spinnerCercania.getSelectedItem().toString();
-
-        String ordenSeleccionado =
-                spinnerOrden.getSelectedItem().toString();
-
-        String textoPrecioMinimo =
-                precioMinimo.getText().toString().trim();
-
-        String textoPrecioMaximo =
-                precioMaximo.getText().toString().trim();
-
-        double precioMin = 0;
-        double precioMax = Double.MAX_VALUE;
-
-        if (!textoPrecioMinimo.isEmpty()) {
-            precioMin =
-                    Double.parseDouble(textoPrecioMinimo);
-        }
-
-        if (!textoPrecioMaximo.isEmpty()) {
-            precioMax =
-                    Double.parseDouble(textoPrecioMaximo);
-        }
-
-        List<Publicacion> resultados =
-                new ArrayList<>();
-
-        for (Publicacion publicacion : publicaciones) {
-
-            boolean coincideTexto =
-                    texto.isEmpty()
-                            || (publicacion.getTitulo() != null && publicacion.getTitulo()
-                            .toLowerCase()
-                            .contains(texto))
-                            || (publicacion.getDescripcion() != null && publicacion.getDescripcion()
-                            .toLowerCase()
-                            .contains(texto));
-
-            boolean coincideCategoria =
-                    categoriaSeleccionada.equals("Todas")
-                            || publicacion.getCategoria()
-                            .equals(categoriaSeleccionada);
-
-            boolean coincideEstado =
-                    estadoSeleccionado.equals("Todos")
-                            || publicacion.getEstado()
-                            .equals(estadoSeleccionado);
-
-            boolean coincidePrecio =
-                    publicacion.getPrecio() >= precioMin
-                            && publicacion.getPrecio() <= precioMax;
-
-            boolean coincideCercania =
-                    cercaniaSeleccionada
-                            .equals("Todas las zonas")
-                            || cercaniaSeleccionada.equals(publicacion.getZona());
-
-            if (coincideTexto
-                    && coincideCategoria
-                    && coincideEstado
-                    && coincidePrecio
-                    && coincideCercania) {
-
-                resultados.add(publicacion);
-            }
-        }
-
-        if (ordenSeleccionado.equals("Más recientes")) {
-
-            Collections.sort(
-                    resultados,
-                    (p1, p2) ->
-                            Integer.compare(
-                                    p2.getFecha(),
-                                    p1.getFecha()
-                            )
-            );
-
-        } else if (ordenSeleccionado.equals("Menor precio")) {
-
-            Collections.sort(
-                    resultados,
-                    (p1, p2) ->
-                            Double.compare(
-                                    p1.getPrecio(),
-                                    p2.getPrecio()
-                            )
-            );
-
-        } else if (ordenSeleccionado.equals("Mayor precio")) {
-
-            Collections.sort(
-                    resultados,
-                    (p1, p2) ->
-                            Double.compare(
-                                    p2.getPrecio(),
-                                    p1.getPrecio()
-                            )
-            );
-        }
-
-        publicacionesFiltradas = resultados;
-
-        paginaActual = 1;
-
-        mostrarPagina();
-    }
-
     private void aplicarFiltros() {
         try {
-            if (buscador.getText().toString().trim().length() > 200) {
-                Toast.makeText(requireContext(), "La búsqueda no puede superar los 200 caracteres", Toast.LENGTH_SHORT).show();
-                return;
-            }
-            Double min = precioOpcional(precioMinimo.getText().toString());
-            Double max = precioOpcional(precioMaximo.getText().toString());
-            if (min != null && min < 0 || max != null && max < 0) {
-                Toast.makeText(requireContext(), "Los precios no pueden ser negativos", Toast.LENGTH_SHORT).show();
-                return;
-            }
-            if (min != null && max != null && min > max) {
-                Toast.makeText(requireContext(), "El precio mínimo no puede superar al máximo", Toast.LENGTH_SHORT).show();
-                return;
-            }
+            filtrosAplicados = leerFiltrosEnEdicion();
             paginaActual = 1;
             cargarDatos();
-        } catch (NumberFormatException error) {
-            Toast.makeText(requireContext(), "Ingresá precios válidos", Toast.LENGTH_SHORT).show();
+        } catch (IllegalArgumentException error) {
+            Toast.makeText(requireContext(), error.getMessage(), Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -848,6 +674,7 @@ public class HomeFragment extends Fragment {
             List<Publicacion> lista) {
 
         publicacionesContainer.removeAllViews();
+        botonesFavorito.clear();
 
         if (lista.isEmpty()) {
 
@@ -864,165 +691,122 @@ public class HomeFragment extends Fragment {
         }
     }
 
-    private void agregarPublicacion(
-            Publicacion publicacion) {
-
-        MaterialCardView tarjeta = crearTarjeta();
-
-        LinearLayout contenido =
-                new LinearLayout(requireContext());
-
-        contenido.setOrientation(LinearLayout.VERTICAL);
-        tarjeta.addView(contenido);
-
-        int colorOnSurface = MaterialColors.getColor(requireContext(), com.google.android.material.R.attr.colorOnSurface, Color.BLACK);
-        int colorOnSurfaceVariant = MaterialColors.getColor(requireContext(), com.google.android.material.R.attr.colorOnSurfaceVariant, Color.DKGRAY);
-        int colorPrice = androidx.core.content.ContextCompat.getColor(requireContext(), R.color.price);
-        int colorPrimary = MaterialColors.getColor(requireContext(), android.R.attr.colorPrimary, Color.BLUE);
-
-        TextView titulo =
-                new TextView(requireContext());
-
-        titulo.setText(
-                publicacion.getTitulo()
+    private void agregarPublicacion(Publicacion publicacion) {
+        View tarjeta = PublicationCardBinder.inflate(getLayoutInflater(), publicacionesContainer);
+        PublicationCardBinder.bind(
+                tarjeta,
+                publicacion.getTitulo(),
+                publicacion.getDescripcion(),
+                MoneyFormat.amount(publicacion.getPrecio()),
+                publicacion.getEstado(),
+                publicacion.getCategoria(),
+                publicacion.getZona(),
+                null
         );
 
-        titulo.setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_TitleMedium);
-        titulo.setTextColor(colorOnSurface);
-
-        TextView descripcion =
-                new TextView(requireContext());
-
-        descripcion.setText(
-                publicacion.getDescripcion()
-        );
-
-        descripcion.setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_BodyMedium);
-        descripcion.setTextColor(colorOnSurfaceVariant);
-        descripcion.setPaddingRelative(0, dpToPx(4), 0, 0);
-
-        TextView precio =
-                new TextView(requireContext());
-
-        precio.setText(
-                "Precio: $"
-                        + publicacion.getPrecio()
-        );
-
-        precio.setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_TitleSmall);
-        precio.setTextColor(colorPrice);
-        precio.setPaddingRelative(0, dpToPx(8), 0, 0);
-
-        TextView estado =
-                new TextView(requireContext());
-
-        estado.setText(
-                "Estado: "
-                        + publicacion.getEstado()
-        );
-
-        estado.setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_BodyMedium);
-        estado.setTextColor(colorOnSurfaceVariant);
-        estado.setPaddingRelative(0, dpToPx(4), 0, 0);
-
-        TextView categoria =
-                new TextView(requireContext());
-
-        categoria.setText(
-                "Categoría: "
-                        + publicacion.getCategoria()
-        );
-
-        categoria.setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_BodyMedium);
-        categoria.setTextColor(colorOnSurfaceVariant);
-
-        TextView zona =
-                new TextView(requireContext());
-
-        zona.setText(
-                "Zona: "
-                        + publicacion.getZona()
-        );
-
-        zona.setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_BodyMedium);
-        zona.setTextColor(colorOnSurfaceVariant);
-
-        TextView verDetalle =
-                new TextView(requireContext());
-
-        verDetalle.setText(
-                "Ver detalle"
-        );
-
-        verDetalle.setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_LabelLarge);
-        verDetalle.setTextColor(colorPrimary);
-        verDetalle.setPaddingRelative(
-                0,
-                dpToPx(12),
-                0,
-                0
-        );
-
-        contenido.addView(titulo);
-        contenido.addView(descripcion);
-        contenido.addView(precio);
-        contenido.addView(estado);
-        contenido.addView(categoria);
-        contenido.addView(zona);
-        contenido.addView(verDetalle);
+        ImageButton botonFavorito = PublicationCardBinder.favoriteButton(tarjeta);
+        if (publicacion.getActions() == null || publicacion.getActions().canFavorite()) {
+            configurarBotonFavorito(publicacion, botonFavorito);
+        } else {
+            botonFavorito.setVisibility(View.GONE);
+        }
 
         tarjeta.setOnClickListener(v -> {
-
-            Bundle bundle =
-                    new Bundle();
-
-            bundle.putString(
-                    "publicacionId",
-                    publicacion.getId()
-            );
-
-            bundle.putString(
-                    "usuarioActualEmail",
-                    usuarioActualEmail
-            );
-
-            Navigation.findNavController(v)
-                    .navigate(
-                            R.id.action_homeFragment_to_detailFragment,
-                            bundle
-                    );
+            Bundle bundle = new Bundle();
+            bundle.putString("publicacionId", publicacion.getId());
+            bundle.putString("usuarioActualEmail", usuarioActualEmail);
+            Navigation.findNavController(v).navigate(
+                    R.id.action_homeFragment_to_detailFragment, bundle);
         });
 
-        publicacionesContainer.addView(
-                tarjeta
-        );
+        publicacionesContainer.addView(tarjeta);
     }
 
-    private MaterialCardView crearTarjeta() {
-        MaterialCardView tarjeta = new MaterialCardView(requireContext());
+    private void configurarBotonFavorito(Publicacion publicacion, ImageButton boton) {
+        boton.setOnClickListener(v -> alternarFavorito(publicacion));
+        botonesFavorito.put(publicacion.getId(), boton);
+        actualizarBotonFavorito(publicacion.getId());
+    }
 
-        tarjeta.setRadius(
-                getResources().getDimension(R.dimen.corner_radius_card)
-        );
+    private Publicacion buscarPublicacion(String id) {
+        if (publicacionesFiltradas == null) return null;
+        for (Publicacion p : publicacionesFiltradas) {
+            if (id.equals(p.getId())) return p;
+        }
+        return null;
+    }
 
-        tarjeta.setCardElevation(
-                getResources().getDimension(R.dimen.card_elevation)
-        );
+    private boolean esFavorito(Publicacion publicacion) {
+        Boolean pendiente = favoritosPendientes.get(publicacion.getId());
+        return pendiente != null ? pendiente : publicacion.isFavorite();
+    }
 
-        tarjeta.setContentPadding(
-                dpToPx(16), dpToPx(16), dpToPx(16), dpToPx(16)
-        );
+    private void actualizarBotonFavorito(String id) {
+        ImageButton boton = botonesFavorito.get(id);
+        Publicacion publicacion = buscarPublicacion(id);
+        if (boton == null || publicacion == null) return;
 
-        LinearLayout.LayoutParams parametros =
-                new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT
-                );
+        boolean favorito = esFavorito(publicacion);
+        boton.setImageResource(favorito ? R.drawable.ic_favorite : R.drawable.ic_favorite_border);
+        boton.setImageTintList(android.content.res.ColorStateList.valueOf(
+                favorito
+                        ? MaterialColors.getColor(boton, android.R.attr.colorPrimary, Color.BLUE)
+                        : MaterialColors.getColor(boton, com.google.android.material.R.attr.colorOnSurfaceVariant, Color.DKGRAY)));
+        boton.setContentDescription(favorito ? "Quitar de favoritos" : "Guardar en favoritos");
 
-        parametros.setMargins(0, 0, 0, dpToPx(12));
-        tarjeta.setLayoutParams(parametros);
+        boolean habilitado = publicacionRepository.isOnline() && !favoritosPendientes.containsKey(id);
+        boton.setEnabled(habilitado);
+        boton.setAlpha(habilitado ? 1f : 0.4f);
+    }
 
-        return tarjeta;
+    private void alternarFavorito(Publicacion publicacion) {
+        String id = publicacion.getId();
+        if (id == null || favoritosPendientes.containsKey(id)) return;
+
+        if (!publicacionRepository.isOnline()) {
+            Toast.makeText(requireContext(),
+                    "Se necesita conexión a internet para continuar", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        boolean nuevoEstado = !publicacion.isFavorite();
+        favoritosPendientes.put(id, nuevoEstado);
+        actualizarBotonFavorito(id);
+
+        Call<FavoriteResponse> llamada = nuevoEstado
+                ? favoritesApi.addFavorite(id)
+                : favoritesApi.removeFavorite(id);
+
+        llamada.enqueue(new Callback<FavoriteResponse>() {
+            @Override
+            public void onResponse(Call<FavoriteResponse> call, Response<FavoriteResponse> response) {
+                if (response.isSuccessful()) {
+                    resolverFavorito(id, nuevoEstado, null);
+                } else {
+                    resolverFavorito(id, !nuevoEstado, ApiErrorMessage.from(response, nuevoEstado
+                            ? "No se pudo guardar la publicación"
+                            : "No se pudo quitar de favoritos"));
+                }
+            }
+
+            @Override
+            public void onFailure(Call<FavoriteResponse> call, Throwable t) {
+                resolverFavorito(id, !nuevoEstado, "Error de conexión");
+            }
+        });
+    }
+
+    /** Cierra la petición en curso dejando {@code estadoFinal} y avisa si hubo error. */
+    private void resolverFavorito(String id, boolean estadoFinal, String error) {
+        favoritosPendientes.remove(id);
+        // La lista pudo recargarse mientras la petición estaba en vuelo, por eso se busca por id.
+        Publicacion actual = buscarPublicacion(id);
+        if (actual != null) actual.setFavorite(estadoFinal);
+        if (!isAdded()) return;
+        actualizarBotonFavorito(id);
+        if (error != null) {
+            Toast.makeText(requireContext(), error, Toast.LENGTH_SHORT).show();
+        }
     }
 
     private TextView crearMensajeVacio(String texto) {
@@ -1039,14 +823,19 @@ public class HomeFragment extends Fragment {
         return mensaje;
     }
 
-    private String valorOpcional(String value) {
-        String trimmed = value == null ? "" : value.trim();
-        return trimmed.isEmpty() ? null : trimmed;
+    private FiltrosPublicaciones leerFiltrosEnEdicion() {
+        return FiltrosPublicaciones.crear(buscador.getText().toString(), categoriaSeleccionadaApi(),
+                condicionSeleccionadaApi(), zonaSeleccionadaApi(), precioMinimo.getText().toString(),
+                precioMaximo.getText().toString(), ordenSeleccionadoApi());
     }
 
-    private Double precioOpcional(String value) {
-        String trimmed = value == null ? "" : value.trim();
-        return trimmed.isEmpty() ? null : Double.parseDouble(trimmed);
+    private FiltrosPublicaciones filtrosIniciales() {
+        Bundle args = getArguments();
+        if (args == null) return leerFiltrosEnEdicion();
+        String min = args.containsKey("minPrice") ? String.valueOf(args.getDouble("minPrice")) : null;
+        String max = args.containsKey("maxPrice") ? String.valueOf(args.getDouble("maxPrice")) : null;
+        return FiltrosPublicaciones.crear(args.getString("query"), args.getString("category"),
+                args.getString("condition"), args.getString("zone"), min, max, args.getString("sort"));
     }
 
     private String categoriaSeleccionadaApi() {

@@ -15,6 +15,7 @@ import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 
 import com.da_grupo9.ronda.R;
+import com.da_grupo9.ronda.data.repository.RepositoryResult;
 import com.da_grupo9.ronda.data.model.Publicacion;
 import com.da_grupo9.ronda.data.repository.PublicacionRepository;
 import com.google.android.material.button.MaterialButton;
@@ -90,7 +91,7 @@ public class QuestionFragment extends Fragment {
         inputLayout.setError(null);
         setLoading(true);
         publicacionRepository.crearPregunta(publicacionId, texto,
-                new PublicacionRepository.Resultado<Publicacion.Question>() {
+                new RepositoryResult<Publicacion.Question>() {
                     @Override
                     public void onSuccess(Publicacion.Question data) {
                         if (!isAdded()) return;
