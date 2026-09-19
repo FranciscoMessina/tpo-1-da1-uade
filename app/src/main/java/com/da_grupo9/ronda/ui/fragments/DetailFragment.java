@@ -12,6 +12,8 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 import android.os.Bundle;
+import android.text.InputFilter;
+import android.text.InputType;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,11 +25,15 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 
 import com.bumptech.glide.Glide;
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.textfield.TextInputLayout;
 
 import javax.inject.Inject;
 import dagger.hilt.android.AndroidEntryPoint;
@@ -62,6 +68,7 @@ public class DetailFragment extends Fragment {
     private TextView textDetailEstado;
     private TextView textDetailCategoria;
     private TextView textDetailZona;
+    private TextView textDetailDireccion;
     private TextView textDetailFecha;
     private TextView textDetailDescripcion;
 
@@ -71,6 +78,8 @@ public class DetailFragment extends Fragment {
 
     private LinearLayout containerAccionesComprador;
     private LinearLayout containerAccionesVendedor;
+    private LinearLayout containerPreguntasComprador;
+    private LinearLayout containerPreguntasRecibidas;
 
     private Button buttonPreguntar;
     private Button buttonOfertar;
@@ -121,6 +130,7 @@ public class DetailFragment extends Fragment {
         textDetailEstado = view.findViewById(R.id.textDetailEstado);
         textDetailCategoria = view.findViewById(R.id.textDetailCategoria);
         textDetailZona = view.findViewById(R.id.textDetailZona);
+        textDetailDireccion = view.findViewById(R.id.textDetailDireccion);
         textDetailFecha = view.findViewById(R.id.textDetailFecha);
         textDetailDescripcion = view.findViewById(R.id.textDetailDescripcion);
 
@@ -132,6 +142,8 @@ public class DetailFragment extends Fragment {
         // Contenedores
         containerAccionesComprador = view.findViewById(R.id.containerAccionesComprador);
         containerAccionesVendedor = view.findViewById(R.id.containerAccionesVendedor);
+        containerPreguntasComprador = view.findViewById(R.id.containerPreguntasComprador);
+        containerPreguntasRecibidas = view.findViewById(R.id.containerPreguntasRecibidas);
 
         // Botones
         buttonPreguntar = view.findViewById(R.id.buttonPreguntar);
@@ -222,6 +234,11 @@ public class DetailFragment extends Fragment {
         textDetailEstado.setText("Estado: " + publicacion.getEstado());
         textDetailCategoria.setText("Categoría: " + publicacion.getCategoria());
         textDetailZona.setText("Zona de entrega: " + publicacion.getZona());
+        boolean mostrarDireccion = publicacion.getAddress() != null && !publicacion.isAddressLocked();
+        textDetailDireccion.setVisibility(mostrarDireccion ? View.VISIBLE : View.GONE);
+        if (mostrarDireccion) {
+            textDetailDireccion.setText("Dirección: " + publicacion.getAddress());
+        }
         textDetailFecha.setText("Fecha de publicación: " + publicacion.getFechaPublicacion());
         textDetailDescripcion.setText(publicacion.getDescripcion());
 
@@ -238,9 +255,11 @@ public class DetailFragment extends Fragment {
         if (esVendedor) {
             containerAccionesComprador.setVisibility(View.GONE);
             containerAccionesVendedor.setVisibility(View.VISIBLE);
+            poblarPreguntasRecibidas(publicacion.getQuestions());
         } else {
             containerAccionesComprador.setVisibility(View.VISIBLE);
             containerAccionesVendedor.setVisibility(View.GONE);
+            poblarPreguntasComprador(publicacion.getQuestions());
         }
 
         actualizarBotonFavorito(publicacion);
@@ -290,7 +309,14 @@ public class DetailFragment extends Fragment {
                 return;
             }
             if (publicacionCargada != null) {
-                Toast.makeText(requireContext(), "Oferta de compra enviada a " + publicacionCargada.getVendedorNombre(), Toast.LENGTH_SHORT).show();
+                Bundle bundle = new Bundle();
+                bundle.putString("publicacionId", publicacionCargada.getId());
+                bundle.putString("publicacionTitulo", publicacionCargada.getTitulo());
+                bundle.putFloat("precioPublicado", (float) publicacionCargada.getPrecio());
+                Navigation.findNavController(v).navigate(
+                        R.id.action_detailFragment_to_createOfferFragment,
+                        bundle
+                );
             }
         });
 
@@ -431,6 +457,163 @@ public class DetailFragment extends Fragment {
         } else {
             buttonGuardar.setText("Guardar");
         }
+    }
+
+    private void poblarPreguntasRecibidas(List<Publicacion.Question> preguntas) {
+        containerPreguntasRecibidas.removeAllViews();
+        if (preguntas.isEmpty()) {
+            TextView vacio = crearTexto("Todavía no recibiste preguntas");
+            containerPreguntasRecibidas.addView(vacio);
+            return;
+        }
+
+        for (Publicacion.Question pregunta : preguntas) {
+            LinearLayout bloque = new LinearLayout(requireContext());
+            bloque.setOrientation(LinearLayout.VERTICAL);
+            int padding = dp(12);
+            bloque.setPadding(padding, padding, padding, padding);
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            params.bottomMargin = dp(8);
+            bloque.setLayoutParams(params);
+            bloque.setBackgroundResource(R.drawable.bg_rounded_primary_container);
+
+            bloque.addView(crearTexto("Pregunta: " + valorOBlanco(pregunta.getText())));
+            if (pregunta.getAnswer() == null) {
+                MaterialButton responder = new MaterialButton(requireContext(), null,
+                        com.google.android.material.R.attr.materialButtonOutlinedStyle);
+                responder.setText("Responder");
+                responder.setEnabled(publicacionRepository.isOnline());
+                responder.setOnClickListener(v -> abrirDialogoRespuesta(pregunta));
+                bloque.addView(responder);
+            } else {
+                TextView respuesta = crearTexto("Respuesta: " + pregunta.getAnswer());
+                respuesta.setPadding(0, dp(8), 0, 0);
+                bloque.addView(respuesta);
+                String fecha = pregunta.getAnsweredAt();
+                if (fecha != null) {
+                    TextView fechaRespuesta = crearTexto("Respondida: " + fecha);
+                    fechaRespuesta.setPadding(0, dp(4), 0, 0);
+                    bloque.addView(fechaRespuesta);
+                }
+            }
+            containerPreguntasRecibidas.addView(bloque);
+        }
+    }
+
+    private void poblarPreguntasComprador(List<Publicacion.Question> preguntas) {
+        containerPreguntasComprador.removeAllViews();
+        if (preguntas.isEmpty()) {
+            containerPreguntasComprador.addView(crearTextoSuperficie("Todavía no hay preguntas"));
+            return;
+        }
+
+        for (Publicacion.Question pregunta : preguntas) {
+            LinearLayout bloque = new LinearLayout(requireContext());
+            bloque.setOrientation(LinearLayout.VERTICAL);
+            int padding = dp(12);
+            bloque.setPadding(padding, padding, padding, padding);
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            params.bottomMargin = dp(8);
+            bloque.setLayoutParams(params);
+            bloque.setBackgroundResource(R.drawable.bg_rounded_primary_container);
+
+            bloque.addView(crearTextoSuperficie("Pregunta: " + valorOBlanco(pregunta.getText())));
+            TextView respuesta;
+            if (pregunta.getAnswer() == null) {
+                respuesta = crearTextoSuperficie("Aún no fue respondida");
+            } else {
+                respuesta = crearTextoSuperficie("Respuesta: " + pregunta.getAnswer());
+            }
+            respuesta.setPadding(0, dp(8), 0, 0);
+            bloque.addView(respuesta);
+
+            if (pregunta.getAnswer() != null && pregunta.getAnsweredAt() != null) {
+                TextView fecha = crearTextoSuperficie("Respondida: " + pregunta.getAnsweredAt());
+                fecha.setPadding(0, dp(4), 0, 0);
+                bloque.addView(fecha);
+            }
+            containerPreguntasComprador.addView(bloque);
+        }
+    }
+
+    private void abrirDialogoRespuesta(Publicacion.Question pregunta) {
+        TextInputLayout inputLayout = new TextInputLayout(requireContext());
+        int margen = dp(20);
+        inputLayout.setPadding(margen, 0, margen, 0);
+        inputLayout.setHint("Respuesta");
+        inputLayout.setCounterEnabled(true);
+        inputLayout.setCounterMaxLength(1000);
+
+        TextInputEditText input = new TextInputEditText(inputLayout.getContext());
+        input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
+                | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
+        input.setMinLines(3);
+        input.setMaxLines(8);
+        input.setFilters(new InputFilter[]{new InputFilter.LengthFilter(1000)});
+        inputLayout.addView(input);
+
+        AlertDialog dialog = new MaterialAlertDialogBuilder(requireContext())
+                .setTitle("Responder pregunta")
+                .setMessage(pregunta.getText())
+                .setView(inputLayout)
+                .setNegativeButton("Cancelar", null)
+                .setPositiveButton("Enviar", null)
+                .create();
+        dialog.setOnShowListener(ignored -> dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+                .setOnClickListener(v -> enviarRespuesta(dialog, inputLayout, input, pregunta)));
+        dialog.show();
+    }
+
+    private void enviarRespuesta(AlertDialog dialog, TextInputLayout inputLayout,
+                                 TextInputEditText input, Publicacion.Question pregunta) {
+        String respuesta = input.getText() == null ? "" : input.getText().toString().trim();
+        if (respuesta.isEmpty()) {
+            inputLayout.setError("Escribí una respuesta antes de enviarla");
+            return;
+        }
+        inputLayout.setError(null);
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
+        publicacionRepository.responderPregunta(pregunta.getId(), respuesta,
+                new PublicacionRepository.Resultado<Publicacion.Question>() {
+                    @Override public void onSuccess(Publicacion.Question data) {
+                        if (!isAdded()) return;
+                        dialog.dismiss();
+                        Toast.makeText(requireContext(), "Respuesta enviada", Toast.LENGTH_SHORT).show();
+                        cargarDatosPublicacion(true);
+                    }
+
+                    @Override public void onError(String mensaje) {
+                        if (!isAdded()) return;
+                        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(true);
+                        Toast.makeText(requireContext(), mensaje, Toast.LENGTH_LONG).show();
+                    }
+                });
+    }
+
+    private TextView crearTexto(String contenido) {
+        TextView textView = new TextView(requireContext());
+        textView.setText(contenido);
+        textView.setTextColor(com.google.android.material.color.MaterialColors.getColor(
+                textView, com.google.android.material.R.attr.colorOnPrimaryContainer));
+        return textView;
+    }
+
+    private TextView crearTextoSuperficie(String contenido) {
+        TextView textView = new TextView(requireContext());
+        textView.setText(contenido);
+        textView.setTextColor(com.google.android.material.color.MaterialColors.getColor(
+                textView, com.google.android.material.R.attr.colorOnPrimaryContainer));
+        return textView;
+    }
+
+    private String valorOBlanco(String valor) {
+        return valor == null ? "" : valor;
+    }
+
+    private int dp(int valor) {
+        return Math.round(valor * getResources().getDisplayMetrics().density);
     }
     private void actualizarBotonPausar(MaterialButton buttonPausar, Publicacion publicacion) {
         if (buttonPausar == null || publicacion == null) return;

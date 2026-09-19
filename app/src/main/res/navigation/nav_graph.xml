@@ -204,6 +204,31 @@
             android:id="@+id/action_detailFragment_to_questionFragment"
             app:destination="@id/questionFragment" />
 
+        <action
+            android:id="@+id/action_detailFragment_to_createOfferFragment"
+            app:destination="@id/createOfferFragment" />
+
+    </fragment>
+
+    <fragment
+        android:id="@+id/createOfferFragment"
+        android:name="com.da_grupo9.ronda.ui.fragments.CreateOfferFragment"
+        android:label="Hacer una oferta">
+
+        <argument
+            android:name="publicacionId"
+            android:defaultValue=""
+            app:argType="string" />
+
+        <argument
+            android:name="publicacionTitulo"
+            android:defaultValue=""
+            app:argType="string" />
+
+        <argument
+            android:name="precioPublicado"
+            android:defaultValue="0.0"
+            app:argType="float" />
     </fragment>
 
     <fragment

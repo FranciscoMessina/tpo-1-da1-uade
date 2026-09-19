@@ -9,6 +9,7 @@ import com.da_grupo9.ronda.data.model.UploadImageResponse;
 import com.da_grupo9.ronda.data.model.CategoriesResponse;
 import com.da_grupo9.ronda.data.model.ZonesResponse;
 import com.da_grupo9.ronda.data.model.QuestionRequest;
+import com.da_grupo9.ronda.data.model.AnswerQuestionRequest;
 import okhttp3.MultipartBody;
 import java.util.Map;
 import retrofit2.Call;
@@ -51,4 +52,8 @@ public interface PublicacionApi {
     Call<Publicacion> cambiarEstado(@Path("id") String id, @Body Map<String, String> estado);
     @POST("publications/{id}/questions")
     Call<Publicacion.Question> crearPregunta(@Path("id") String id, @Body QuestionRequest pregunta);
+    @POST("questions/{id}/answer")
+    Call<Publicacion.Question> responderPregunta(
+            @Path("id") String id,
+            @Body AnswerQuestionRequest respuesta);
 }

@@ -15,6 +15,7 @@ import com.da_grupo9.ronda.data.model.UploadImageResponse;
 import com.da_grupo9.ronda.data.model.CategoriesResponse;
 import com.da_grupo9.ronda.data.model.ZonesResponse;
 import com.da_grupo9.ronda.data.model.QuestionRequest;
+import com.da_grupo9.ronda.data.model.AnswerQuestionRequest;
 import com.da_grupo9.ronda.data.remote.PublicacionApi;
 import com.da_grupo9.ronda.util.ImageStorageManager;
 import com.da_grupo9.ronda.util.NetworkMonitor;
@@ -352,6 +353,15 @@ public class PublicacionRepository {
             return;
         }
         ejecutar(api.crearPregunta(publicacionId, new QuestionRequest(texto)), resultado);
+    }
+
+    public void responderPregunta(String preguntaId, String respuesta,
+                                  Resultado<Publicacion.Question> resultado) {
+        if (!networkMonitor.isOnline()) {
+            resultado.onError("Se necesita conexión a internet para responder la pregunta");
+            return;
+        }
+        ejecutar(api.responderPregunta(preguntaId, new AnswerQuestionRequest(respuesta)), resultado);
     }
 
     private void subirImagenes(List<String> rutas, int indice, List<String> urls,

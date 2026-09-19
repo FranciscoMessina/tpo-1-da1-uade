@@ -18,6 +18,8 @@ public class Publicacion implements Serializable {
     private String itemCondition;
     private String condition;
     private String zone;
+    private String address;
+    private Boolean addressLocked;
     private String status;
     private int draftStep;
     private String publishedAt;
@@ -77,6 +79,8 @@ public class Publicacion implements Serializable {
         }
     }
     public String getZona() { return zone; }
+    public String getAddress() { return address; }
+    public boolean isAddressLocked() { return Boolean.TRUE.equals(addressLocked); }
     public String getCategoryApiValue() { return category; }
     public String getConditionApiValue() { return itemCondition != null ? itemCondition : condition; }
     public String getEstadoPublicacion() { return status; }
