@@ -2,6 +2,7 @@ package com.da_grupo9.ronda.ui.fragments;
 
 import com.da_grupo9.ronda.R;
 import com.da_grupo9.ronda.data.model.Publicacion;
+import com.da_grupo9.ronda.data.model.FiltrosPublicaciones;
 import com.da_grupo9.ronda.data.repository.PublicacionRepository;
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.color.MaterialColors;
@@ -83,8 +84,8 @@ public class HomeFragment extends Fragment {
     private com.da_grupo9.ronda.util.NetworkMonitor.NetworkStatusListener networkListener;
     private boolean previouslyOffline = false;
 
-    private List<Publicacion> publicaciones;
     private List<Publicacion> publicacionesFiltradas;
+    private FiltrosPublicaciones filtrosAplicados;
 
     private int paginaActual = 1;
     private final int publicacionesPorPagina = 3;
@@ -95,8 +96,6 @@ public class HomeFragment extends Fragment {
     private String zonaBusquedaGuardada;
 
     private String usuarioActualEmail = "";
-    private boolean aplicarBusquedaGuardada = false;
-
     public HomeFragment() {
     }
 
@@ -172,8 +171,8 @@ public class HomeFragment extends Fragment {
         cargarBusquedaGuardada();
         configurarVisibilidadGuardarBusqueda();
 
-        publicaciones = new ArrayList<>();
         publicacionesFiltradas = new ArrayList<>();
+        filtrosAplicados = filtrosIniciales();
         cargarDatos();
 
         botonFiltrar.setOnClickListener(
@@ -210,16 +209,7 @@ public class HomeFragment extends Fragment {
     private void cargarDatos() {
         actualizarEstadoConexion(publicacionRepository.isOnline());
 
-        String query = valorOpcional(buscador.getText().toString());
-        String category = categoriaSeleccionadaApi();
-        String condition = condicionSeleccionadaApi();
-        String zone = zonaSeleccionadaApi();
-        Double minPrice = precioOpcional(precioMinimo.getText().toString());
-        Double maxPrice = precioOpcional(precioMaximo.getText().toString());
-        String sort = ordenSeleccionadoApi();
-
-        publicacionRepository.getPublicaciones(paginaActual, publicacionesPorPagina, query,
-                category, condition, zone, minPrice, maxPrice, sort,
+        publicacionRepository.getPublicaciones(paginaActual, publicacionesPorPagina, filtrosAplicados,
                 new PublicacionRepository.ResultadoPagina() {
 
                     @Override
@@ -227,12 +217,10 @@ public class HomeFragment extends Fragment {
                         if (!isAdded()) return;
 
                         actualizarEstadoConexion(publicacionRepository.isOnline());
-                        publicaciones = new ArrayList<>(data);
                         publicacionesFiltradas = new ArrayList<>(data);
                         paginaActual = page;
                         totalPaginas = Math.max(1, pages);
                         totalResultados = total;
-                        aplicarBusquedaGuardada = false;
                         mostrarPagina();
                     }
 
@@ -431,83 +419,24 @@ public class HomeFragment extends Fragment {
 
     private void guardarBusqueda(String nombre) {
 
-        String query = buscador.getText().toString().trim();
-
-        String categoria =
-                spinnerCategoria.getSelectedItem().toString();
-
-        String estado =
-                spinnerEstado.getSelectedItem().toString();
-
-        String cercania = zonaSeleccionadaApi();
-
-        String orden =
-                spinnerOrden.getSelectedItem().toString();
-
-        String textoMin =
-                precioMinimo.getText().toString().trim();
-
-        String textoMax =
-                precioMaximo.getText().toString().trim();
-
-        Double minPrice =
-                textoMin.isEmpty() ? null : Double.parseDouble(textoMin);
-
-        Double maxPrice =
-                textoMax.isEmpty() ? null : Double.parseDouble(textoMax);
-
-        if (query.isEmpty()) {
-            query = null;
-        }
-
-        if (categoria.equals("Todas")) {
-            categoria = null;
-        } else if (categoria.equals("Tecnología")) {
-            categoria = "electronics";
-        } else if (categoria.equals("Hogar")) {
-            categoria = "home";
-        } else if (categoria.equals("Ropa y moda")) {
-            categoria = "fashion";
-        } else if (categoria.equals("Deportes")) {
-            categoria = "sports";
-        } else if (categoria.equals("Vehículos")) {
-            categoria = "vehicles";
-        } else if (categoria.equals("Libros")) {
-            categoria = "books";
-        } else if (categoria.equals("Juguetes")) {
-            categoria = "toys";
-        } else if (categoria.equals("Otros")) {
-            categoria = "other";
-        }
-
-        if (estado.equals("Todos")) {
-            estado = null;
-        } else if (estado.equals("Nuevo")) {
-            estado = "new";
-        } else if (estado.equals("Como nuevo")) {
-            estado = "like_new";
-        } else if (estado.equals("Usado")) {
-            estado = "used";
-        }
-
-        if (orden.equals("Más recientes")) {
-            orden = "recent";
-        } else if (orden.equals("Menor precio")) {
-            orden = "price_asc";
-        } else if (orden.equals("Mayor precio")) {
-            orden = "price_desc";
+        final FiltrosPublicaciones filtros;
+        try {
+            filtros = leerFiltrosEnEdicion();
+        } catch (IllegalArgumentException error) {
+            Toast.makeText(requireContext(), error.getMessage(), Toast.LENGTH_SHORT).show();
+            return;
         }
 
         SavedSearchRequest request =
                 new SavedSearchRequest(
                         nombre,
-                        query,
-                        categoria,
-                        minPrice,
-                        maxPrice,
-                        estado,
-                        cercania,
-                        orden
+                        filtros.getQuery(),
+                        filtros.getCategory(),
+                        filtros.getMinPrice(),
+                        filtros.getMaxPrice(),
+                        filtros.getCondition(),
+                        filtros.getZone(),
+                        filtros.getSort()
                 );
 
         savedSearchesApi.createSavedSearch(request)
@@ -562,7 +491,6 @@ public class HomeFragment extends Fragment {
         if (args == null) {
             return;
         }
-        aplicarBusquedaGuardada = true;
         String query = args.getString("query");
         String category = args.getString("category");
         String condition = args.getString("condition");
@@ -659,149 +587,13 @@ public class HomeFragment extends Fragment {
                 break;
         }
     }
-    private void aplicarFiltrosLocal() {
-
-        String texto =
-                buscador.getText()
-                        .toString()
-                        .toLowerCase()
-                        .trim();
-
-        String categoriaSeleccionada =
-                spinnerCategoria.getSelectedItem().toString();
-
-        String estadoSeleccionado =
-                spinnerEstado.getSelectedItem().toString();
-
-        String cercaniaSeleccionada =
-                spinnerCercania.getSelectedItem().toString();
-
-        String ordenSeleccionado =
-                spinnerOrden.getSelectedItem().toString();
-
-        String textoPrecioMinimo =
-                precioMinimo.getText().toString().trim();
-
-        String textoPrecioMaximo =
-                precioMaximo.getText().toString().trim();
-
-        double precioMin = 0;
-        double precioMax = Double.MAX_VALUE;
-
-        if (!textoPrecioMinimo.isEmpty()) {
-            precioMin =
-                    Double.parseDouble(textoPrecioMinimo);
-        }
-
-        if (!textoPrecioMaximo.isEmpty()) {
-            precioMax =
-                    Double.parseDouble(textoPrecioMaximo);
-        }
-
-        List<Publicacion> resultados =
-                new ArrayList<>();
-
-        for (Publicacion publicacion : publicaciones) {
-
-            boolean coincideTexto =
-                    texto.isEmpty()
-                            || (publicacion.getTitulo() != null && publicacion.getTitulo()
-                            .toLowerCase()
-                            .contains(texto))
-                            || (publicacion.getDescripcion() != null && publicacion.getDescripcion()
-                            .toLowerCase()
-                            .contains(texto));
-
-            boolean coincideCategoria =
-                    categoriaSeleccionada.equals("Todas")
-                            || publicacion.getCategoria()
-                            .equals(categoriaSeleccionada);
-
-            boolean coincideEstado =
-                    estadoSeleccionado.equals("Todos")
-                            || publicacion.getEstado()
-                            .equals(estadoSeleccionado);
-
-            boolean coincidePrecio =
-                    publicacion.getPrecio() >= precioMin
-                            && publicacion.getPrecio() <= precioMax;
-
-            boolean coincideCercania =
-                    cercaniaSeleccionada
-                            .equals("Todas las zonas")
-                            || cercaniaSeleccionada.equals(publicacion.getZona());
-
-            if (coincideTexto
-                    && coincideCategoria
-                    && coincideEstado
-                    && coincidePrecio
-                    && coincideCercania) {
-
-                resultados.add(publicacion);
-            }
-        }
-
-        if (ordenSeleccionado.equals("Más recientes")) {
-
-            Collections.sort(
-                    resultados,
-                    (p1, p2) ->
-                            Integer.compare(
-                                    p2.getFecha(),
-                                    p1.getFecha()
-                            )
-            );
-
-        } else if (ordenSeleccionado.equals("Menor precio")) {
-
-            Collections.sort(
-                    resultados,
-                    (p1, p2) ->
-                            Double.compare(
-                                    p1.getPrecio(),
-                                    p2.getPrecio()
-                            )
-            );
-
-        } else if (ordenSeleccionado.equals("Mayor precio")) {
-
-            Collections.sort(
-                    resultados,
-                    (p1, p2) ->
-                            Double.compare(
-                                    p2.getPrecio(),
-                                    p1.getPrecio()
-                            )
-            );
-        }
-
-        publicacionesFiltradas = resultados;
-
-        paginaActual = 1;
-
-        mostrarPagina();
-    }
-
     private void aplicarFiltros() {
         try {
-            if (buscador.getText().toString().trim().length() > 200) {
-                Toast.makeText(requireContext(), "La búsqueda no puede superar los 200 caracteres", Toast.LENGTH_SHORT).show();
-                return;
-            }
-            Double min = precioOpcional(precioMinimo.getText().toString());
-            Double max = precioOpcional(precioMaximo.getText().toString());
-            if (min != null && min < 0 || max != null && max < 0) {
-                Toast.makeText(requireContext(), "Los precios no pueden ser negativos", Toast.LENGTH_SHORT).show();
-                return;
-            }
-            if (min != null && max != null && min > max) {
-                Toast.makeText(requireContext(), "El precio mínimo no puede superar al máximo", Toast.LENGTH_SHORT).show();
-                return;
-            }
+            filtrosAplicados = leerFiltrosEnEdicion();
             paginaActual = 1;
             cargarDatos();
-        } catch (NumberFormatException error) {
-            Toast.makeText(requireContext(), "Ingresá precios válidos", Toast.LENGTH_SHORT).show();
+        } catch (IllegalArgumentException error) {
+            Toast.makeText(requireContext(), error.getMessage(), Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -1044,8 +836,8 @@ public class HomeFragment extends Fragment {
     }
 
     private Publicacion buscarPublicacion(String id) {
-        if (publicaciones == null) return null;
-        for (Publicacion p : publicaciones) {
+        if (publicacionesFiltradas == null) return null;
+        for (Publicacion p : publicacionesFiltradas) {
             if (id.equals(p.getId())) return p;
         }
         return null;
@@ -1165,14 +957,19 @@ public class HomeFragment extends Fragment {
         return mensaje;
     }
 
-    private String valorOpcional(String value) {
-        String trimmed = value == null ? "" : value.trim();
-        return trimmed.isEmpty() ? null : trimmed;
+    private FiltrosPublicaciones leerFiltrosEnEdicion() {
+        return FiltrosPublicaciones.crear(buscador.getText().toString(), categoriaSeleccionadaApi(),
+                condicionSeleccionadaApi(), zonaSeleccionadaApi(), precioMinimo.getText().toString(),
+                precioMaximo.getText().toString(), ordenSeleccionadoApi());
     }
 
-    private Double precioOpcional(String value) {
-        String trimmed = value == null ? "" : value.trim();
-        return trimmed.isEmpty() ? null : Double.parseDouble(trimmed);
+    private FiltrosPublicaciones filtrosIniciales() {
+        Bundle args = getArguments();
+        if (args == null) return leerFiltrosEnEdicion();
+        String min = args.containsKey("minPrice") ? String.valueOf(args.getDouble("minPrice")) : null;
+        String max = args.containsKey("maxPrice") ? String.valueOf(args.getDouble("maxPrice")) : null;
+        return FiltrosPublicaciones.crear(args.getString("query"), args.getString("category"),
+                args.getString("condition"), args.getString("zone"), min, max, args.getString("sort"));
     }
 
     private String categoriaSeleccionadaApi() {

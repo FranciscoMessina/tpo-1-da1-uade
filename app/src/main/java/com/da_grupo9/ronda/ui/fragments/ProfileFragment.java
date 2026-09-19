@@ -27,8 +27,6 @@ import com.da_grupo9.ronda.data.model.Perfil;
 import com.da_grupo9.ronda.data.model.PublicUser;
 import com.da_grupo9.ronda.data.model.Publicacion;
 import com.da_grupo9.ronda.data.model.UploadImageResponse;
-import com.da_grupo9.ronda.data.model.Operation;
-import com.da_grupo9.ronda.data.model.OperationsResponse;
 import com.bumptech.glide.Glide;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
@@ -163,23 +161,6 @@ public class ProfileFragment extends Fragment {
             }
             @Override public void onError(String mensaje) {
                 if (isAdded()) textPublicacionesActivas.setText("Publicaciones activas: no disponible");
-            }
-        });
-
-        profileRepository.getOperations(new PublicacionRepository.Resultado<OperationsResponse>() {
-            @Override public void onSuccess(OperationsResponse response) {
-                if (!isAdded()) return;
-                int compras = 0;
-                int ventas = 0;
-                for (Operation operation : response.getItems()) {
-                    if ("buy".equals(operation.getType())) compras++;
-                    else if ("sell".equals(operation.getType())) ventas++;
-                }
-                textOperaciones.setText((compras + ventas) + " operaciones concretadas");
-                textCompradorVendedor.setText(compras + " como comprador · " + ventas + " como vendedor");
-            }
-            @Override public void onError(String mensaje) {
-                // Se mantienen los totales de reputación obtenidos desde /me.
             }
         });
 

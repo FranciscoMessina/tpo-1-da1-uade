@@ -15,16 +15,17 @@ public class PublicacionMapper {
 
     private static final Gson gson = new Gson();
 
-    public static PublicacionEntity toEntity(Publicacion publicacion, ImageStorageManager imageStorageManager) {
+    public static PublicacionEntity toEntity(String accountId, Publicacion publicacion, ImageStorageManager imageStorageManager) {
         if (publicacion == null) return null;
 
         PublicacionEntity entity = new PublicacionEntity();
+        entity.setAccountId(accountId);
         entity.setId(publicacion.getId() != null ? publicacion.getId() : "");
         entity.setTitle(publicacion.getTitulo());
         entity.setDescription(publicacion.getDescripcion());
-        entity.setCategory(publicacion.getCategoria());
+        entity.setCategory(publicacion.getCategoryApiValue());
         entity.setPrice(publicacion.getPrecio());
-        entity.setItemCondition(publicacion.getEstado());
+        entity.setItemCondition(publicacion.getConditionApiValue());
         entity.setZone(publicacion.getZona());
         entity.setStatus(publicacion.getEstadoPublicacion());
         entity.setPublishedAt(publicacion.getFechaPublicacion());
@@ -34,9 +35,13 @@ public class PublicacionMapper {
         if (imageStorageManager != null && !TextUtils.isEmpty(publicacion.getCoverImage())) {
             entity.setLocalCoverImagePath(imageStorageManager.getLocalImagePathIfExists(publicacion.getCoverImage()));
         }
-        entity.setFullJson(gson.toJson(publicacion));
+        entity.setFullJson(toJson(publicacion));
         entity.setCachedAt(System.currentTimeMillis());
         return entity;
+    }
+
+    public static String toJson(Publicacion publicacion) {
+        return gson.toJson(publicacion);
     }
 
     public static Publicacion toModel(PublicacionEntity entity, ImageStorageManager imageStorageManager) {

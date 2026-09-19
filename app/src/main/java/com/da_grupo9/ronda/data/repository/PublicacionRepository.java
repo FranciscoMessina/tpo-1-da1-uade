@@ -6,7 +6,9 @@ import android.os.Looper;
 import com.da_grupo9.ronda.data.local.PublicacionDao;
 import com.da_grupo9.ronda.data.local.PublicacionEntity;
 import com.da_grupo9.ronda.data.local.PublicacionMapper;
+import com.da_grupo9.ronda.data.local.SessionManager;
 import com.da_grupo9.ronda.data.model.Publicacion;
+import com.da_grupo9.ronda.data.model.FiltrosPublicaciones;
 import com.da_grupo9.ronda.data.model.PublicacionesResponse;
 import com.da_grupo9.ronda.data.model.PublicUser;
 import com.da_grupo9.ronda.data.model.PublicationRequest;
@@ -58,6 +60,7 @@ public class PublicacionRepository {
     private final PublicacionDao publicacionDao;
     private final NetworkMonitor networkMonitor;
     private final ImageStorageManager imageStorageManager;
+    private final SessionManager sessionManager;
 
     private final ExecutorService dbExecutor = Executors.newSingleThreadExecutor();
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
@@ -67,11 +70,19 @@ public class PublicacionRepository {
             PublicacionApi api,
             PublicacionDao publicacionDao,
             NetworkMonitor networkMonitor,
-            ImageStorageManager imageStorageManager) {
+            ImageStorageManager imageStorageManager,
+            SessionManager sessionManager) {
         this.api = api;
         this.publicacionDao = publicacionDao;
         this.networkMonitor = networkMonitor;
         this.imageStorageManager = imageStorageManager;
+        this.sessionManager = sessionManager;
+    }
+
+    /** La caché se separa por cuenta; sin sesión se usa el espacio anónimo. */
+    private String cuentaActual() {
+        String userId = sessionManager.getUserId();
+        return userId != null && sessionManager.isLoggedIn() ? userId : "";
     }
 
     public boolean isOnline() {
@@ -82,9 +93,15 @@ public class PublicacionRepository {
         return networkMonitor;
     }
 
-    public void getPublicaciones(int page, int pageSize, String query, String category,
-                                 String condition, String zone, Double minPrice, Double maxPrice,
-                                 String sort, ResultadoPagina resultado) {
+    public void getPublicaciones(int page, int pageSize, FiltrosPublicaciones filtros,
+                                 ResultadoPagina resultado) {
+        String query = filtros.getQuery();
+        String category = filtros.getCategory();
+        String condition = filtros.getCondition();
+        String zone = filtros.getZone();
+        Double minPrice = filtros.getMinPrice();
+        Double maxPrice = filtros.getMaxPrice();
+        String sort = filtros.getSort();
         if (!networkMonitor.isOnline()) {
             obtenerPublicacionesDeCache(page, pageSize, query, category, condition, zone,
                     minPrice, maxPrice, sort, resultado,
@@ -92,13 +109,16 @@ public class PublicacionRepository {
             return;
         }
 
+        // Las escrituras pendientes se guardan bajo la cuenta que hizo la petición,
+        // aunque la sesión cambie antes de que llegue la respuesta.
+        String cuenta = cuentaActual();
         api.getPublicaciones(page, pageSize, query, category, condition, zone, minPrice, maxPrice, sort)
                 .enqueue(new Callback<PublicacionesResponse>() {
             @Override
             public void onResponse(Call<PublicacionesResponse> call, Response<PublicacionesResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     List<Publicacion> items = response.body().getItems();
-                    guardarPublicacionesEnCache(items);
+                    guardarPublicacionesEnCache(cuenta, items);
                     PublicacionesResponse.Pagination pagination = response.body().getPagination();
                     int responsePage = pagination != null ? pagination.getPage() : page;
                     int totalPages = pagination != null ? pagination.getTotalPages() : 1;
@@ -139,12 +159,13 @@ public class PublicacionRepository {
             return;
         }
 
+        String cuenta = cuentaActual();
         api.getPublicacion(id).enqueue(new Callback<Publicacion>() {
             @Override
             public void onResponse(Call<Publicacion> call, Response<Publicacion> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     Publicacion publicacion = response.body();
-                    guardarConsultaDetalle(publicacion);
+                    guardarConsultaDetalle(cuenta, publicacion);
                     mainHandler.post(() -> resultado.onSuccess(publicacion));
                 } else {
                     obtenerPublicacionDeCache(id, resultado, ApiErrorMessage.from(response,
@@ -162,8 +183,9 @@ public class PublicacionRepository {
     }
 
     public void getUltimasConsultadas(int limit, Resultado<List<Publicacion>> resultado) {
+        String cuenta = cuentaActual();
         dbExecutor.execute(() -> {
-            List<PublicacionEntity> entities = publicacionDao.getUltimasConsultadas(limit);
+            List<PublicacionEntity> entities = publicacionDao.getUltimasConsultadas(cuenta, limit);
             List<Publicacion> modelos = new ArrayList<>();
             for (PublicacionEntity entity : entities) {
                 Publicacion pub = PublicacionMapper.toModel(entity, imageStorageManager);
@@ -173,13 +195,15 @@ public class PublicacionRepository {
         });
     }
 
-    private void guardarPublicacionesEnCache(List<Publicacion> items) {
+    private void guardarPublicacionesEnCache(String cuenta, List<Publicacion> items) {
         if (items == null || items.isEmpty()) return;
         dbExecutor.execute(() -> {
             List<PublicacionEntity> entities = new ArrayList<>();
             for (Publicacion pub : items) {
-                PublicacionEntity entity = PublicacionMapper.toEntity(pub, imageStorageManager);
-                if (entity != null) entities.add(entity);
+                PublicacionEntity entity = PublicacionMapper.toEntity(cuenta, pub, imageStorageManager);
+                if (entity == null) continue;
+                conservarDetalle(entity, pub);
+                entities.add(entity);
             }
             publicacionDao.insertOrUpdateAll(entities);
 
@@ -192,11 +216,28 @@ public class PublicacionRepository {
         });
     }
 
-    private void guardarConsultaDetalle(Publicacion publicacion) {
+    /**
+     * El resumen del feed no debe reemplazar un detalle ya consultado: se actualizan
+     * sólo los campos compartidos y se conservan galería, permisos y marca de consulta.
+     * Debe ejecutarse en dbExecutor.
+     */
+    private void conservarDetalle(PublicacionEntity nueva, Publicacion resumen) {
+        PublicacionEntity existente = publicacionDao.getById(nueva.getAccountId(), nueva.getId());
+        if (existente == null || !existente.isHasDetail()) return;
+        Publicacion detalle = PublicacionMapper.toModel(existente, null);
+        if (detalle == null) return;
+        detalle.actualizarDesdeResumen(resumen);
+        nueva.setFullJson(PublicacionMapper.toJson(detalle));
+        nueva.setHasDetail(true);
+        nueva.setLastConsultedAt(existente.getLastConsultedAt());
+    }
+
+    private void guardarConsultaDetalle(String cuenta, Publicacion publicacion) {
         if (publicacion == null || publicacion.getId() == null) return;
         dbExecutor.execute(() -> {
-            PublicacionEntity entity = PublicacionMapper.toEntity(publicacion, imageStorageManager);
+            PublicacionEntity entity = PublicacionMapper.toEntity(cuenta, publicacion, imageStorageManager);
             if (entity != null) {
+                entity.setHasDetail(true);
                 entity.setLastConsultedAt(System.currentTimeMillis());
                 publicacionDao.insertOrUpdate(entity);
             }
@@ -218,8 +259,9 @@ public class PublicacionRepository {
                                              String condition, String zone, Double minPrice,
                                              Double maxPrice, String sort, ResultadoPagina resultado,
                                              String fallbackError) {
+        String cuenta = cuentaActual();
         dbExecutor.execute(() -> {
-            List<PublicacionEntity> cached = publicacionDao.getPublicacionesHome();
+            List<PublicacionEntity> cached = publicacionDao.getPublicacionesHome(cuenta);
             if (cached != null && !cached.isEmpty()) {
                 List<Publicacion> modelos = new ArrayList<>();
                 for (PublicacionEntity entity : cached) {
@@ -260,11 +302,12 @@ public class PublicacionRepository {
     }
 
     private void obtenerPublicacionDeCache(String id, Resultado<Publicacion> resultado, String fallbackError) {
+        String cuenta = cuentaActual();
         dbExecutor.execute(() -> {
-            PublicacionEntity entity = publicacionDao.getById(id);
+            PublicacionEntity entity = publicacionDao.getById(cuenta, id);
             if (entity != null) {
                 // Registrar consulta
-                publicacionDao.actualizarUltimaConsulta(id, System.currentTimeMillis());
+                publicacionDao.actualizarUltimaConsulta(cuenta, id, System.currentTimeMillis());
                 Publicacion pub = PublicacionMapper.toModel(entity, imageStorageManager);
                 mainHandler.post(() -> resultado.onSuccess(pub));
             } else {

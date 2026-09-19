@@ -50,6 +50,26 @@ public class Publicacion implements Serializable {
     public void setCoverImage(String coverImage) { this.coverImage = coverImage; }
     public void setImages(List<PublicationImage> images) { this.images = images; }
 
+    /** Actualiza los campos que el feed también informa, conservando galería, vendedor, preguntas y permisos del detalle. */
+    public void actualizarDesdeResumen(Publicacion resumen) {
+        if (resumen.title != null) title = resumen.title;
+        if (resumen.description != null) description = resumen.description;
+        if (resumen.category != null) category = resumen.category;
+        if (resumen.price != null || resumen.priceCents != null) {
+            price = resumen.price;
+            priceCents = resumen.priceCents;
+        }
+        if (resumen.itemCondition != null) itemCondition = resumen.itemCondition;
+        if (resumen.condition != null) condition = resumen.condition;
+        if (resumen.zone != null) zone = resumen.zone;
+        if (resumen.status != null) status = resumen.status;
+        if (resumen.publishedAt != null) publishedAt = resumen.publishedAt;
+        if (resumen.updatedAt != null) updatedAt = resumen.updatedAt;
+        if (resumen.sellerName != null) sellerName = resumen.sellerName;
+        if (resumen.coverImage != null) coverImage = resumen.coverImage;
+        if (resumen.isFavorite != null) isFavorite = resumen.isFavorite;
+    }
+
     public String getId() { return id; }
     public String getSellerId() { return sellerId; }
     public String getTitulo() { return title; }
