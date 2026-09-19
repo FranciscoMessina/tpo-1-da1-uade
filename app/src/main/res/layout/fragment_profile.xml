@@ -19,6 +19,26 @@
             android:textAppearance="@style/TextAppearance.Material3.HeadlineSmall"
             android:textColor="?attr/colorOnSurface" />
 
+        <ImageView
+            android:id="@+id/imageAvatarPerfil"
+            android:layout_width="112dp"
+            android:layout_height="112dp"
+            android:layout_gravity="center_horizontal"
+            android:background="@drawable/bg_avatar"
+            android:clipToOutline="true"
+            android:contentDescription="Foto de perfil"
+            android:scaleType="centerCrop"
+            android:src="@drawable/ic_photo_camera" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/buttonCambiarAvatar"
+            style="@style/Widget.Ronda.Button.Text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="@dimen/spacing_md"
+            android:text="Cambiar foto" />
+
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -101,7 +121,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/spacing_sm"
-                    android:text="4.7 estrellas"
+                    android:text="Cargando…"
                     android:textAppearance="@style/TextAppearance.Material3.BodyLarge"
                     android:textColor="?attr/colorPrimary" />
 
@@ -110,7 +130,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/spacing_xs"
-                    android:text="12 operaciones concretadas"
+                    android:text="Cargando…"
                     android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
                     android:textColor="?attr/colorOnSurfaceVariant" />
 
@@ -119,7 +139,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/spacing_xs"
-                    android:text="7 como comprador · 5 como vendedor"
+                    android:text="Cargando…"
                     android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
                     android:textColor="?attr/colorOnSurfaceVariant" />
 
@@ -128,7 +148,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/spacing_sm"
-                    android:text="Antigüedad: 2 años"
+                    android:text="Cargando…"
                     android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
                     android:textColor="?attr/colorOnSurfaceVariant" />
 
@@ -137,7 +157,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/spacing_xs"
-                    android:text="Publicaciones activas: 3"
+                    android:text="Cargando…"
                     android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
                     android:textColor="?attr/colorOnSurfaceVariant" />
 

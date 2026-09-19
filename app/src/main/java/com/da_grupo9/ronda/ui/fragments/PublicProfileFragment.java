@@ -15,6 +15,12 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.ImageView;
+import com.bumptech.glide.Glide;
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
+import java.util.Locale;
 
 import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
@@ -56,6 +62,8 @@ public class PublicProfileFragment extends Fragment {
         TextView textEmail = view.findViewById(R.id.textPerfilPublicoEmail);
         TextView textReputacion = view.findViewById(R.id.textPerfilPublicoReputacion);
         TextView textAntiguedad = view.findViewById(R.id.textPerfilPublicoAntiguedad);
+        TextView textOperaciones = view.findViewById(R.id.textPerfilPublicoOperaciones);
+        ImageView imageAvatar = view.findViewById(R.id.imagePerfilPublicoAvatar);
 
         LinearLayout containerPublicaciones =
                 view.findViewById(R.id.containerPublicacionesVendedor);
@@ -74,26 +82,37 @@ public class PublicProfileFragment extends Fragment {
         }
 
         textNombre.setText(vendedorNombre);
-        textEmail.setText("");
+        textEmail.setText("Cargando zona…");
         textReputacion.setText("Reputación: " + vendedorReputacion);
 
-        textAntiguedad.setText("Antigüedad en la plataforma: 2 años");
+        textAntiguedad.setText("Cargando…");
+        textOperaciones.setText("Cargando…");
 
-        cargarPerfil(vendedorId, textNombre, textReputacion, textAntiguedad, containerPublicaciones);
+        cargarPerfil(vendedorId, textNombre, textEmail, textReputacion, textAntiguedad,
+                textOperaciones, imageAvatar, containerPublicaciones);
 
         buttonVolver.setOnClickListener(v ->
                 Navigation.findNavController(v).popBackStack()
         );
     }
 
-    private void cargarPerfil(String vendedorId, TextView nombre, TextView reputacion,
-                              TextView antiguedad, LinearLayout container) {
+    private void cargarPerfil(String vendedorId, TextView nombre, TextView zona, TextView reputacion,
+                              TextView antiguedad, TextView operaciones, ImageView avatar,
+                              LinearLayout container) {
         publicacionRepository.getUsuario(vendedorId, new PublicacionRepository.Resultado<PublicUser>() {
             @Override public void onSuccess(PublicUser usuario) {
                 if (!isAdded()) return;
                 nombre.setText(usuario.getName());
-                reputacion.setText("Reputación: " + String.format("%.1f (%d)", usuario.getRatingAverage(), usuario.getRatingCount()));
-                antiguedad.setText("Miembro desde: " + usuario.getMemberSince());
+                zona.setText(usuario.getZone() != null ? usuario.getZone() : "Zona no informada");
+                reputacion.setText("Reputación: " + String.format(Locale.getDefault(), "%.1f (%d calificaciones)", usuario.getRatingAverage(), usuario.getRatingCount()));
+                antiguedad.setText("Miembro desde: " + formatearFecha(usuario.getMemberSince()));
+                operaciones.setText(usuario.getPurchasesCompleted() + " compras · "
+                        + usuario.getSalesCompleted() + " ventas");
+                if (usuario.getAvatarUrl() != null && !usuario.getAvatarUrl().isEmpty()) {
+                    Glide.with(PublicProfileFragment.this).load(usuario.getAvatarUrl())
+                            .placeholder(R.drawable.ic_photo_camera)
+                            .error(R.drawable.ic_photo_camera).into(avatar);
+                }
                 renderizarPublicacionesActivas(usuario.getActivePublications(), container);
             }
             @Override public void onError(String mensaje) {
@@ -153,5 +172,14 @@ public class PublicProfileFragment extends Fragment {
 
     private int dpToPx(int dp) {
         return Math.round(dp * getResources().getDisplayMetrics().density);
+    }
+
+    private String formatearFecha(String fecha) {
+        if (fecha == null || fecha.isEmpty()) return "sin datos";
+        try {
+            return OffsetDateTime.parse(fecha).format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM));
+        } catch (RuntimeException ignored) {
+            return fecha;
+        }
     }
 }
