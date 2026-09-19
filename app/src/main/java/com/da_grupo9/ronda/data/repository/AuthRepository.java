@@ -34,11 +34,17 @@ public class AuthRepository {
         body.put("password", password);
         ejecutarConSesion(api.login(body), result);
     }
-    public void requestOtp(String email, Resultado result) { ejecutar(api.requestOtp(emailBody(email)), result); }
-    public void resendOtp(String email, Resultado result) { ejecutar(api.resendOtp(emailBody(email)), result); }
-    public void verifyOtp(String email, String code, Resultado result) {
+    public void requestOtp(String email, String purpose, Resultado result) {
+        ejecutar(api.requestOtp(otpBody(email, purpose)), result);
+    }
+    public void resendOtp(String email, String purpose, Resultado result) {
+        ejecutar(api.resendOtp(otpBody(email, purpose)), result);
+    }
+    public void verifyOtp(String email, String code, String purpose, String password, Resultado result) {
         Map<String, String> body = emailBody(email);
         body.put("code", code);
+        body.put("purpose", purpose);
+        if (password != null) body.put("password", password);
         ejecutarConSesion(api.verifyOtp(body), result);
     }
 
@@ -91,6 +97,12 @@ public class AuthRepository {
     private Map<String, String> emailBody(String email) {
         Map<String, String> body = new HashMap<>();
         body.put("email", email);
+        return body;
+    }
+
+    private Map<String, String> otpBody(String email, String purpose) {
+        Map<String, String> body = emailBody(email);
+        body.put("purpose", purpose);
         return body;
     }
 

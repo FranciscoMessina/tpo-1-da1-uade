@@ -9,6 +9,8 @@ import com.da_grupo9.ronda.data.local.PublicacionMapper;
 import com.da_grupo9.ronda.data.model.Publicacion;
 import com.da_grupo9.ronda.data.model.PublicacionesResponse;
 import com.da_grupo9.ronda.data.model.PublicUser;
+import com.da_grupo9.ronda.data.model.PublicationRequest;
+import com.da_grupo9.ronda.data.model.UploadImageResponse;
 import com.da_grupo9.ronda.data.remote.PublicacionApi;
 import com.da_grupo9.ronda.util.ImageStorageManager;
 import com.da_grupo9.ronda.util.NetworkMonitor;
@@ -19,6 +21,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.io.File;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -26,6 +29,9 @@ import javax.inject.Singleton;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
 
 @Singleton
 public class PublicacionRepository {
@@ -216,34 +222,21 @@ public class PublicacionRepository {
         });
     }
 
-    public void agregarPublicacion(Publicacion publicacion, Resultado<Publicacion> resultado) {
+    public void agregarPublicacion(PublicationRequest publicacion, List<String> rutasImagenes,
+                                   Resultado<Publicacion> resultado) {
         if (!networkMonitor.isOnline()) {
             resultado.onError("Se necesita conexión a internet para publicar un artículo");
             return;
         }
-        api.crearBorrador().enqueue(new Callback<Publicacion>() {
-            @Override public void onResponse(Call<Publicacion> call, Response<Publicacion> response) {
-                if (!response.isSuccessful() || response.body() == null) {
-                    resultado.onError("No se pudo crear el borrador (código " + response.code() + ")");
-                    return;
-                }
-                String id = response.body().getId();
-                api.actualizarBorrador(id, publicacion).enqueue(new Callback<Publicacion>() {
-                    @Override public void onResponse(Call<Publicacion> call, Response<Publicacion> updateResponse) {
-                        if (updateResponse.isSuccessful()) {
-                            publicar(id, updateResponse.body() != null ? updateResponse.body() : publicacion, resultado);
-                        } else {
-                            resultado.onError("No se pudo completar el borrador (código " + updateResponse.code() + ")");
-                        }
-                    }
-                    @Override public void onFailure(Call<Publicacion> call, Throwable error) {
-                        resultado.onError("No se pudo conectar con el servidor");
-                    }
-                });
+        subirImagenes(rutasImagenes, 0, new ArrayList<>(), new Resultado<List<String>>() {
+            @Override public void onSuccess(List<String> urls) {
+                PublicationRequest request = new PublicationRequest(
+                        publicacion.getTitle(), publicacion.getDescription(),
+                        publicacion.getCategory(), publicacion.getPrice(),
+                        publicacion.getCondition(), publicacion.getAddress(), urls);
+                ejecutar(api.crearPublicacion(request), resultado);
             }
-            @Override public void onFailure(Call<Publicacion> call, Throwable error) {
-                resultado.onError("No se pudo conectar con el servidor");
-            }
+            @Override public void onError(String mensaje) { resultado.onError(mensaje); }
         });
     }
 
@@ -255,25 +248,37 @@ public class PublicacionRepository {
         ejecutar(api.cambiarEstado(id, Collections.singletonMap("status", estado)), resultado);
     }
 
-    public void actualizarPublicacion(String id, Publicacion publicacion, Resultado<Publicacion> resultado) {
+    public void actualizarPublicacion(String id, PublicationRequest publicacion, Resultado<Publicacion> resultado) {
         if (!networkMonitor.isOnline()) {
             resultado.onError("Se necesita conexión a internet para actualizar la publicación");
             return;
         }
-        ejecutar(api.actualizarBorrador(id, publicacion), resultado);
+        ejecutar(api.actualizarPublicacion(id, publicacion), resultado);
     }
 
-    private void publicar(String id, Publicacion publicacion, Resultado<Publicacion> resultado) {
-        api.publicar(id).enqueue(new Callback<Void>() {
-            @Override public void onResponse(Call<Void> call, Response<Void> response) {
-                if (response.isSuccessful()) resultado.onSuccess(publicacion);
-                else resultado.onError("No se pudo publicar (código " + response.code() + ")");
+    private void subirImagenes(List<String> rutas, int indice, List<String> urls,
+                               Resultado<List<String>> resultado) {
+        if (indice >= rutas.size()) {
+            resultado.onSuccess(urls);
+            return;
+        }
+        File archivo = new File(rutas.get(indice));
+        String nombre = archivo.getName();
+        String mime = nombre.endsWith(".png") ? "image/png"
+                : nombre.endsWith(".webp") ? "image/webp" : "image/jpeg";
+        RequestBody body = RequestBody.create(archivo, MediaType.parse(mime));
+        MultipartBody.Part part = MultipartBody.Part.createFormData("file", nombre, body);
+        api.subirImagen(part).enqueue(new Callback<UploadImageResponse>() {
+            @Override public void onResponse(Call<UploadImageResponse> call, Response<UploadImageResponse> response) {
+                if (!response.isSuccessful() || response.body() == null || response.body().getUrl() == null) {
+                    resultado.onError("No se pudo subir una imagen (código " + response.code() + ")");
+                    return;
+                }
+                urls.add(response.body().getUrl());
+                subirImagenes(rutas, indice + 1, urls, resultado);
             }
-
-            @Override public void onFailure(Call<Void> call, Throwable error) {
-                resultado.onError(error instanceof IOException
-                        ? "No se pudo conectar con el servidor"
-                        : "No se pudo procesar la respuesta del servidor");
+            @Override public void onFailure(Call<UploadImageResponse> call, Throwable error) {
+                resultado.onError("No se pudo subir una imagen");
             }
         });
     }

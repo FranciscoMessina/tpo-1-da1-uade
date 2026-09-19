@@ -58,9 +58,11 @@ public class OtpFragment extends Fragment {
                 view.findViewById(R.id.buttonResendOtp);
 
         String email = "";
+        String purpose = "login";
 
         if (getArguments() != null) {
             email = getArguments().getString("email", "");
+            purpose = getArguments().getString("purpose", "login");
         }
 
         textEmail.setText(
@@ -68,6 +70,7 @@ public class OtpFragment extends Fragment {
         );
 
         String finalEmail = email;
+        String finalPurpose = purpose;
 
         buttonConfirm.setOnClickListener(v -> {
 
@@ -84,7 +87,7 @@ public class OtpFragment extends Fragment {
 
             } else {
 
-                authRepository.verifyOtp(finalEmail, code, new AuthRepository.Resultado() {
+                authRepository.verifyOtp(finalEmail, code, finalPurpose, null, new AuthRepository.Resultado() {
                     @Override public void onSuccess() {
                         if (!isAdded()) return;
                         Bundle bundle = new Bundle();
@@ -96,7 +99,7 @@ public class OtpFragment extends Fragment {
             }
         });
 
-        buttonResend.setOnClickListener(v -> authRepository.resendOtp(finalEmail, new AuthRepository.Resultado() {
+        buttonResend.setOnClickListener(v -> authRepository.resendOtp(finalEmail, finalPurpose, new AuthRepository.Resultado() {
             @Override public void onSuccess() {
                 if (isAdded()) Toast.makeText(requireContext(), "Código reenviado", Toast.LENGTH_SHORT).show();
             }

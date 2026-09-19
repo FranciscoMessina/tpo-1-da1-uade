@@ -142,18 +142,6 @@ public class MisPublicacionesFragment extends Fragment {
             });
             contenido.addView(buttonPausar);
 
-            MaterialButton buttonVendida = new MaterialButton(requireContext(), null, com.google.android.material.R.attr.materialButtonOutlinedStyle);
-            buttonVendida.setText("Marcar como vendida");
-            buttonVendida.setIcon(androidx.core.content.ContextCompat.getDrawable(requireContext(), R.drawable.ic_local_offer));
-            buttonVendida.setLayoutParams(botonAccionParams());
-            buttonVendida.setOnClickListener(v -> {
-                publicacionRepository.cambiarEstadoPublicacion(
-                        publicacion.getId(),
-                        "sold",
-                        recargarAlFinalizar()
-                );
-            });
-            contenido.addView(buttonVendida);
         } else if ("paused".equals(publicacion.getEstadoPublicacion())) {
             MaterialButton buttonReactivar = new MaterialButton(requireContext(), null, com.google.android.material.R.attr.materialButtonOutlinedStyle);
             buttonReactivar.setText("Reactivar");

@@ -4,6 +4,7 @@ import com.da_grupo9.ronda.R;
 import com.da_grupo9.ronda.data.local.BorradorPublicacionStorage;
 import com.da_grupo9.ronda.data.local.SessionManager;
 import com.da_grupo9.ronda.data.model.Publicacion;
+import com.da_grupo9.ronda.data.model.PublicationRequest;
 import com.da_grupo9.ronda.data.repository.PublicacionRepository;
 
 import android.net.Uri;
@@ -168,7 +169,13 @@ public class PublicarArticuloFragment extends Fragment {
 
         mostrarPaso();
 
-        buttonSeleccionarFoto.setOnClickListener(v -> galleryLauncher.launch("image/*"));
+        buttonSeleccionarFoto.setOnClickListener(v -> {
+            if (fotosSeleccionadas.size() >= 10) {
+                Toast.makeText(requireContext(), "Podés subir hasta 10 imágenes", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            galleryLauncher.launch("image/*");
+        });
         buttonQuitarFotos.setOnClickListener(v -> quitarFotosSeleccionadas());
         buttonDescartarBorrador.setOnClickListener(v -> descartarBorrador());
 
@@ -417,17 +424,18 @@ public class PublicarArticuloFragment extends Fragment {
             return;
         }
 
-        Publicacion publicacion = new Publicacion(
+        boolean esEdicion = publicacionId != null && !publicacionId.isEmpty();
+        PublicationRequest publicacion = new PublicationRequest(
                 editTitulo.getText().toString().trim(),
                 editDescripcion.getText().toString().trim(),
+                categoryApiValue(spinnerCategoria.getSelectedItemPosition()),
                 Double.parseDouble(editPrecio.getText().toString().trim()),
                 conditionApiValue(spinnerEstado.getSelectedItemPosition()),
-                categoryApiValue(spinnerCategoria.getSelectedItemPosition()),
-                editZona.getText().toString().trim(),
-                7
+                esEdicion ? null : editDireccion.getText().toString().trim(),
+                null
         );
 
-        if (publicacionId != null && !publicacionId.isEmpty()) {
+        if (esEdicion) {
             publicacionRepository.actualizarPublicacion(publicacionId, publicacion, new PublicacionRepository.Resultado<Publicacion>() {
                 @Override public void onSuccess(Publicacion data) {
                     if (!isAdded()) return;
@@ -441,7 +449,7 @@ public class PublicarArticuloFragment extends Fragment {
             return;
         }
 
-        publicacionRepository.agregarPublicacion(publicacion, new PublicacionRepository.Resultado<Publicacion>() {
+        publicacionRepository.agregarPublicacion(publicacion, fotosSeleccionadas, new PublicacionRepository.Resultado<Publicacion>() {
             @Override public void onSuccess(Publicacion data) {
                 if (!isAdded()) return;
                 publicacionCreada = true;
@@ -466,13 +474,20 @@ public class PublicarArticuloFragment extends Fragment {
     private void copiarFotoAlAlmacenamientoInterno(Uri uri) {
         android.content.Context context = requireContext().getApplicationContext();
         fileExecutor.execute(() -> {
+            String mime = context.getContentResolver().getType(uri);
+            if (!("image/jpeg".equals(mime) || "image/png".equals(mime) || "image/webp".equals(mime))) {
+                mostrarErrorFoto("Elegí una imagen JPG, PNG o WebP");
+                return;
+            }
             File directorio = new File(context.getFilesDir(), "borradores_publicacion");
             if (!directorio.exists() && !directorio.mkdirs()) {
                 mostrarErrorFoto();
                 return;
             }
 
-            File destino = new File(directorio, "foto_" + System.currentTimeMillis() + ".img");
+            String extension = "image/png".equals(mime) ? ".png"
+                    : "image/webp".equals(mime) ? ".webp" : ".jpg";
+            File destino = new File(directorio, "foto_" + System.currentTimeMillis() + extension);
 
             try (InputStream input = context.getContentResolver().openInputStream(uri);
                  FileOutputStream output = new FileOutputStream(destino)) {
@@ -483,8 +498,16 @@ public class PublicarArticuloFragment extends Fragment {
 
                 byte[] buffer = new byte[8192];
                 int cantidad;
+                long total = 0;
                 while ((cantidad = input.read(buffer)) != -1) {
                     output.write(buffer, 0, cantidad);
+                    total += cantidad;
+                    if (total > 5L * 1024L * 1024L) {
+                        output.close();
+                        destino.delete();
+                        mostrarErrorFoto("La imagen no puede superar los 5 MB");
+                        return;
+                    }
                 }
 
                 mainHandler.post(() -> {
@@ -504,9 +527,13 @@ public class PublicarArticuloFragment extends Fragment {
     }
 
     private void mostrarErrorFoto() {
+        mostrarErrorFoto("No se pudo guardar la imagen");
+    }
+
+    private void mostrarErrorFoto(String mensaje) {
         mainHandler.post(() -> {
             if (isAdded()) {
-                Toast.makeText(requireContext(), "No se pudo guardar la imagen", Toast.LENGTH_SHORT).show();
+                Toast.makeText(requireContext(), mensaje, Toast.LENGTH_SHORT).show();
             }
         });
     }
