@@ -52,6 +52,7 @@ dependencies {
     implementation(libs.retrofit.converter.gson)
     implementation(libs.security.crypto)
     implementation(libs.glide)
+    implementation(libs.biometric)
     testImplementation(libs.junit)
     androidTestImplementation(libs.espresso.core)
     androidTestImplementation(libs.ext.junit)
