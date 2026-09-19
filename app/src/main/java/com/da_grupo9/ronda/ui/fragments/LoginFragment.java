@@ -58,6 +58,8 @@ public class LoginFragment extends Fragment {
         Button buttonForgotPassword =
                 view.findViewById(R.id.buttonForgotPassword);
 
+        Button buttonCreateAccount = view.findViewById(R.id.buttonCreateAccount);
+
         buttonLogin.setOnClickListener(v -> {
 
             String email =
@@ -112,6 +114,9 @@ public class LoginFragment extends Fragment {
             Navigation.findNavController(v)
                     .navigate(R.id.action_loginFragment_to_forgotPasswordFragment);
         });
+
+        buttonCreateAccount.setOnClickListener(v -> Navigation.findNavController(v)
+                .navigate(R.id.action_loginFragment_to_registerFragment));
     }
 
     private AuthRepository.Resultado navegarAlHome(View view, String email) {
