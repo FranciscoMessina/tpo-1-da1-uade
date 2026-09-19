@@ -6,6 +6,7 @@ import com.da_grupo9.ronda.data.local.SessionManager;
 import com.da_grupo9.ronda.data.model.Publicacion;
 import com.da_grupo9.ronda.data.model.PublicationRequest;
 import com.da_grupo9.ronda.data.repository.PublicacionRepository;
+import com.da_grupo9.ronda.util.MoneyFormat;
 
 import android.net.Uri;
 import android.os.Bundle;
@@ -345,7 +346,8 @@ public class PublicarArticuloFragment extends Fragment {
                 "Título: " + editTitulo.getText().toString().trim()
                         + "\nDescripción: " + editDescripcion.getText().toString().trim()
                         + "\nCategoría: " + spinnerCategoria.getSelectedItem().toString()
-                        + "\nPrecio: $" + editPrecio.getText().toString().trim()
+                        + "\nPrecio: " + MoneyFormat.amount(
+                                Double.parseDouble(editPrecio.getText().toString().trim()))
                         + "\nEstado: " + spinnerEstado.getSelectedItem().toString();
 
         if (publicacionId == null || publicacionId.isEmpty()) {

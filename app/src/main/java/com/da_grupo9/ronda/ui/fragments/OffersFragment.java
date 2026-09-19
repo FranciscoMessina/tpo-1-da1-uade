@@ -20,6 +20,7 @@ import com.da_grupo9.ronda.data.model.Offer;
 import com.da_grupo9.ronda.data.model.OfferActionResponse;
 import com.da_grupo9.ronda.data.repository.OffersRepository;
 import com.da_grupo9.ronda.util.ApiError;
+import com.da_grupo9.ronda.util.MoneyFormat;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.button.MaterialButtonToggleGroup;
 import com.google.android.material.card.MaterialCardView;
@@ -249,7 +250,7 @@ public class OffersFragment extends Fragment {
         parent.addView(text);
     }
 
-    private String money(double value) { return "$" + String.format(Locale.getDefault(), "%,.2f", value); }
+    private String money(double value) { return MoneyFormat.amount(value); }
     private String safe(String value, String fallback) { return value == null || value.isEmpty() ? fallback : value; }
 
     private String statusLabel(String status) {

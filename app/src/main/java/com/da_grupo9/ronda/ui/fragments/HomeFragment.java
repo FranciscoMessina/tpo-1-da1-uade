@@ -42,6 +42,7 @@ import com.da_grupo9.ronda.data.model.SavedSearchItem;
 import com.da_grupo9.ronda.data.remote.FavoritesApi;
 import com.da_grupo9.ronda.data.remote.SavedSearchesApi;
 import com.da_grupo9.ronda.util.ApiErrorMessage;
+import com.da_grupo9.ronda.util.MoneyFormat;
 
 import android.widget.ImageButton;
 import java.util.HashMap;
@@ -715,8 +716,7 @@ public class HomeFragment extends Fragment {
                 new TextView(requireContext());
 
         precio.setText(
-                "Precio: $"
-                        + publicacion.getPrecio()
+                "Precio: " + MoneyFormat.amount(publicacion.getPrecio())
         );
 
         precio.setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_TitleSmall);

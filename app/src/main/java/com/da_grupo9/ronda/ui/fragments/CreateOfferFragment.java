@@ -16,12 +16,11 @@ import androidx.navigation.Navigation;
 import com.da_grupo9.ronda.R;
 import com.da_grupo9.ronda.data.model.OfferActionResponse;
 import com.da_grupo9.ronda.data.repository.OffersRepository;
+import com.da_grupo9.ronda.util.MoneyFormat;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.progressindicator.CircularProgressIndicator;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
-
-import java.util.Locale;
 
 import javax.inject.Inject;
 
@@ -54,11 +53,11 @@ public class CreateOfferFragment extends Fragment {
         publicationId = args == null ? "" : args.getString("publicationId", "");
         String titulo = args == null ? "" : args.getString("publicationTitle", "");
         String vendedor = args == null ? "" : args.getString("sellerName", "");
-        float precio = args == null ? 0f : args.getFloat("publicationPrice", 0f);
+        double precio = args == null ? 0d : args.getDouble("publicationPrice", 0d);
 
         ((TextView) view.findViewById(R.id.textOfferPublication)).setText(titulo);
         ((TextView) view.findViewById(R.id.textOfferPublishedPrice))
-                .setText("Precio publicado: $" + String.format("%,.0f", precio));
+                .setText("Precio publicado: " + MoneyFormat.amount(precio));
         ((TextView) view.findViewById(R.id.textOfferSeller))
                 .setText(vendedor.isEmpty() ? "" : "Vendedor: " + vendedor);
         priceLayout = view.findViewById(R.id.inputOfferPriceLayout);
@@ -67,7 +66,7 @@ public class CreateOfferFragment extends Fragment {
         inputMessage = view.findViewById(R.id.inputOfferMessage);
         buttonSend = view.findViewById(R.id.buttonSendOffer);
         progress = view.findViewById(R.id.progressSendOffer);
-        inputPrice.setText(formatearPrecioEditable(precio));
+        inputPrice.setText(MoneyFormat.editableAmount(precio));
         buttonSend.setOnClickListener(v -> enviarOferta());
         view.findViewById(R.id.buttonOfferBack).setOnClickListener(
                 v -> Navigation.findNavController(v).popBackStack());
@@ -138,10 +137,4 @@ public class CreateOfferFragment extends Fragment {
         progress.setVisibility(loading ? View.VISIBLE : View.GONE);
     }
 
-    private String formatearPrecioEditable(float precio) {
-        if (precio == Math.rint(precio)) {
-            return String.format(Locale.US, "%.0f", precio);
-        }
-        return String.format(Locale.US, "%.2f", precio);
-    }
 }

@@ -7,6 +7,7 @@ import com.da_grupo9.ronda.data.model.PublicacionesResponse;
 import com.da_grupo9.ronda.data.model.ReviewItem;
 import com.da_grupo9.ronda.data.model.ReviewsResponse;
 import com.da_grupo9.ronda.data.repository.PublicacionRepository;
+import com.da_grupo9.ronda.util.MoneyFormat;
 import com.google.android.material.color.MaterialColors;
 
 import android.graphics.Color;
@@ -226,8 +227,8 @@ public class PublicProfileFragment extends Fragment {
                 publicacionView.setText(
                         "• "
                                 + publicacion.getTitulo()
-                                + " - $"
-                                + String.format("%,.0f", publicacion.getPrecio())
+                                + " - "
+                                + MoneyFormat.amount(publicacion.getPrecio())
                 );
 
                 publicacionView.setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_BodyLarge);

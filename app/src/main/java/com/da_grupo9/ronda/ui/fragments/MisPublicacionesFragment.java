@@ -3,6 +3,7 @@ package com.da_grupo9.ronda.ui.fragments;
 import com.da_grupo9.ronda.R;
 import com.da_grupo9.ronda.data.model.Publicacion;
 import com.da_grupo9.ronda.data.repository.PublicacionRepository;
+import com.da_grupo9.ronda.util.MoneyFormat;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.color.MaterialColors;
@@ -117,7 +118,7 @@ public class MisPublicacionesFragment extends Fragment {
         titulo.setTextColor(colorOnSurface);
 
         TextView precio = new TextView(requireContext());
-        precio.setText("Precio: $" + publicacion.getPrecio());
+        precio.setText("Precio: " + MoneyFormat.amount(publicacion.getPrecio()));
         precio.setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_TitleSmall);
         precio.setTextColor(colorPrice);
         precio.setPaddingRelative(0, dpToPx(4), 0, 0);

@@ -20,6 +20,7 @@ import com.da_grupo9.ronda.data.model.FavoritesResponse;
 import com.da_grupo9.ronda.data.model.FavoritesReadResponse;
 import com.da_grupo9.ronda.data.remote.FavoritesApi;
 import com.da_grupo9.ronda.util.ApiErrorMessage;
+import com.da_grupo9.ronda.util.MoneyFormat;
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.color.MaterialColors;
 
@@ -210,7 +211,7 @@ public class FavoritesFragment extends Fragment {
 
         TextView precio = new TextView(requireContext());
         precio.setText(
-                "Precio: $" + String.format("%,.0f", favorito.getPrice())
+                "Precio: " + MoneyFormat.amount(favorito.getPrice())
         );
         precio.setTextAppearance(
                 com.google.android.material.R.style.TextAppearance_Material3_TitleSmall

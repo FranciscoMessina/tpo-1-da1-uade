@@ -20,7 +20,7 @@ public final class OperationFormat {
     }
 
     public static String amount(double amount) {
-        return "$" + String.format("%,.0f", amount);
+        return MoneyFormat.amount(amount);
     }
 
     public static String typeLabel(Operation operation) {

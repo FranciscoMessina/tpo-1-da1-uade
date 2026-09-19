@@ -4,6 +4,7 @@ import com.da_grupo9.ronda.R;
 import com.da_grupo9.ronda.data.model.Publicacion;
 import com.da_grupo9.ronda.data.repository.PublicacionRepository;
 import com.da_grupo9.ronda.util.NetworkMonitor;
+import com.da_grupo9.ronda.util.MoneyFormat;
 import com.da_grupo9.ronda.data.remote.FavoritesApi;
 import com.da_grupo9.ronda.util.ApiErrorMessage;
 
@@ -235,7 +236,7 @@ public class DetailFragment extends Fragment {
 
     private void poblarDatos(Publicacion publicacion) {
         textDetailTitulo.setText(publicacion.getTitulo());
-        textDetailPrecio.setText("Precio: $" + String.format("%,.0f", publicacion.getPrecio()));
+        textDetailPrecio.setText("Precio: " + MoneyFormat.amount(publicacion.getPrecio()));
         textDetailEstado.setText("Estado: " + publicacion.getEstado());
         textDetailCategoria.setText("Categoría: " + publicacion.getCategoria());
         textDetailZona.setText("Zona de entrega: " + publicacion.getZona());
@@ -322,7 +323,7 @@ public class DetailFragment extends Fragment {
                 Bundle bundle = new Bundle();
                 bundle.putString("publicationId", publicacionCargada.getId());
                 bundle.putString("publicationTitle", publicacionCargada.getTitulo());
-                bundle.putFloat("publicationPrice", (float) publicacionCargada.getPrecio());
+                bundle.putDouble("publicationPrice", publicacionCargada.getPrecio());
                 bundle.putString("sellerName", publicacionCargada.getVendedorNombre());
                 Navigation.findNavController(v).navigate(
                         R.id.action_detailFragment_to_createOfferFragment,
