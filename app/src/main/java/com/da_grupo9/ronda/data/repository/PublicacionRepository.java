@@ -22,6 +22,7 @@ import com.da_grupo9.ronda.data.remote.PublicacionApi;
 import com.da_grupo9.ronda.util.ImageStorageManager;
 import com.da_grupo9.ronda.util.NetworkMonitor;
 import com.da_grupo9.ronda.util.ApiErrorMessage;
+import com.da_grupo9.ronda.util.ApiError;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -49,11 +50,13 @@ public class PublicacionRepository {
     public interface Resultado<T> {
         void onSuccess(T data);
         void onError(String mensaje);
+        default void onError(ApiError error) { onError(error.getMessage()); }
     }
 
     public interface ResultadoPagina {
         void onSuccess(List<Publicacion> items, int page, int totalPages, int total);
         void onError(String mensaje);
+        default void onError(ApiError error) { onError(error.getMessage()); }
     }
 
     private final PublicacionApi api;
@@ -125,7 +128,7 @@ public class PublicacionRepository {
                     int total = pagination != null ? pagination.getTotal() : items.size();
                     mainHandler.post(() -> resultado.onSuccess(items, responsePage, totalPages, total));
                 } else {
-                    resultado.onError(ApiErrorMessage.from(response, "El servidor respondió con código " + response.code()));
+                    resultado.onError(ApiError.from(response, "El servidor respondió con código " + response.code()));
                 }
             }
 
@@ -328,7 +331,7 @@ public class PublicacionRepository {
         api.getPublicacionesPropias().enqueue(new Callback<PublicacionesResponse>() {
             @Override public void onResponse(Call<PublicacionesResponse> call, Response<PublicacionesResponse> response) {
                 if (response.isSuccessful() && response.body() != null) resultado.onSuccess(response.body().getItems());
-                else resultado.onError(ApiErrorMessage.from(response, "El servidor respondió con código " + response.code()));
+                else resultado.onError(ApiError.from(response, "El servidor respondió con código " + response.code()));
             }
             @Override public void onFailure(Call<PublicacionesResponse> call, Throwable error) {
                 resultado.onError(error instanceof IOException ? "No se pudo conectar con el servidor" : "No se pudo procesar la respuesta del servidor");
@@ -422,7 +425,7 @@ public class PublicacionRepository {
         api.subirImagen(part).enqueue(new Callback<UploadImageResponse>() {
             @Override public void onResponse(Call<UploadImageResponse> call, Response<UploadImageResponse> response) {
                 if (!response.isSuccessful() || response.body() == null || response.body().getUrl() == null) {
-                    resultado.onError(ApiErrorMessage.from(response,
+                    resultado.onError(ApiError.from(response,
                             "No se pudo subir una imagen (código " + response.code() + ")"));
                     return;
                 }
@@ -442,7 +445,7 @@ public class PublicacionRepository {
                 if (response.isSuccessful() && response.body() != null) {
                     resultado.onSuccess(response.body());
                 } else {
-                    resultado.onError(ApiErrorMessage.from(response, "El servidor respondió con código " + response.code()));
+                    resultado.onError(ApiError.from(response, "El servidor respondió con código " + response.code()));
                 }
             }
 

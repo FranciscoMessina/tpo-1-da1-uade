@@ -7,7 +7,7 @@ import com.da_grupo9.ronda.data.model.OffersResponse;
 import com.da_grupo9.ronda.data.model.RespondCounterRequest;
 import com.da_grupo9.ronda.data.model.RespondOfferRequest;
 import com.da_grupo9.ronda.data.remote.OffersApi;
-import com.da_grupo9.ronda.util.ApiErrorMessage;
+import com.da_grupo9.ronda.util.ApiError;
 import com.da_grupo9.ronda.util.NetworkMonitor;
 
 import java.io.IOException;
@@ -25,6 +25,7 @@ public class OffersRepository {
     public interface Result<T> {
         void onSuccess(T data);
         void onError(String message);
+        default void onError(ApiError error) { onError(error.getMessage()); }
     }
 
     private final OffersApi api;
@@ -42,7 +43,7 @@ public class OffersRepository {
         api.getMyOffers().enqueue(new Callback<OffersResponse>() {
             @Override public void onResponse(Call<OffersResponse> call, Response<OffersResponse> response) {
                 if (response.isSuccessful() && response.body() != null) result.onSuccess(response.body().getItems());
-                else result.onError(ApiErrorMessage.from(response, "No se pudieron cargar las ofertas"));
+                else result.onError(ApiError.from(response, "No se pudieron cargar las ofertas"));
             }
             @Override public void onFailure(Call<OffersResponse> call, Throwable error) { result.onError(networkError(error)); }
         });
@@ -80,7 +81,7 @@ public class OffersRepository {
         call.enqueue(new Callback<T>() {
             @Override public void onResponse(Call<T> call, Response<T> response) {
                 if (response.isSuccessful()) result.onSuccess(response.body());
-                else result.onError(ApiErrorMessage.from(response, "No se pudo realizar la acción"));
+                else result.onError(ApiError.from(response, "No se pudo realizar la acción"));
             }
             @Override public void onFailure(Call<T> call, Throwable error) { result.onError(networkError(error)); }
         });

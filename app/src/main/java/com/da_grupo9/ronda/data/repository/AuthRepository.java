@@ -5,7 +5,7 @@ import com.da_grupo9.ronda.data.model.LoginResponse;
 import com.da_grupo9.ronda.data.model.Perfil;
 import com.da_grupo9.ronda.data.remote.AuthApi;
 import com.da_grupo9.ronda.data.remote.ProfileApi;
-import com.da_grupo9.ronda.util.ApiErrorMessage;
+import com.da_grupo9.ronda.util.ApiError;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -18,7 +18,11 @@ import retrofit2.Response;
 
 @Singleton
 public class AuthRepository {
-    public interface Resultado { void onSuccess(); void onError(String mensaje); }
+    public interface Resultado {
+        void onSuccess();
+        void onError(String mensaje);
+        default void onError(ApiError error) { onError(error.getMessage()); }
+    }
     private final AuthApi api;
     private final ProfileApi profileApi;
     private final SessionManager sessionManager;
@@ -79,7 +83,7 @@ public class AuthRepository {
             @Override public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
                 sessionManager.clear();
                 if (response.isSuccessful()) result.onSuccess();
-                else result.onError(ApiErrorMessage.from(response, "No se pudo cerrar la sesión en el servidor"));
+                else result.onError(ApiError.from(response, "No se pudo cerrar la sesión en el servidor"));
             }
 
             @Override public void onFailure(Call<ResponseBody> call, Throwable error) {
@@ -102,10 +106,11 @@ public class AuthRepository {
                     return;
                 }
 
-                if (response.code() == 401 || response.code() == 403) {
+                ApiError apiError = ApiError.from(response, "La sesión guardada ya no es válida");
+                if (apiError.isSessionInvalid()) {
                     sessionManager.clear();
                 }
-                result.onError(ApiErrorMessage.from(response, "La sesión guardada ya no es válida"));
+                result.onError(apiError);
             }
 
             @Override public void onFailure(Call<Perfil> call, Throwable error) {
@@ -135,7 +140,7 @@ public class AuthRepository {
                     if (passwordStatus != null) sessionManager.setPasswordStatus(passwordStatus);
                     result.onSuccess();
                 } else {
-                    result.onError(ApiErrorMessage.from(response, "El servidor respondió con código " + response.code()));
+                    result.onError(ApiError.from(response, "El servidor respondió con código " + response.code()));
                 }
             }
             @Override public void onFailure(Call<LoginResponse> call, Throwable error) {
@@ -148,7 +153,7 @@ public class AuthRepository {
         call.enqueue(new Callback<ResponseBody>() {
             @Override public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
                 if (response.isSuccessful()) result.onSuccess();
-                else result.onError(ApiErrorMessage.from(response, "El servidor respondió con código " + response.code()));
+                else result.onError(ApiError.from(response, "El servidor respondió con código " + response.code()));
             }
             @Override public void onFailure(Call<ResponseBody> call, Throwable error) {
                 result.onError(error instanceof IOException ? "No se pudo conectar con el servidor" : "Respuesta inválida del servidor");

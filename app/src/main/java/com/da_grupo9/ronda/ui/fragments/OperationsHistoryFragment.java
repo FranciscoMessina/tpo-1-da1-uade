@@ -105,6 +105,10 @@ public class OperationsHistoryFragment extends Fragment {
 
         getChildFragmentManager().setFragmentResultListener(RatingBottomSheet.REQUEST_KEY,
                 getViewLifecycleOwner(), (key, result) -> {
+                    if (result.getBoolean(RatingBottomSheet.RESULT_REFRESH_ONLY, false)) {
+                        cargar();
+                        return;
+                    }
                     String id = result.getString(RatingBottomSheet.RESULT_OPERATION_ID);
                     for (Operation operation : operations) {
                         if (operation.getId() != null && operation.getId().equals(id)) {

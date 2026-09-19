@@ -19,6 +19,7 @@ import com.da_grupo9.ronda.R;
 import com.da_grupo9.ronda.data.model.Offer;
 import com.da_grupo9.ronda.data.model.OfferActionResponse;
 import com.da_grupo9.ronda.data.repository.OffersRepository;
+import com.da_grupo9.ronda.util.ApiError;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.button.MaterialButtonToggleGroup;
 import com.google.android.material.card.MaterialCardView;
@@ -214,6 +215,10 @@ public class OffersFragment extends Fragment {
                 if (!isAdded()) return;
                 setLoading(false);
                 Toast.makeText(requireContext(), message, Toast.LENGTH_LONG).show();
+            }
+            @Override public void onError(ApiError error) {
+                onError(error.getMessage());
+                if (error.isOfferNoLongerActionable()) loadOffers();
             }
         };
     }

@@ -106,7 +106,9 @@ public class OperationDetailFragment extends Fragment {
                 .show(getChildFragmentManager(), RatingBottomSheet.TAG));
         getChildFragmentManager().setFragmentResultListener(RatingBottomSheet.REQUEST_KEY,
                 getViewLifecycleOwner(), (key, result) -> {
-                    operation.setMyRating(result.getInt(RatingBottomSheet.RESULT_RATING));
+                    if (!result.getBoolean(RatingBottomSheet.RESULT_REFRESH_ONLY, false)) {
+                        operation.setMyRating(result.getInt(RatingBottomSheet.RESULT_RATING));
+                    }
                     mostrarCalificacion();
                     cargarContraparte();
                     refrescarOperacion();

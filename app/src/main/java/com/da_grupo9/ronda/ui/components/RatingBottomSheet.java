@@ -13,6 +13,7 @@ import androidx.annotation.Nullable;
 import com.da_grupo9.ronda.R;
 import com.da_grupo9.ronda.data.repository.ProfileRepository;
 import com.da_grupo9.ronda.data.repository.PublicacionRepository;
+import com.da_grupo9.ronda.util.ApiError;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
@@ -32,6 +33,7 @@ public class RatingBottomSheet extends BottomSheetDialogFragment {
     public static final String REQUEST_KEY = "operation_rating";
     public static final String RESULT_OPERATION_ID = "operationId";
     public static final String RESULT_RATING = "rating";
+    public static final String RESULT_REFRESH_ONLY = "refreshOnly";
 
     private static final String ARG_OPERATION_ID = "operationId";
     private static final String ARG_COUNTERPARTY = "counterparty";
@@ -101,6 +103,19 @@ public class RatingBottomSheet extends BottomSheetDialogFragment {
                         if (!isAdded()) return;
                         setLoading(false);
                         mostrarError(mensaje);
+                    }
+
+                    @Override public void onError(ApiError error) {
+                        if (!error.isReviewAlreadySubmitted()) {
+                            onError(error.getMessage());
+                            return;
+                        }
+                        if (!isAdded()) return;
+                        Bundle result = new Bundle();
+                        result.putString(RESULT_OPERATION_ID, operationId);
+                        result.putBoolean(RESULT_REFRESH_ONLY, true);
+                        getParentFragmentManager().setFragmentResult(REQUEST_KEY, result);
+                        dismissAllowingStateLoss();
                     }
                 });
     }
