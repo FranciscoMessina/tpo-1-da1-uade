@@ -1,12 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+
+    <!-- Escala de espaciado: única fuente de verdad para márgenes y paddings. -->
     <dimen name="spacing_xs">4dp</dimen>
     <dimen name="spacing_sm">8dp</dimen>
     <dimen name="spacing_md">16dp</dimen>
     <dimen name="spacing_lg">24dp</dimen>
     <dimen name="spacing_xl">32dp</dimen>
 
+    <!-- Radios de esquina: un radio para contenedores y otro para controles. -->
     <dimen name="corner_radius_card">16dp</dimen>
     <dimen name="corner_radius_button">12dp</dimen>
-    <dimen name="card_elevation">2dp</dimen>
+    <dimen name="corner_radius_field">12dp</dimen>
+
+    <!-- Diseño plano: sin sombras en ninguna superficie. La jerarquía se da con borde y color. -->
+    <dimen name="card_elevation">0dp</dimen>
+    <dimen name="stroke_width">1dp</dimen>
+
+    <!-- Separación vertical entre elementos de una lista. -->
+    <dimen name="list_item_spacing">@dimen/spacing_sm</dimen>
+
+    <!-- Tamaños fijos reutilizados por varias pantallas. -->
+    <dimen name="avatar_size">96dp</dimen>
+    <dimen name="icon_size">24dp</dimen>
+    <dimen name="touch_target_min">48dp</dimen>
+    <dimen name="gallery_height">220dp</dimen>
+    <dimen name="field_min_height">56dp</dimen>
+
 </resources>

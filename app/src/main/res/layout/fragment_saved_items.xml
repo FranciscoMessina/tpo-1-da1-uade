@@ -4,12 +4,17 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-
+    <TextView
+        style="@style/Widget.Ronda.Text.ScreenTitle"
+        android:paddingHorizontal="@dimen/spacing_md"
+        android:paddingTop="@dimen/spacing_md"
+        android:text="@string/nav_guardados" />
 
     <com.google.android.material.tabs.TabLayout
         android:id="@+id/savedItemsTabs"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/spacing_sm" />
 
     <FrameLayout
         android:id="@+id/savedItemsContent"

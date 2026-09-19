@@ -4,19 +4,15 @@ import com.da_grupo9.ronda.R;
 import com.da_grupo9.ronda.data.repository.RepositoryResult;
 import com.da_grupo9.ronda.data.model.Publicacion;
 import com.da_grupo9.ronda.data.repository.PublicacionRepository;
+import com.da_grupo9.ronda.ui.components.EmptyStateView;
+import com.da_grupo9.ronda.ui.components.PublicationCardBinder;
 import com.da_grupo9.ronda.util.MoneyFormat;
-import com.google.android.material.button.MaterialButton;
-import com.google.android.material.card.MaterialCardView;
-import com.google.android.material.color.MaterialColors;
 
-import android.graphics.Color;
 import android.os.Bundle;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
-import android.widget.TextView;
 
 import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
@@ -60,8 +56,6 @@ public class MisPublicacionesFragment extends Fragment {
         publicacionesContainer =
                 view.findViewById(R.id.misPublicacionesContainer);
 
-
-
         if (getArguments() != null) {
             email = getArguments().getString("email", "");
         }
@@ -101,157 +95,65 @@ public class MisPublicacionesFragment extends Fragment {
         }
     }
 
+    /**
+     * Usa la misma tarjeta que Inicio y Favoritos; lo propio de esta pantalla son
+     * el estado de la publicación y los botones de gestión.
+     */
     private void agregarPublicacion(Publicacion publicacion) {
-        MaterialCardView tarjeta = crearTarjeta();
+        View tarjeta = PublicationCardBinder.inflate(getLayoutInflater(), publicacionesContainer);
+        PublicationCardBinder.bind(
+                tarjeta,
+                publicacion.getTitulo(),
+                publicacion.getDescripcion(),
+                MoneyFormat.amount(publicacion.getPrecio()),
+                publicacion.getEstado(),
+                publicacion.getCategoria(),
+                publicacion.getZona(),
+                null
+        );
+        PublicationCardBinder.setStatus(tarjeta, publicacion.getEstadoPublicacionVisible());
+        PublicationCardBinder.favoriteButton(tarjeta).setVisibility(View.GONE);
 
-        LinearLayout contenido = new LinearLayout(requireContext());
-        contenido.setOrientation(LinearLayout.VERTICAL);
-        contenido.setPadding(0, 0, 0, dpToPx(12));
-        tarjeta.addView(contenido);
-
-        int colorOnSurface = MaterialColors.getColor(requireContext(), com.google.android.material.R.attr.colorOnSurface, Color.BLACK);
-        int colorOnSurfaceVariant = MaterialColors.getColor(requireContext(), com.google.android.material.R.attr.colorOnSurfaceVariant, Color.DKGRAY);
-        int colorPrice = androidx.core.content.ContextCompat.getColor(requireContext(), R.color.price);
-
-        TextView titulo = new TextView(requireContext());
-        titulo.setText(publicacion.getTitulo());
-        titulo.setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_TitleMedium);
-        titulo.setTextColor(colorOnSurface);
-
-        TextView precio = new TextView(requireContext());
-        precio.setText("Precio: " + MoneyFormat.amount(publicacion.getPrecio()));
-        precio.setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_TitleSmall);
-        precio.setTextColor(colorPrice);
-        precio.setPaddingRelative(0, dpToPx(4), 0, 0);
-
-        TextView estado = new TextView(requireContext());
-        estado.setText("Estado de publicación: " + publicacion.getEstadoPublicacionVisible());
-        estado.setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_BodyMedium);
-        estado.setTextColor(colorOnSurfaceVariant);
-        estado.setPaddingRelative(0, dpToPx(4), 0, 0);
-
-        contenido.addView(titulo);
-        contenido.addView(precio);
-        contenido.addView(estado);
-
-        MaterialButton buttonDetalle = new MaterialButton(requireContext(), null,
-                com.google.android.material.R.attr.materialButtonOutlinedStyle);
-        buttonDetalle.setText("Ver detalle");
-        buttonDetalle.setIcon(androidx.core.content.ContextCompat.getDrawable(requireContext(), R.drawable.ic_chevron_right));
-        LinearLayout.LayoutParams detalleParams = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT);
-        detalleParams.topMargin = dpToPx(12);
-        buttonDetalle.setLayoutParams(detalleParams);
-        buttonDetalle.setOnClickListener(v -> {
+        tarjeta.setOnClickListener(v -> {
             Bundle args = new Bundle();
             args.putString("publicacionId", publicacion.getId());
             args.putString("usuarioActualEmail", email);
             Navigation.findNavController(v).navigate(
                     R.id.action_misPublicacionesFragment_to_detailFragment, args);
         });
-        contenido.addView(buttonDetalle);
 
+        agregarAccionesDeGestion(tarjeta, publicacion);
+
+        publicacionesContainer.addView(tarjeta);
+    }
+
+    private void agregarAccionesDeGestion(View tarjeta, Publicacion publicacion) {
         String estadoPublicacion = publicacion.getEstadoPublicacion();
-        LinearLayout acciones = new LinearLayout(requireContext());
-        acciones.setOrientation(LinearLayout.HORIZONTAL);
-        acciones.setGravity(Gravity.CENTER_VERTICAL);
 
         if (!"sold".equals(estadoPublicacion)) {
-            MaterialButton buttonEditar = new MaterialButton(requireContext(), null,
-                    com.google.android.material.R.attr.materialButtonOutlinedStyle);
-            buttonEditar.setText("Editar");
-            buttonEditar.setIcon(androidx.core.content.ContextCompat.getDrawable(requireContext(), R.drawable.ic_edit));
-            buttonEditar.setLayoutParams(botonAccionParams(false));
-            buttonEditar.setOnClickListener(v -> {
+            PublicationCardBinder.addAction(tarjeta, "Editar", R.drawable.ic_edit, v -> {
                 Bundle args = new Bundle();
                 args.putString("email", email);
                 args.putString("publicacionId", publicacion.getId());
                 Navigation.findNavController(v).navigate(
                         R.id.action_misPublicacionesFragment_to_publicarArticuloFragment, args);
             });
-            acciones.addView(buttonEditar);
         }
 
         if ("active".equals(estadoPublicacion)) {
-            MaterialButton buttonPausar = new MaterialButton(requireContext(), null, com.google.android.material.R.attr.materialButtonOutlinedStyle);
-            buttonPausar.setText("Pausar");
-            buttonPausar.setIcon(androidx.core.content.ContextCompat.getDrawable(requireContext(), R.drawable.ic_pause));
-            buttonPausar.setLayoutParams(botonAccionParams(true));
-            buttonPausar.setOnClickListener(v -> {
-                publicacionRepository.cambiarEstadoPublicacion(
-                        publicacion.getId(),
-                        "paused",
-                        recargarAlFinalizar()
-                );
-            });
-            acciones.addView(buttonPausar);
+            PublicationCardBinder.addAction(tarjeta, "Pausar", R.drawable.ic_pause, v ->
+                    publicacionRepository.cambiarEstadoPublicacion(
+                            publicacion.getId(), "paused", recargarAlFinalizar()));
 
         } else if ("paused".equals(estadoPublicacion)) {
-            MaterialButton buttonReactivar = new MaterialButton(requireContext(), null, com.google.android.material.R.attr.materialButtonOutlinedStyle);
-            buttonReactivar.setText("Reactivar");
-            buttonReactivar.setIcon(androidx.core.content.ContextCompat.getDrawable(requireContext(), R.drawable.ic_play_arrow));
-            buttonReactivar.setLayoutParams(botonAccionParams(true));
-            buttonReactivar.setOnClickListener(v -> {
-                publicacionRepository.cambiarEstadoPublicacion(
-                        publicacion.getId(),
-                        "active",
-                        recargarAlFinalizar()
-                );
-            });
-            acciones.addView(buttonReactivar);
+            PublicationCardBinder.addAction(tarjeta, "Reactivar", R.drawable.ic_play_arrow, v ->
+                    publicacionRepository.cambiarEstadoPublicacion(
+                            publicacion.getId(), "active", recargarAlFinalizar()));
         }
-
-        if (acciones.getChildCount() > 0) contenido.addView(acciones);
-
-        publicacionesContainer.addView(tarjeta);
     }
 
-    private LinearLayout.LayoutParams botonAccionParams(boolean conMargenInicial) {
-        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-                0,
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                1f
-        );
-        params.topMargin = dpToPx(12);
-        if (conMargenInicial) params.setMarginStart(dpToPx(8));
-        return params;
-    }
-
-    private MaterialCardView crearTarjeta() {
-        MaterialCardView tarjeta = new MaterialCardView(requireContext());
-
-        tarjeta.setRadius(getResources().getDimension(R.dimen.corner_radius_card));
-        tarjeta.setCardElevation(getResources().getDimension(R.dimen.card_elevation));
-        tarjeta.setContentPadding(dpToPx(16), dpToPx(16), dpToPx(16), dpToPx(16));
-
-        LinearLayout.LayoutParams parametros = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-        );
-
-        parametros.setMargins(0, 0, 0, dpToPx(12));
-        tarjeta.setLayoutParams(parametros);
-
-        return tarjeta;
-    }
-
-    private TextView crearMensajeVacio(String texto) {
-        TextView mensaje = new TextView(requireContext());
-
-        mensaje.setText(texto);
-        mensaje.setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_BodyLarge);
-        mensaje.setTextColor(
-                MaterialColors.getColor(requireContext(), com.google.android.material.R.attr.colorOnSurfaceVariant, Color.DKGRAY)
-        );
-        mensaje.setGravity(Gravity.CENTER);
-        mensaje.setPadding(dpToPx(16), dpToPx(32), dpToPx(16), dpToPx(32));
-
-        return mensaje;
-    }
-
-    private int dpToPx(int dp) {
-        return Math.round(dp * getResources().getDisplayMetrics().density);
+    private View crearMensajeVacio(String texto) {
+        return EmptyStateView.create(getLayoutInflater(), publicacionesContainer, texto);
     }
 
     private RepositoryResult<Publicacion> recargarAlFinalizar() {

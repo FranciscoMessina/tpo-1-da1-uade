@@ -6,15 +6,9 @@
     android:orientation="vertical"
     android:padding="@dimen/spacing_md">
 
-
-
     <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="Mis publicaciones"
-        android:textAppearance="@style/TextAppearance.Material3.HeadlineSmall"
-        android:textColor="?attr/colorOnSurface" />
+        style="@style/Widget.Ronda.Text.ScreenTitle"
+        android:text="@string/nav_mis_publicaciones" />
 
     <ScrollView
         android:layout_width="match_parent"

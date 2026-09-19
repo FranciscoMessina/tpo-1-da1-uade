@@ -1,6 +1,8 @@
 package com.da_grupo9.ronda.ui.fragments;
 
 import com.da_grupo9.ronda.R;
+import com.da_grupo9.ronda.ui.components.EmptyStateView;
+import com.da_grupo9.ronda.ui.components.PublicationCardBinder;
 import com.da_grupo9.ronda.data.repository.RepositoryResult;
 import com.da_grupo9.ronda.data.model.Publicacion;
 import com.da_grupo9.ronda.data.model.PublicUser;
@@ -9,15 +11,11 @@ import com.da_grupo9.ronda.data.model.ReviewItem;
 import com.da_grupo9.ronda.data.model.ReviewsResponse;
 import com.da_grupo9.ronda.data.repository.PublicacionRepository;
 import com.da_grupo9.ronda.util.MoneyFormat;
-import com.google.android.material.color.MaterialColors;
 
-import android.graphics.Color;
 import android.os.Bundle;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.util.TypedValue;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -144,7 +142,7 @@ public class PublicProfileFragment extends Fragment {
                 cargandoResenas = false;
                 buttonMasCalificaciones.setEnabled(true);
                 if (pagina == 1) {
-                    containerCalificaciones.addView(crearMensajeVacio(mensaje));
+                    containerCalificaciones.addView(crearMensajeVacio(containerCalificaciones, mensaje));
                     buttonMasCalificaciones.setText("Reintentar");
                     buttonMasCalificaciones.setVisibility(View.VISIBLE);
                 } else {
@@ -160,7 +158,7 @@ public class PublicProfileFragment extends Fragment {
         buttonMasCalificaciones.setText("Ver más calificaciones");
 
         if (resenas.isEmpty() && paginaResenas == 1) {
-            containerCalificaciones.addView(crearMensajeVacio("El usuario todavía no recibió calificaciones."));
+            containerCalificaciones.addView(crearMensajeVacio(containerCalificaciones, "El usuario todavía no recibió calificaciones."));
             return;
         }
 
@@ -208,84 +206,53 @@ public class PublicProfileFragment extends Fragment {
             }
             @Override public void onError(String mensaje) {
                 if (!isAdded()) return;
-                container.addView(crearMensajeVacio(mensaje));
+                container.addView(crearMensajeVacio(container, mensaje));
             }
         });
     }
 
+    /** Las publicaciones del vendedor usan la misma tarjeta que Inicio y Favoritos. */
     private void renderizarPublicacionesActivas(List<Publicacion> publicaciones, LinearLayout container) {
         int cantidad = 0;
 
-        int colorOnSurface = MaterialColors.getColor(requireContext(), com.google.android.material.R.attr.colorOnSurface, Color.BLACK);
-
         for (Publicacion publicacion : publicaciones) {
+            View tarjeta = PublicationCardBinder.inflate(getLayoutInflater(), container);
+            PublicationCardBinder.bind(
+                    tarjeta,
+                    publicacion.getTitulo(),
+                    publicacion.getDescripcion(),
+                    MoneyFormat.amount(publicacion.getPrecio()),
+                    publicacion.getEstado(),
+                    publicacion.getCategoria(),
+                    publicacion.getZona(),
+                    null
+            );
+            PublicationCardBinder.favoriteButton(tarjeta).setVisibility(View.GONE);
 
-            {
-
-                TextView publicacionView =
-                        new TextView(requireContext());
-
-                publicacionView.setText(
-                        "• "
-                                + publicacion.getTitulo()
-                                + " - "
-                                + MoneyFormat.amount(publicacion.getPrecio())
+            tarjeta.setContentDescription("Ver detalle de " + publicacion.getTitulo());
+            tarjeta.setOnClickListener(v -> {
+                if (publicacion.getId() == null || publicacion.getId().isEmpty()) return;
+                Bundle arguments = new Bundle();
+                arguments.putString("publicacionId", publicacion.getId());
+                Navigation.findNavController(v).navigate(
+                        R.id.action_publicProfileFragment_to_detailFragment,
+                        arguments
                 );
+            });
 
-                publicacionView.setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_BodyLarge);
-                publicacionView.setTextColor(colorOnSurface);
-                publicacionView.setPaddingRelative(0, dpToPx(6), 0, dpToPx(6));
-                publicacionView.setCompoundDrawablesRelativeWithIntrinsicBounds(
-                        0, 0, R.drawable.ic_chevron_right, 0);
-                publicacionView.setCompoundDrawablePadding(dpToPx(8));
-                publicacionView.setClickable(true);
-                publicacionView.setFocusable(true);
-                publicacionView.setContentDescription("Ver detalle de " + publicacion.getTitulo());
-
-                TypedValue selectableBackground = new TypedValue();
-                if (requireContext().getTheme().resolveAttribute(
-                        android.R.attr.selectableItemBackground, selectableBackground, true)) {
-                    publicacionView.setBackgroundResource(selectableBackground.resourceId);
-                }
-
-                publicacionView.setOnClickListener(v -> {
-                    if (publicacion.getId() == null || publicacion.getId().isEmpty()) return;
-                    Bundle arguments = new Bundle();
-                    arguments.putString("publicacionId", publicacion.getId());
-                    Navigation.findNavController(v).navigate(
-                            R.id.action_publicProfileFragment_to_detailFragment,
-                            arguments
-                    );
-                });
-
-                container.addView(publicacionView);
-
-                cantidad++;
-            }
+            container.addView(tarjeta);
+            cantidad++;
         }
 
         if (cantidad == 0) {
-            container.addView(crearMensajeVacio("El usuario no tiene publicaciones activas."));
+            container.addView(crearMensajeVacio(container, "El usuario no tiene publicaciones activas."));
         }
     }
 
-    private TextView crearMensajeVacio(String texto) {
-        TextView mensaje = new TextView(requireContext());
-
-        mensaje.setText(texto);
-        mensaje.setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_BodyLarge);
-        mensaje.setTextColor(
-                MaterialColors.getColor(requireContext(), com.google.android.material.R.attr.colorOnSurfaceVariant, Color.DKGRAY)
-        );
-        mensaje.setGravity(Gravity.CENTER);
-        mensaje.setPadding(dpToPx(16), dpToPx(24), dpToPx(16), dpToPx(24));
-
-        return mensaje;
+    private View crearMensajeVacio(LinearLayout container, String texto) {
+        return EmptyStateView.create(getLayoutInflater(), container, texto);
     }
 
-    private int dpToPx(int dp) {
-        return Math.round(dp * getResources().getDisplayMetrics().density);
-    }
 
     private String formatearFecha(String fecha) {
         if (fecha == null || fecha.isEmpty()) return "sin datos";

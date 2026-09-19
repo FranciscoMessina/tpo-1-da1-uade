@@ -215,7 +215,6 @@ public class OperationsHistoryFragment extends Fragment {
                         R.id.action_operationsHistoryFragment_to_operationDetailFragment, args);
             };
             card.setOnClickListener(abrirDetalle);
-            card.findViewById(R.id.buttonOperationDetail).setOnClickListener(abrirDetalle);
 
             View buttonRate = card.findViewById(R.id.buttonOperationRate);
             buttonRate.setVisibility(operation.canRate() ? View.VISIBLE : View.GONE);

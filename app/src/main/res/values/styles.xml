@@ -1,36 +1,199 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <!--
+        Sistema de estilos de Ronda.
+
+        Reglas:
+        - Diseño plano: ninguna superficie proyecta sombra. La jerarquía se construye
+          con borde (colorOutlineVariant), color de fondo y tipografía.
+        - Cada rol de UI tiene un único estilo. Si dos pantallas hacen lo mismo,
+          usan el mismo estilo.
+    -->
+
+    <!-- ============================ Botones ============================ -->
+
+    <!-- Acción principal de la pantalla. Una sola por pantalla. -->
     <style name="Widget.Ronda.Button" parent="Widget.Material3.Button">
         <item name="cornerRadius">@dimen/corner_radius_button</item>
-        <item name="android:insetTop">4dp</item>
-        <item name="android:insetBottom">4dp</item>
+        <item name="android:insetTop">@dimen/spacing_xs</item>
+        <item name="android:insetBottom">@dimen/spacing_xs</item>
+        <item name="elevation">0dp</item>
+        <item name="android:stateListAnimator">@null</item>
     </style>
 
+    <!-- Acción secundaria: alternativas al mismo nivel que la principal. -->
     <style name="Widget.Ronda.Button.Outlined" parent="Widget.Material3.Button.OutlinedButton">
         <item name="cornerRadius">@dimen/corner_radius_button</item>
-        <item name="android:insetTop">4dp</item>
-        <item name="android:insetBottom">4dp</item>
+        <item name="android:insetTop">@dimen/spacing_xs</item>
+        <item name="android:insetBottom">@dimen/spacing_xs</item>
+        <item name="strokeWidth">@dimen/stroke_width</item>
+        <item name="elevation">0dp</item>
+        <item name="android:stateListAnimator">@null</item>
     </style>
 
+    <!-- Acción terciaria: navegación, enlaces y acciones de bajo peso. -->
     <style name="Widget.Ronda.Button.Text" parent="Widget.Material3.Button.TextButton">
-        <item name="android:insetTop">4dp</item>
-        <item name="android:insetBottom">4dp</item>
+        <item name="android:insetTop">@dimen/spacing_xs</item>
+        <item name="android:insetBottom">@dimen/spacing_xs</item>
+        <item name="elevation">0dp</item>
+        <item name="android:stateListAnimator">@null</item>
     </style>
+
+    <!-- Único estilo para "Volver": mismo icono, misma etiqueta, misma posición. -->
+    <style name="Widget.Ronda.Button.Back" parent="Widget.Ronda.Button.Text">
+        <item name="icon">@drawable/ic_arrow_back</item>
+        <item name="iconGravity">textStart</item>
+        <item name="android:text">@string/action_back</item>
+        <item name="android:layout_gravity">start</item>
+    </style>
+
+    <!-- Botón de solo icono (navegación de galería, controles compactos). -->
+    <style name="Widget.Ronda.Button.Icon" parent="Widget.Material3.Button.IconButton.Outlined">
+        <item name="cornerRadius">@dimen/corner_radius_button</item>
+        <item name="strokeWidth">@dimen/stroke_width</item>
+        <item name="elevation">0dp</item>
+        <item name="android:stateListAnimator">@null</item>
+    </style>
+
+    <!-- Botón dentro de un MaterialButtonToggleGroup. -->
+    <style name="Widget.Ronda.Button.Toggle" parent="Widget.Ronda.Button.Outlined">
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+    </style>
+
+    <!-- ========================= Campos de entrada ========================= -->
 
     <style name="Widget.Ronda.TextInputLayout" parent="Widget.Material3.TextInputLayout.OutlinedBox">
         <item name="shapeAppearanceOverlay">@style/ShapeAppearance.Ronda.TextField</item>
+        <item name="boxStrokeWidth">@dimen/stroke_width</item>
     </style>
 
     <style name="ShapeAppearance.Ronda.TextField" parent="">
-        <item name="cornerSize">12dp</item>
+        <item name="cornerSize">@dimen/corner_radius_field</item>
     </style>
 
-    <style name="Widget.Ronda.Card" parent="Widget.Material3.CardView.Elevated">
+    <!-- Selector desplegable. Imita al campo de texto para que un formulario se vea uniforme. -->
+    <style name="Widget.Ronda.Spinner" parent="Widget.AppCompat.Spinner">
+        <item name="android:background">@drawable/bg_field_spinner</item>
+        <item name="android:minHeight">@dimen/field_min_height</item>
+        <item name="android:paddingStart">@dimen/spacing_md</item>
+        <item name="android:paddingEnd">@dimen/spacing_xl</item>
+        <item name="android:popupBackground">?attr/colorSurface</item>
+    </style>
+
+    <!-- ========================== Contenedores ========================== -->
+
+    <!-- Tarjeta: contenedor plano con borde. Único estilo de tarjeta de la app. -->
+    <style name="Widget.Ronda.Card" parent="Widget.Material3.CardView.Outlined">
         <item name="cardCornerRadius">@dimen/corner_radius_card</item>
         <item name="cardElevation">@dimen/card_elevation</item>
         <item name="contentPadding">@dimen/spacing_md</item>
         <item name="cardBackgroundColor">?attr/colorSurface</item>
+        <item name="strokeColor">?attr/colorOutlineVariant</item>
+        <item name="strokeWidth">@dimen/stroke_width</item>
+    </style>
+
+    <!-- Tarjeta de lista: igual que la anterior, con la separación inferior estándar. -->
+    <style name="Widget.Ronda.Card.List" parent="Widget.Ronda.Card">
+        <item name="android:layout_marginBottom">@dimen/list_item_spacing</item>
+    </style>
+
+    <!-- Aviso de error persistente (por ejemplo, modo sin conexión). -->
+    <style name="Widget.Ronda.Card.Banner" parent="Widget.Ronda.Card">
+        <item name="cardBackgroundColor">?attr/colorErrorContainer</item>
+        <item name="strokeColor">?attr/colorError</item>
+        <item name="contentPadding">@dimen/spacing_sm</item>
+    </style>
+
+    <!-- Bloque anidado dentro de una tarjeta o sección (preguntas, sub-ítems). -->
+    <style name="Widget.Ronda.Card.Nested" parent="Widget.Ronda.Card">
+        <item name="cardBackgroundColor">@color/surface_container</item>
+        <item name="strokeWidth">0dp</item>
+        <item name="contentPadding">@dimen/spacing_sm</item>
+    </style>
+
+    <!-- ========================== Navegación ========================== -->
+
+    <style name="Widget.Ronda.BottomNavigation" parent="Widget.Material3.BottomNavigationView">
+        <item name="elevation">0dp</item>
+        <item name="android:background">?attr/colorSurface</item>
+    </style>
+
+    <style name="Widget.Ronda.TabLayout" parent="Widget.Material3.TabLayout">
+        <item name="elevation">0dp</item>
+        <item name="android:background">?attr/colorSurface</item>
+        <item name="tabIndicatorColor">?attr/colorPrimary</item>
+    </style>
+
+    <!-- =========================== Tipografía =========================== -->
+
+    <!-- Título de pantalla: mismo peso y color en todas las pantallas. -->
+    <style name="Widget.Ronda.Text.ScreenTitle" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textAppearance">@style/TextAppearance.Material3.HeadlineSmall</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+    </style>
+
+    <!-- Título de sección dentro de una pantalla. -->
+    <style name="Widget.Ronda.Text.SectionTitle" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textAppearance">@style/TextAppearance.Material3.TitleMedium</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+    </style>
+
+    <!-- Etiqueta de apoyo sobre un control sin hint propio (spinners). -->
+    <style name="Widget.Ronda.Text.FieldLabel" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textAppearance">@style/TextAppearance.Material3.LabelLarge</item>
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+        <item name="android:layout_marginBottom">@dimen/spacing_xs</item>
+    </style>
+
+    <!-- Texto de estado vacío / mensaje informativo centrado. -->
+    <style name="Widget.Ronda.Text.Empty" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textAppearance">@style/TextAppearance.Material3.BodyLarge</item>
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+        <item name="android:gravity">center</item>
+        <item name="android:paddingHorizontal">@dimen/spacing_md</item>
+        <item name="android:paddingVertical">@dimen/spacing_xl</item>
+    </style>
+
+    <!-- Precio: siempre el mismo color y peso, en tarjetas y en el detalle. -->
+    <style name="Widget.Ronda.Text.Price" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textAppearance">@style/TextAppearance.Material3.TitleSmall</item>
+        <item name="android:textColor">@color/price</item>
+    </style>
+
+    <!-- Precio destacado de la pantalla de detalle. -->
+    <style name="Widget.Ronda.Text.Price.Large" parent="Widget.Ronda.Text.Price">
+        <item name="android:textAppearance">@style/TextAppearance.Material3.TitleLarge</item>
+    </style>
+
+    <!-- Dato secundario de una ficha (zona, categoría, fecha…). -->
+    <style name="Widget.Ronda.Text.Meta" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textAppearance">@style/TextAppearance.Material3.BodyMedium</item>
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+    </style>
+
+    <!-- Afordancia de "ver detalle" dentro de una tarjeta pulsable. -->
+    <style name="Widget.Ronda.Text.Link" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textAppearance">@style/TextAppearance.Material3.LabelLarge</item>
+        <item name="android:textColor">?attr/colorPrimary</item>
+        <item name="android:drawableEnd">@drawable/ic_chevron_right</item>
+        <item name="android:drawableTint">?attr/colorPrimary</item>
+        <item name="android:gravity">center_vertical</item>
     </style>
 
 </resources>

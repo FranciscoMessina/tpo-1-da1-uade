@@ -1,7 +1,5 @@
 <resources>
     <string name="app_name">Ronda</string>
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
 
     <string name="nav_home">Inicio</string>
     <string name="nav_mis_publicaciones">Mis publicaciones</string>
@@ -9,4 +7,9 @@
     <string name="nav_guardados">Guardados</string>
     <string name="nav_perfil">Perfil</string>
     <string name="session_expired_message">Tu sesión venció. Iniciá sesión nuevamente.</string>
+
+    <!-- Acciones compartidas: una sola etiqueta por acción en toda la app. -->
+    <string name="action_back">Volver</string>
+    <string name="action_detail">Ver detalle</string>
+    <string name="action_public_profile">Ver perfil público</string>
 </resources>

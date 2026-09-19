@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Mensaje de lista vacía o de error. Único formato para toda la app. -->
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/textEmptyState"
+    style="@style/Widget.Ronda.Text.Empty" />

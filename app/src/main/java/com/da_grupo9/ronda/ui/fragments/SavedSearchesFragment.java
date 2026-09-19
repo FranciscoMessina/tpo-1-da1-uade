@@ -7,7 +7,6 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.widget.Button;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -126,48 +125,26 @@ public class SavedSearchesFragment extends Fragment {
 
         textoSinBusquedas.setVisibility(View.GONE);
 
+        LayoutInflater inflater = getLayoutInflater();
+
         for (SavedSearchItem busqueda : response.getItems()) {
 
-            LinearLayout contenedorBusqueda =
-                    new LinearLayout(requireContext());
+            View tarjeta = inflater.inflate(
+                    R.layout.item_saved_search, busquedasContainer, false);
 
-            contenedorBusqueda.setOrientation(LinearLayout.VERTICAL);
-            contenedorBusqueda.setPadding(16, 16, 16, 16);
+            ((TextView) tarjeta.findViewById(R.id.textSavedSearchName))
+                    .setText(busqueda.getName());
 
-            TextView textoBusqueda =
-                    new TextView(requireContext());
+            ((TextView) tarjeta.findViewById(R.id.textSavedSearchNews))
+                    .setText("Novedades: " + busqueda.getUnreadCount());
 
-            String texto =
-                    busqueda.getName()
-                            + "\nNovedades: "
-                            + busqueda.getUnreadCount();
+            tarjeta.findViewById(R.id.buttonUseSavedSearch)
+                    .setOnClickListener(v -> usarBusqueda(busqueda));
 
-            textoBusqueda.setText(texto);
-            textoBusqueda.setTextSize(18);
+            tarjeta.findViewById(R.id.buttonDeleteSavedSearch)
+                    .setOnClickListener(v -> eliminarBusqueda(busqueda.getId()));
 
-            Button botonUsarBusqueda =
-                    new Button(requireContext());
-
-            botonUsarBusqueda.setText("Usar búsqueda");
-
-            botonUsarBusqueda.setOnClickListener(
-                    v -> usarBusqueda(busqueda)
-            );
-
-            Button botonEliminar =
-                    new Button(requireContext());
-
-            botonEliminar.setText("Eliminar");
-
-            botonEliminar.setOnClickListener(
-                    v -> eliminarBusqueda(busqueda.getId())
-            );
-
-            contenedorBusqueda.addView(textoBusqueda);
-            contenedorBusqueda.addView(botonUsarBusqueda);
-            contenedorBusqueda.addView(botonEliminar);
-
-            busquedasContainer.addView(contenedorBusqueda);
+            busquedasContainer.addView(tarjeta);
         }
     }
 
