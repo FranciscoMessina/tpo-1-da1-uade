@@ -12,46 +12,73 @@
         android:padding="@dimen/spacing_md">
 
         <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            style="@style/Widget.Ronda.Text.ScreenTitle"
             android:layout_marginBottom="@dimen/spacing_md"
-            android:text="Crear cuenta"
-            android:textAppearance="@style/TextAppearance.Material3.HeadlineSmall" />
+            android:text="Crear cuenta" />
 
-        <EditText
-            android:id="@+id/editRegisterEmail"
+        <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Correo electrónico"
-            android:inputType="textEmailAddress" />
+            android:hint="Correo electrónico">
 
-        <EditText
-            android:id="@+id/editRegisterName"
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/editRegisterEmail"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textEmailAddress" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Nombre"
-            android:inputType="textPersonName" />
+            android:layout_marginTop="@dimen/spacing_sm"
+            android:hint="Nombre">
 
-        <EditText
-            android:id="@+id/editRegisterUsername"
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/editRegisterName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textPersonName" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Nombre de usuario"
-            android:inputType="text" />
+            android:layout_marginTop="@dimen/spacing_sm"
+            android:hint="Nombre de usuario">
 
-        <EditText
-            android:id="@+id/editRegisterPhone"
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/editRegisterUsername"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="text" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Teléfono (opcional)"
-            android:inputType="phone" />
+            android:layout_marginTop="@dimen/spacing_sm"
+            android:hint="Teléfono (opcional)">
 
-        <EditText
-            android:id="@+id/editRegisterZone"
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/editRegisterPhone"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="phone" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Zona (opcional)"
-            android:inputType="textPostalAddress" />
+            android:layout_marginTop="@dimen/spacing_sm"
+            android:hint="Zona (opcional)">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/editRegisterZone"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textPostalAddress" />
+        </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"

@@ -23,7 +23,6 @@ import com.da_grupo9.ronda.util.ApiError;
 import com.da_grupo9.ronda.util.MoneyFormat;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.button.MaterialButtonToggleGroup;
-import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.progressindicator.LinearProgressIndicator;
 import com.google.android.material.textfield.TextInputEditText;
@@ -117,35 +116,23 @@ public class OffersFragment extends Fragment {
         emptyView.setVisibility(count == 0 && !loading ? View.VISIBLE : View.GONE);
     }
 
+    /** Infla item_offer y solo decide qué datos y qué acciones quedan visibles. */
     private View createCard(Offer offer) {
-        MaterialCardView card = new MaterialCardView(requireContext());
-        LinearLayout.LayoutParams cardParams = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        cardParams.topMargin = dp(12);
-        card.setLayoutParams(cardParams);
-        card.setCardElevation(dp(2));
-        card.setRadius(dp(12));
+        View card = getLayoutInflater().inflate(R.layout.item_offer, container, false);
 
-        LinearLayout content = new LinearLayout(requireContext());
-        content.setOrientation(LinearLayout.VERTICAL);
-        content.setPadding(dp(16), dp(16), dp(16), dp(16));
-        card.addView(content);
-        addText(content, safe(offer.getTitle(), "Artículo"), 18, true);
-        addText(content, "Oferta: " + money(offer.getAmount()), 16, true);
-        if (offer.getCounterAmount() != null) {
-            addText(content, "Contraoferta: " + money(offer.getCounterAmount()), 16, true);
-        }
-        addText(content, "Estado: " + statusLabel(offer.getStatus()), 14, false);
-        addText(content, "Creada: " + formatDate(offer.getCreatedAt()), 14, false);
-        addText(content, expiryText(offer.getExpiresAt()), 14, false);
-        if (offer.getMessage() != null && !offer.getMessage().trim().isEmpty()) {
-            addText(content, "Mensaje: " + offer.getMessage(), 14, false);
-        }
+        text(card, R.id.textOfferTitle, safe(offer.getTitle(), "Artículo"));
+        text(card, R.id.textOfferAmount, "Oferta: " + money(offer.getAmount()));
+        text(card, R.id.textOfferStatus, "Estado: " + statusLabel(offer.getStatus()));
+        text(card, R.id.textOfferCreatedAt, "Creada: " + formatDate(offer.getCreatedAt()));
+        text(card, R.id.textOfferExpiresAt, expiryText(offer.getExpiresAt()));
 
-        LinearLayout actions = new LinearLayout(requireContext());
-        actions.setOrientation(LinearLayout.HORIZONTAL);
-        actions.setPadding(0, dp(8), 0, 0);
-        content.addView(actions);
+        optionalText(card, R.id.textOfferCounterAmount, offer.getCounterAmount() == null
+                ? null : "Contraoferta: " + money(offer.getCounterAmount()));
+        optionalText(card, R.id.textOfferMessage,
+                offer.getMessage() == null || offer.getMessage().trim().isEmpty()
+                        ? null : "Mensaje: " + offer.getMessage());
+
+        LinearLayout actions = card.findViewById(R.id.containerOfferActions);
         if ("seller".equals(offer.getRole()) && "pending".equals(offer.getStatus())) {
             addAction(actions, "Aceptar", () -> sellerAction(offer, "accept", null));
             addAction(actions, "Rechazar", () -> sellerAction(offer, "reject", null));
@@ -157,13 +144,14 @@ public class OffersFragment extends Fragment {
             addAction(actions, "Cancelar", () -> cancelOffer(offer));
         }
         actions.setVisibility(actions.getChildCount() == 0 ? View.GONE : View.VISIBLE);
+
         return card;
     }
 
     private void showCounterDialog(Offer offer) {
         TextInputLayout layout = new TextInputLayout(requireContext());
         layout.setHint("Importe de la contraoferta");
-        int padding = dp(20);
+        int padding = getResources().getDimensionPixelSize(R.dimen.spacing_lg);
         layout.setPadding(padding, 0, padding, 0);
         TextInputEditText input = new TextInputEditText(requireContext());
         input.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
@@ -231,23 +219,27 @@ public class OffersFragment extends Fragment {
     }
 
     private void addAction(LinearLayout parent, String label, Runnable action) {
-        MaterialButton button = new MaterialButton(requireContext(), null,
+        MaterialButton button = new MaterialButton(parent.getContext(), null,
                 com.google.android.material.R.attr.materialButtonOutlinedStyle);
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(0,
                 ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
+        if (parent.getChildCount() > 0) {
+            params.setMarginStart(getResources().getDimensionPixelSize(R.dimen.spacing_sm));
+        }
         button.setLayoutParams(params);
         button.setText(label);
-        button.setTextSize(11);
         button.setOnClickListener(v -> { if (!loading) action.run(); });
         parent.addView(button);
     }
 
-    private void addText(LinearLayout parent, String value, int size, boolean prominent) {
-        TextView text = new TextView(requireContext());
-        text.setText(value);
-        text.setTextSize(size);
-        if (prominent) text.setTypeface(text.getTypeface(), android.graphics.Typeface.BOLD);
-        parent.addView(text);
+    private void text(View card, int id, String value) {
+        ((TextView) card.findViewById(id)).setText(value);
+    }
+
+    private void optionalText(View card, int id, String value) {
+        TextView view = card.findViewById(id);
+        view.setVisibility(value == null ? View.GONE : View.VISIBLE);
+        if (value != null) view.setText(value);
     }
 
     private String money(double value) { return MoneyFormat.amount(value); }
@@ -283,5 +275,4 @@ public class OffersFragment extends Fragment {
         } catch (RuntimeException ignored) { return "Vencimiento: " + raw; }
     }
 
-    private int dp(int value) { return Math.round(value * getResources().getDisplayMetrics().density); }
 }

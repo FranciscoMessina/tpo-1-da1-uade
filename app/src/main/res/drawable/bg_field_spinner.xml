@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Fondo del Spinner. Replica el contorno del TextInputLayout outlined para que
+    un formulario que mezcla campos de texto y selectores se vea homogéneo.
+-->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@android:color/transparent" />
+            <stroke
+                android:width="@dimen/stroke_width"
+                android:color="?attr/colorOutline" />
+            <corners android:radius="@dimen/corner_radius_field" />
+        </shape>
+    </item>
+
+    <item
+        android:width="@dimen/icon_size"
+        android:height="@dimen/icon_size"
+        android:drawable="@drawable/ic_arrow_drop_down"
+        android:end="@dimen/spacing_sm"
+        android:gravity="center_vertical|end" />
+
+</layer-list>

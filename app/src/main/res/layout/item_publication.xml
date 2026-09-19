@@ -1,10 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    Tarjeta de publicación. Es la única representación de una publicación en una
+    lista: la usan Inicio, Favoritos, Mis publicaciones y el perfil público.
+-->
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/cardPublication"
-    style="@style/Widget.Ronda.Card"
+    style="@style/Widget.Ronda.Card.List"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="12dp"
     android:clickable="true"
     android:focusable="true">
 
@@ -29,8 +32,8 @@
 
             <ImageButton
                 android:id="@+id/buttonPublicationFavorite"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
+                android:layout_width="@dimen/touch_target_min"
+                android:layout_height="@dimen/touch_target_min"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="Guardar en favoritos"
                 android:scaleType="center"
@@ -39,41 +42,31 @@
 
         <TextView
             android:id="@+id/textPublicationDescription"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/spacing_xs"
-            android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
-            android:textColor="?attr/colorOnSurfaceVariant" />
+            style="@style/Widget.Ronda.Text.Meta"
+            android:layout_marginTop="@dimen/spacing_xs" />
 
         <TextView
             android:id="@+id/textPublicationPrice"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/spacing_sm"
-            android:textAppearance="@style/TextAppearance.Material3.TitleSmall"
-            android:textColor="@color/price" />
+            style="@style/Widget.Ronda.Text.Price"
+            android:layout_marginTop="@dimen/spacing_sm" />
 
         <TextView
             android:id="@+id/textPublicationCondition"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/spacing_xs"
-            android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
-            android:textColor="?attr/colorOnSurfaceVariant" />
+            style="@style/Widget.Ronda.Text.Meta"
+            android:layout_marginTop="@dimen/spacing_xs" />
 
         <TextView
             android:id="@+id/textPublicationCategory"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
-            android:textColor="?attr/colorOnSurfaceVariant" />
+            style="@style/Widget.Ronda.Text.Meta" />
 
         <TextView
             android:id="@+id/textPublicationZone"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
-            android:textColor="?attr/colorOnSurfaceVariant" />
+            style="@style/Widget.Ronda.Text.Meta" />
+
+        <TextView
+            android:id="@+id/textPublicationStatus"
+            style="@style/Widget.Ronda.Text.Meta"
+            android:visibility="gone" />
 
         <TextView
             android:id="@+id/textPublicationUpdate"
@@ -81,14 +74,23 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/spacing_sm"
             android:textAppearance="@style/TextAppearance.Material3.LabelLarge"
+            android:textColor="?attr/colorPrimary"
             android:visibility="gone" />
 
         <TextView
+            android:id="@+id/textPublicationDetailHint"
+            style="@style/Widget.Ronda.Text.Link"
+            android:layout_marginTop="@dimen/spacing_sm"
+            android:text="@string/action_detail" />
+
+        <!-- Acciones propias del dueño de la publicación (editar, pausar…). -->
+        <LinearLayout
+            android:id="@+id/containerPublicationActions"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/spacing_sm"
-            android:text="Ver detalle"
-            android:textAppearance="@style/TextAppearance.Material3.LabelLarge"
-            android:textColor="?attr/colorPrimary" />
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:visibility="gone" />
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>

@@ -19,6 +19,8 @@
     <color name="md_theme_light_surfaceVariant">#F5DED3</color>
     <color name="md_theme_light_onSurfaceVariant">#53433A</color>
     <color name="md_theme_light_outline">#85736A</color>
+    <color name="md_theme_light_outlineVariant">#E4D0C5</color>
+    <color name="md_theme_light_surfaceContainer">#F7EDE6</color>
     <color name="md_theme_light_error">#BA1A1A</color>
     <color name="md_theme_light_onError">#FFFFFF</color>
     <color name="md_theme_light_errorContainer">#FFDAD6</color>
@@ -39,12 +41,15 @@
     <color name="md_theme_dark_surfaceVariant">#53433A</color>
     <color name="md_theme_dark_onSurfaceVariant">#D8C2B6</color>
     <color name="md_theme_dark_outline">#A08D82</color>
+    <color name="md_theme_dark_outlineVariant">#463A32</color>
+    <color name="md_theme_dark_surfaceContainer">#241B14</color>
     <color name="md_theme_dark_error">#FFB4AB</color>
     <color name="md_theme_dark_onError">#690005</color>
     <color name="md_theme_dark_errorContainer">#93000A</color>
     <color name="md_theme_dark_onErrorContainer">#FFDAD6</color>
 
     <!-- Semantic -->
+    <color name="surface_container">@color/md_theme_light_surfaceContainer</color>
     <color name="price_light">#2E7D32</color>
     <color name="price_dark">#81C784</color>
     <color name="price">@color/price_light</color>

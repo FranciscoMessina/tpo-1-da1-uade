@@ -12,17 +12,14 @@
         android:padding="@dimen/spacing_md">
 
         <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            style="@style/Widget.Ronda.Text.ScreenTitle"
             android:layout_marginBottom="@dimen/spacing_md"
-            android:text="Mi perfil"
-            android:textAppearance="@style/TextAppearance.Material3.HeadlineSmall"
-            android:textColor="?attr/colorOnSurface" />
+            android:text="Mi perfil" />
 
         <ImageView
             android:id="@+id/imageAvatarPerfil"
-            android:layout_width="112dp"
-            android:layout_height="112dp"
+            android:layout_width="@dimen/avatar_size"
+            android:layout_height="@dimen/avatar_size"
             android:layout_gravity="center_horizontal"
             android:background="@drawable/bg_avatar"
             android:clipToOutline="true"
@@ -47,7 +44,8 @@
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/editNombre"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:inputType="textPersonName" />
 
         </com.google.android.material.textfield.TextInputLayout>
 
@@ -88,7 +86,8 @@
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/editZona"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:inputType="textPostalAddress" />
 
         </com.google.android.material.textfield.TextInputLayout>
 
@@ -102,19 +101,16 @@
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/spacing_lg">
+            android:layout_marginTop="@dimen/spacing_md">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="@dimen/spacing_md">
+                android:orientation="vertical">
 
                 <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Actividad"
-                    android:textAppearance="@style/TextAppearance.Material3.TitleMedium" />
+                    style="@style/Widget.Ronda.Text.SectionTitle"
+                    android:text="Actividad" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/buttonMyOffers"
@@ -130,7 +126,7 @@
                     style="@style/Widget.Ronda.Button.Outlined"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/spacing_sm"
+                    android:layout_marginTop="@dimen/spacing_xs"
                     android:text="Historial de operaciones" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
@@ -138,26 +134,21 @@
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/spacing_lg">
+            android:layout_marginTop="@dimen/spacing_md">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="@dimen/spacing_md">
+                android:orientation="vertical">
 
                 <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Seguridad de la cuenta"
-                    android:textAppearance="@style/TextAppearance.Material3.TitleMedium" />
+                    style="@style/Widget.Ronda.Text.SectionTitle"
+                    android:text="Seguridad de la cuenta" />
 
                 <TextView
                     android:id="@+id/textPasswordStatus"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/spacing_sm"
-                    android:textAppearance="@style/TextAppearance.Material3.BodyMedium" />
+                    style="@style/Widget.Ronda.Text.Meta"
+                    android:layout_marginTop="@dimen/spacing_sm" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/buttonSetPassword"
@@ -174,7 +165,7 @@
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/spacing_lg">
+            android:layout_marginTop="@dimen/spacing_md">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -182,15 +173,12 @@
                 android:orientation="vertical">
 
                 <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Reputación"
-                    android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
-                    android:textColor="?attr/colorOnSurface" />
+                    style="@style/Widget.Ronda.Text.SectionTitle"
+                    android:text="Reputación" />
 
                 <TextView
                     android:id="@+id/textReputacion"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/spacing_sm"
                     android:text="Cargando…"
@@ -199,39 +187,27 @@
 
                 <TextView
                     android:id="@+id/textOperaciones"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    style="@style/Widget.Ronda.Text.Meta"
                     android:layout_marginTop="@dimen/spacing_xs"
-                    android:text="Cargando…"
-                    android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
-                    android:textColor="?attr/colorOnSurfaceVariant" />
+                    android:text="Cargando…" />
 
                 <TextView
                     android:id="@+id/textCompradorVendedor"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    style="@style/Widget.Ronda.Text.Meta"
                     android:layout_marginTop="@dimen/spacing_xs"
-                    android:text="Cargando…"
-                    android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
-                    android:textColor="?attr/colorOnSurfaceVariant" />
+                    android:text="Cargando…" />
 
                 <TextView
                     android:id="@+id/textAntiguedad"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/spacing_sm"
-                    android:text="Cargando…"
-                    android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
-                    android:textColor="?attr/colorOnSurfaceVariant" />
+                    style="@style/Widget.Ronda.Text.Meta"
+                    android:layout_marginTop="@dimen/spacing_xs"
+                    android:text="Cargando…" />
 
                 <TextView
                     android:id="@+id/textPublicacionesActivas"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    style="@style/Widget.Ronda.Text.Meta"
                     android:layout_marginTop="@dimen/spacing_xs"
-                    android:text="Cargando…"
-                    android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
-                    android:textColor="?attr/colorOnSurfaceVariant" />
+                    android:text="Cargando…" />
 
             </LinearLayout>
 

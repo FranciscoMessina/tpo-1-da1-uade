@@ -1,101 +1,113 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="@dimen/spacing_md">
+    android:fillViewport="true">
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/buttonOfferBack"
-        style="@style/Widget.Ronda.Button.Text"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Volver"
-        app:icon="@drawable/ic_arrow_back" />
-
-    <TextView
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/spacing_md"
-        android:text="Hacer una oferta"
-        android:textAppearance="@style/TextAppearance.Material3.HeadlineSmall" />
+        android:orientation="vertical"
+        android:padding="@dimen/spacing_md">
 
-    <TextView
-        android:id="@+id/textOfferPublication"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/spacing_sm"
-        android:textAppearance="@style/TextAppearance.Material3.TitleMedium" />
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/buttonOfferBack"
+            style="@style/Widget.Ronda.Button.Back"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
 
-    <TextView
-        android:id="@+id/textOfferPublishedPrice"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/spacing_xs"
-        android:textAppearance="@style/TextAppearance.Material3.BodyLarge" />
+        <TextView
+            style="@style/Widget.Ronda.Text.ScreenTitle"
+            android:layout_marginTop="@dimen/spacing_sm"
+            android:text="Hacer una oferta" />
 
-    <TextView
-        android:id="@+id/textOfferSeller"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/spacing_xs"
-        android:textAppearance="@style/TextAppearance.Material3.BodyMedium" />
-
-    <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/inputOfferPriceLayout"
-        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/spacing_lg"
-        android:hint="Tu oferta">
-
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/inputOfferPrice"
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:inputType="numberDecimal"
-            android:maxLines="1"
-            android:selectAllOnFocus="true" />
+            android:layout_marginTop="@dimen/spacing_md">
 
-    </com.google.android.material.textfield.TextInputLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
 
-    <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/inputOfferMessageLayout"
-        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/spacing_md"
-        android:hint="Mensaje para el vendedor"
-        app:counterEnabled="true"
-        app:counterMaxLength="500">
+                <TextView
+                    android:id="@+id/textOfferPublication"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
+                    android:textColor="?attr/colorOnSurface" />
 
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/inputOfferMessage"
+                <TextView
+                    android:id="@+id/textOfferPublishedPrice"
+                    style="@style/Widget.Ronda.Text.Price"
+                    android:layout_marginTop="@dimen/spacing_sm" />
+
+                <TextView
+                    android:id="@+id/textOfferSeller"
+                    style="@style/Widget.Ronda.Text.Meta"
+                    android:layout_marginTop="@dimen/spacing_xs" />
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/inputOfferPriceLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="top|start"
-            android:inputType="textCapSentences|textMultiLine"
-            android:maxLength="500"
-            android:maxLines="8"
-            android:minLines="4" />
+            android:layout_marginTop="@dimen/spacing_md"
+            android:hint="Tu oferta">
 
-    </com.google.android.material.textfield.TextInputLayout>
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/inputOfferPrice"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="numberDecimal"
+                android:maxLines="1"
+                android:selectAllOnFocus="true" />
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/buttonSendOffer"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/spacing_lg"
-        android:text="Enviar oferta"
-        app:icon="@drawable/ic_local_offer" />
+        </com.google.android.material.textfield.TextInputLayout>
 
-    <com.google.android.material.progressindicator.CircularProgressIndicator
-        android:id="@+id/progressSendOffer"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginTop="@dimen/spacing_sm"
-        android:visibility="gone" />
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/inputOfferMessageLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_sm"
+            android:hint="Mensaje para el vendedor"
+            app:counterEnabled="true"
+            app:counterMaxLength="500">
 
-</LinearLayout>
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/inputOfferMessage"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="top|start"
+                android:inputType="textCapSentences|textMultiLine"
+                android:maxLength="500"
+                android:maxLines="8"
+                android:minLines="4" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/buttonSendOffer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_lg"
+            android:text="Enviar oferta"
+            app:icon="@drawable/ic_local_offer" />
+
+        <com.google.android.material.progressindicator.CircularProgressIndicator
+            android:id="@+id/progressSendOffer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="@dimen/spacing_md"
+            android:indeterminate="true"
+            android:visibility="gone" />
+
+    </LinearLayout>
+
+</ScrollView>

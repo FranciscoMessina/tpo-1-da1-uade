@@ -16,7 +16,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -43,6 +42,8 @@ import com.da_grupo9.ronda.data.remote.FavoritesApi;
 import com.da_grupo9.ronda.data.remote.SavedSearchesApi;
 import com.da_grupo9.ronda.util.ApiErrorMessage;
 import com.da_grupo9.ronda.util.MoneyFormat;
+import com.da_grupo9.ronda.ui.components.EmptyStateView;
+import com.da_grupo9.ronda.ui.components.SpinnerAdapters;
 import com.da_grupo9.ronda.ui.components.PublicationCardBinder;
 
 import android.widget.ImageButton;
@@ -278,19 +279,11 @@ public class HomeFragment extends Fragment {
         };
 
         spinnerEstado.setAdapter(
-                new ArrayAdapter<>(
-                        requireContext(),
-                        android.R.layout.simple_spinner_dropdown_item,
-                        estados
-                )
+                SpinnerAdapters.create(requireContext(), estados)
         );
 
         spinnerOrden.setAdapter(
-                new ArrayAdapter<>(
-                        requireContext(),
-                        android.R.layout.simple_spinner_dropdown_item,
-                        ordenamientos
-                )
+                SpinnerAdapters.create(requireContext(), ordenamientos)
         );
     }
 
@@ -315,8 +308,7 @@ public class HomeFragment extends Fragment {
         List<String> labels = new ArrayList<>();
         labels.add("Todas");
         for (String code : codes) labels.add(etiquetaCategoria(code));
-        spinnerCategoria.setAdapter(new ArrayAdapter<>(requireContext(),
-                android.R.layout.simple_spinner_dropdown_item, labels));
+        spinnerCategoria.setAdapter(SpinnerAdapters.create(requireContext(), labels));
     }
 
     private void cargarZonas() {
@@ -340,8 +332,7 @@ public class HomeFragment extends Fragment {
         List<String> labels = new ArrayList<>();
         labels.add("Todas las zonas");
         labels.addAll(zones);
-        spinnerCercania.setAdapter(new ArrayAdapter<>(requireContext(),
-                android.R.layout.simple_spinner_dropdown_item, labels));
+        spinnerCercania.setAdapter(SpinnerAdapters.create(requireContext(), labels));
     }
 
     private void configurarVisibilidadGuardarBusqueda() {
@@ -809,18 +800,8 @@ public class HomeFragment extends Fragment {
         }
     }
 
-    private TextView crearMensajeVacio(String texto) {
-        TextView mensaje = new TextView(requireContext());
-
-        mensaje.setText(texto);
-        mensaje.setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_BodyLarge);
-        mensaje.setTextColor(
-                MaterialColors.getColor(requireContext(), com.google.android.material.R.attr.colorOnSurfaceVariant, Color.DKGRAY)
-        );
-        mensaje.setGravity(Gravity.CENTER);
-        mensaje.setPadding(dpToPx(16), dpToPx(32), dpToPx(16), dpToPx(32));
-
-        return mensaje;
+    private View crearMensajeVacio(String texto) {
+        return EmptyStateView.create(getLayoutInflater(), publicacionesContainer, texto);
     }
 
     private FiltrosPublicaciones leerFiltrosEnEdicion() {
@@ -879,7 +860,4 @@ public class HomeFragment extends Fragment {
         }
     }
 
-    private int dpToPx(int dp) {
-        return Math.round(dp * getResources().getDisplayMetrics().density);
-    }
 }

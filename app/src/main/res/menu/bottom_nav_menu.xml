@@ -18,7 +18,7 @@
 
     <item
         android:id="@+id/savedItemsFragment"
-        android:icon="@drawable/ic_star"
+        android:icon="@drawable/ic_nav_guardados"
         android:title="@string/nav_guardados" />
 
     <item

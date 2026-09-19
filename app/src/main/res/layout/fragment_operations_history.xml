@@ -3,25 +3,20 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:paddingHorizontal="@dimen/spacing_md"
+    android:paddingTop="@dimen/spacing_md">
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/buttonHistoryBack"
-        style="@style/Widget.Ronda.Button.Text"
+        style="@style/Widget.Ronda.Button.Back"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/spacing_sm"
-        android:text="Volver"
-        app:icon="@drawable/ic_arrow_back"
-        app:iconGravity="textStart" />
+        android:layout_height="wrap_content" />
 
     <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:paddingHorizontal="@dimen/spacing_md"
-        android:text="Historial de operaciones"
-        android:textAppearance="@style/TextAppearance.Material3.HeadlineSmall"
-        android:textColor="?attr/colorOnSurface" />
+        style="@style/Widget.Ronda.Text.ScreenTitle"
+        android:layout_marginTop="@dimen/spacing_sm"
+        android:text="Historial de operaciones" />
 
     <com.google.android.material.tabs.TabLayout
         android:id="@+id/historyTabs"
@@ -32,16 +27,14 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:paddingHorizontal="@dimen/spacing_md"
-        android:paddingTop="@dimen/spacing_sm">
+        android:layout_marginTop="@dimen/spacing_sm"
+        android:orientation="horizontal">
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/buttonFilterFrom"
             style="@style/Widget.Ronda.Button.Outlined"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="@dimen/spacing_sm"
             android:layout_weight="1"
             android:text="Desde" />
 
@@ -50,6 +43,7 @@
             style="@style/Widget.Ronda.Button.Outlined"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/spacing_sm"
             android:layout_weight="1"
             android:text="Hasta" />
 
@@ -58,6 +52,7 @@
             style="@style/Widget.Ronda.Button.Text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/spacing_sm"
             android:text="Limpiar" />
 
     </LinearLayout>
@@ -72,17 +67,12 @@
 
     <TextView
         android:id="@+id/textHistoryMessage"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:padding="@dimen/spacing_lg"
-        android:textAppearance="@style/TextAppearance.Material3.BodyLarge"
-        android:textColor="?attr/colorOnSurfaceVariant"
+        style="@style/Widget.Ronda.Text.Empty"
         android:visibility="gone" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/buttonHistoryRetry"
-        style="@style/Widget.Ronda.Button.Text"
+        style="@style/Widget.Ronda.Button.Outlined"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
@@ -92,14 +82,16 @@
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1">
+        android:layout_marginTop="@dimen/spacing_md"
+        android:layout_weight="1"
+        android:clipToPadding="false">
 
         <LinearLayout
             android:id="@+id/containerOperations"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="@dimen/spacing_md" />
+            android:paddingBottom="@dimen/spacing_md" />
 
     </ScrollView>
 

@@ -6,26 +6,24 @@
     android:orientation="vertical"
     android:padding="@dimen/spacing_md">
 
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/buttonOffersBack"
+        style="@style/Widget.Ronda.Button.Back"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/spacing_sm"
         android:gravity="center_vertical"
         android:orientation="horizontal">
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/buttonOffersBack"
-            style="@style/Widget.Ronda.Button.Text"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Volver"
-            app:icon="@drawable/ic_arrow_back" />
-
         <TextView
+            style="@style/Widget.Ronda.Text.ScreenTitle"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Mis ofertas"
-            android:textAppearance="@style/TextAppearance.Material3.HeadlineSmall" />
+            android:text="Mis ofertas" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/buttonRefreshOffers"
@@ -39,14 +37,14 @@
         android:id="@+id/toggleOfferRole"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/spacing_sm"
+        android:layout_marginTop="@dimen/spacing_md"
         app:checkedButton="@id/buttonOffersSent"
         app:selectionRequired="true"
         app:singleSelection="true">
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/buttonOffersSent"
-            style="@style/Widget.Material3.Button.OutlinedButton"
+            style="@style/Widget.Ronda.Button.Toggle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -54,7 +52,7 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/buttonOffersReceived"
-            style="@style/Widget.Material3.Button.OutlinedButton"
+            style="@style/Widget.Ronda.Button.Toggle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -65,28 +63,27 @@
         android:id="@+id/progressOffers"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/spacing_sm"
+        android:indeterminate="true"
         android:visibility="gone" />
 
     <TextView
         android:id="@+id/textOffersEmpty"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/spacing_lg"
-        android:gravity="center"
+        style="@style/Widget.Ronda.Text.Empty"
         android:text="No hay ofertas"
-        android:textAppearance="@style/TextAppearance.Material3.BodyLarge"
         android:visibility="gone" />
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1">
+        android:layout_marginTop="@dimen/spacing_md"
+        android:layout_weight="1"
+        android:clipToPadding="false">
 
         <LinearLayout
             android:id="@+id/containerOffers"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:paddingBottom="@dimen/spacing_lg" />
+            android:orientation="vertical" />
     </androidx.core.widget.NestedScrollView>
 </LinearLayout>

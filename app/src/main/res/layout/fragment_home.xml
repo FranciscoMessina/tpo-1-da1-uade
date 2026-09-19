@@ -10,35 +10,30 @@
 
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/bannerOffline"
+        style="@style/Widget.Ronda.Card.Banner"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="@dimen/spacing_sm"
-        android:visibility="gone"
-        app:cardBackgroundColor="?attr/colorErrorContainer"
-        app:cardCornerRadius="8dp"
-        app:cardElevation="0dp"
-        app:strokeWidth="1dp"
-        app:strokeColor="?attr/colorError">
+        android:visibility="gone">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:padding="12dp">
+            android:orientation="horizontal">
 
             <ImageView
-                android:layout_width="24dp"
-                android:layout_height="24dp"
+                android:layout_width="@dimen/icon_size"
+                android:layout_height="@dimen/icon_size"
+                android:contentDescription="Sin conexión"
                 android:src="@android:drawable/stat_notify_error"
-                app:tint="?attr/colorOnErrorContainer"
-                android:contentDescription="Sin conexión" />
+                app:tint="?attr/colorOnErrorContainer" />
 
             <TextView
                 android:id="@+id/textBannerOffline"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="10dp"
+                android:layout_marginStart="@dimen/spacing_sm"
                 android:text="Modo sin conexión: mostrando publicaciones guardadas. La información podría no estar actualizada."
                 android:textAppearance="@style/TextAppearance.Material3.BodySmall"
                 android:textColor="?attr/colorOnErrorContainer" />
@@ -47,11 +42,7 @@
 
     </com.google.android.material.card.MaterialCardView>
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        >
+    <!-- Encabezado: título de pantalla + acción secundaria de la pantalla. -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -60,12 +51,10 @@
         android:orientation="horizontal">
 
         <TextView
+            style="@style/Widget.Ronda.Text.ScreenTitle"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Publicaciones"
-            android:textAppearance="@style/TextAppearance.Material3.HeadlineSmall"
-            android:textColor="?attr/colorOnSurface" />
+            android:text="Publicaciones" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/botonGuardarBusqueda"
@@ -75,7 +64,6 @@
             android:text="Guardar búsqueda"
             android:visibility="gone" />
 
-    </LinearLayout>
     </LinearLayout>
 
     <com.google.android.material.textfield.TextInputLayout
@@ -97,25 +85,52 @@
         android:layout_marginTop="@dimen/spacing_sm"
         android:orientation="horizontal">
 
-        <Spinner
-            android:id="@+id/spinnerCategoria"
+        <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1" />
+            android:layout_weight="1"
+            android:orientation="vertical">
 
-        <Spinner
-            android:id="@+id/spinnerEstado"
+            <TextView
+                style="@style/Widget.Ronda.Text.FieldLabel"
+                android:labelFor="@id/spinnerCategoria"
+                android:text="Categoría" />
+
+            <Spinner
+                android:id="@+id/spinnerCategoria"
+                style="@style/Widget.Ronda.Spinner"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+        </LinearLayout>
+
+        <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1" />
+            android:layout_marginStart="@dimen/spacing_sm"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                style="@style/Widget.Ronda.Text.FieldLabel"
+                android:labelFor="@id/spinnerEstado"
+                android:text="Estado" />
+
+            <Spinner
+                android:id="@+id/spinnerEstado"
+                style="@style/Widget.Ronda.Spinner"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+        </LinearLayout>
 
     </LinearLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_marginTop="@dimen/spacing_sm">
+        android:layout_marginTop="@dimen/spacing_sm"
+        android:orientation="horizontal">
 
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="0dp"
@@ -134,8 +149,8 @@
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
             android:layout_marginStart="@dimen/spacing_sm"
+            android:layout_weight="1"
             android:hint="Precio máximo">
 
             <com.google.android.material.textfield.TextInputEditText
@@ -148,36 +163,60 @@
 
     </LinearLayout>
 
-
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/spacing_sm"
         android:orientation="horizontal">
 
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
 
-    <Spinner
-        android:id="@+id/spinnerCercania"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/spacing_sm"
-        android:layout_weight="1" />
+            <TextView
+                style="@style/Widget.Ronda.Text.FieldLabel"
+                android:labelFor="@id/spinnerCercania"
+                android:text="Zona" />
 
-    <Spinner
-        android:id="@+id/spinnerOrden"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/spacing_sm"
-        android:layout_weight="1" />
+            <Spinner
+                android:id="@+id/spinnerCercania"
+                style="@style/Widget.Ronda.Spinner"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/spacing_sm"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                style="@style/Widget.Ronda.Text.FieldLabel"
+                android:labelFor="@id/spinnerOrden"
+                android:text="Ordenar por" />
+
+            <Spinner
+                android:id="@+id/spinnerOrden"
+                style="@style/Widget.Ronda.Spinner"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+        </LinearLayout>
+
     </LinearLayout>
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/botonFiltrar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Aplicar filtros"
-        android:layout_marginTop="@dimen/spacing_sm"
-        android:layout_marginBottom="@dimen/spacing_sm" />
+        android:layout_marginTop="@dimen/spacing_md"
+        android:layout_marginBottom="@dimen/spacing_sm"
+        android:text="Aplicar filtros" />
 
     <ScrollView
         android:layout_width="match_parent"
@@ -196,9 +235,9 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
+        android:layout_marginTop="@dimen/spacing_sm"
         android:gravity="center"
-        android:layout_marginTop="@dimen/spacing_sm">
+        android:orientation="horizontal">
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/botonAnterior"

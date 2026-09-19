@@ -7,19 +7,13 @@
     android:padding="@dimen/spacing_md">
 
     <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Calificar operación"
-        android:textAppearance="@style/TextAppearance.Material3.TitleLarge"
-        android:textColor="?attr/colorOnSurface" />
+        style="@style/Widget.Ronda.Text.SectionTitle"
+        android:text="Calificar operación" />
 
     <TextView
         android:id="@+id/textRatingCounterparty"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/spacing_xs"
-        android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
-        android:textColor="?attr/colorOnSurfaceVariant" />
+        style="@style/Widget.Ronda.Text.Meta"
+        android:layout_marginTop="@dimen/spacing_xs" />
 
     <RatingBar
         android:id="@+id/ratingBar"
@@ -49,6 +43,7 @@
             android:gravity="top|start"
             android:inputType="textCapSentences|textMultiLine"
             android:maxLength="1000"
+            android:maxLines="8"
             android:minLines="3" />
 
     </com.google.android.material.textfield.TextInputLayout>

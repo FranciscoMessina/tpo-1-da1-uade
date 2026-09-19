@@ -11,49 +11,40 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <!-- Botón Volver -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/buttonBack"
-            style="@style/Widget.Ronda.Button.Text"
+            style="@style/Widget.Ronda.Button.Back"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="@dimen/spacing_sm"
-            app:icon="@drawable/ic_arrow_back"
-            app:iconGravity="textStart"
-            android:text="Volver " />
+            android:layout_marginBottom="@dimen/spacing_sm" />
 
         <!-- Banner de modo sin conexión -->
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/bannerDetailOffline"
+            style="@style/Widget.Ronda.Card.Banner"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="@dimen/spacing_sm"
-            android:visibility="gone"
-            app:cardBackgroundColor="?attr/colorErrorContainer"
-            app:cardCornerRadius="8dp"
-            app:cardElevation="0dp"
-            app:strokeWidth="1dp"
-            app:strokeColor="?attr/colorError">
+            android:visibility="gone">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
                 android:gravity="center_vertical"
-                android:padding="12dp">
+                android:orientation="horizontal">
 
                 <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
+                    android:layout_width="@dimen/icon_size"
+                    android:layout_height="@dimen/icon_size"
+                    android:contentDescription="Sin conexión"
                     android:src="@android:drawable/stat_notify_error"
-                    app:tint="?attr/colorOnErrorContainer"
-                    android:contentDescription="Sin conexión" />
+                    app:tint="?attr/colorOnErrorContainer" />
 
                 <TextView
                     android:id="@+id/textBannerDetailOffline"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="10dp"
+                    android:layout_marginStart="@dimen/spacing_sm"
                     android:text="Modo sin conexión: las acciones sobre la publicación están deshabilitadas."
                     android:textAppearance="@style/TextAppearance.Material3.BodySmall"
                     android:textColor="?attr/colorOnErrorContainer" />
@@ -63,7 +54,8 @@
         <!-- Galería de fotos -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            app:contentPadding="0dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -73,25 +65,25 @@
                 <ImageView
                     android:id="@+id/imageFotoViewer"
                     android:layout_width="match_parent"
-                    android:layout_height="220dp"
+                    android:layout_height="@dimen/gallery_height"
                     android:background="?attr/colorSurfaceVariant"
-                    android:scaleType="centerCrop"
-                    android:contentDescription="Foto del artículo" />
+                    android:contentDescription="Foto del artículo"
+                    android:scaleType="centerCrop" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/spacing_sm"
                     android:gravity="center_vertical"
-                    android:orientation="horizontal">
+                    android:orientation="horizontal"
+                    android:padding="@dimen/spacing_sm">
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/buttonFotoAnterior"
-                        style="@style/Widget.Material3.Button.IconButton.Outlined"
+                        style="@style/Widget.Ronda.Button.Icon"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        app:icon="@drawable/ic_chevron_left"
-                        android:contentDescription="Foto anterior" />
+                        android:contentDescription="Foto anterior"
+                        app:icon="@drawable/ic_chevron_left" />
 
                     <TextView
                         android:id="@+id/textFotoIndicador"
@@ -105,11 +97,11 @@
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/buttonFotoSiguiente"
-                        style="@style/Widget.Material3.Button.IconButton.Outlined"
+                        style="@style/Widget.Ronda.Button.Icon"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        app:icon="@drawable/ic_chevron_right"
-                        android:contentDescription="Foto siguiente" />
+                        android:contentDescription="Foto siguiente"
+                        app:icon="@drawable/ic_chevron_right" />
 
                 </LinearLayout>
 
@@ -120,21 +112,15 @@
         <!-- Información principal del artículo -->
         <TextView
             android:id="@+id/textDetailTitulo"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            style="@style/Widget.Ronda.Text.ScreenTitle"
             android:layout_marginTop="@dimen/spacing_md"
-            android:text="Título del Artículo"
-            android:textAppearance="@style/TextAppearance.Material3.HeadlineSmall"
-            android:textColor="?attr/colorOnSurface" />
+            android:text="Título del Artículo" />
 
         <TextView
             android:id="@+id/textDetailPrecio"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            style="@style/Widget.Ronda.Text.Price.Large"
             android:layout_marginTop="@dimen/spacing_xs"
-            android:text="Precio: $0"
-            android:textAppearance="@style/TextAppearance.Material3.TitleLarge"
-            android:textColor="@color/price" />
+            android:text="Precio: $0" />
 
         <!-- Ficha técnica rápida -->
         <com.google.android.material.card.MaterialCardView
@@ -149,43 +135,31 @@
 
                 <TextView
                     android:id="@+id/textDetailEstado"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Estado: -"
-                    android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
-                    android:textColor="?attr/colorOnSurface" />
+                    style="@style/Widget.Ronda.Text.Meta"
+                    android:text="Estado: -" />
 
                 <TextView
                     android:id="@+id/textDetailCategoria"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    style="@style/Widget.Ronda.Text.Meta"
                     android:layout_marginTop="@dimen/spacing_xs"
-                    android:text="Categoría: -"
-                    android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
-                    android:textColor="?attr/colorOnSurface" />
+                    android:text="Categoría: -" />
 
                 <TextView
                     android:id="@+id/textDetailZona"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    style="@style/Widget.Ronda.Text.Meta"
                     android:layout_marginTop="@dimen/spacing_xs"
-                    android:text="Zona de entrega: -"
-                    android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
-                    android:textColor="?attr/colorOnSurface" />
+                    android:text="Zona de entrega: -" />
 
                 <TextView
                     android:id="@+id/textDetailDireccion"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    style="@style/Widget.Ronda.Text.Meta"
                     android:layout_marginTop="@dimen/spacing_xs"
                     android:text="Dirección: -"
-                    android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
-                    android:textColor="?attr/colorOnSurface"
                     android:visibility="gone" />
 
                 <TextView
                     android:id="@+id/textDetailFecha"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/spacing_xs"
                     android:text="Fecha de publicación: -"
@@ -198,12 +172,9 @@
 
         <!-- Descripción Completa -->
         <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            style="@style/Widget.Ronda.Text.SectionTitle"
             android:layout_marginTop="@dimen/spacing_md"
-            android:text="Descripción"
-            android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
-            android:textColor="?attr/colorOnSurface" />
+            android:text="Descripción" />
 
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
@@ -222,12 +193,9 @@
 
         <!-- Datos del Vendedor -->
         <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            style="@style/Widget.Ronda.Text.SectionTitle"
             android:layout_marginTop="@dimen/spacing_md"
-            android:text="Información del vendedor"
-            android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
-            android:textColor="?attr/colorOnSurface" />
+            android:text="Información del vendedor" />
 
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
@@ -241,7 +209,7 @@
 
                 <TextView
                     android:id="@+id/textVendedorNombre"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="Vendedor: Nombre Apellido"
                     android:textAppearance="@style/TextAppearance.Material3.TitleSmall"
@@ -249,7 +217,7 @@
 
                 <TextView
                     android:id="@+id/textVendedorReputacion"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/spacing_xs"
                     android:text="Reputación: ★ 4.9 (42 ventas)"
@@ -259,10 +227,10 @@
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/buttonVerPerfilVendedor"
                     style="@style/Widget.Ronda.Button.Outlined"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/spacing_sm"
-                    android:text="Ver perfil público" />
+                    android:text="@string/action_public_profile" />
 
             </LinearLayout>
 
@@ -278,12 +246,9 @@
             android:orientation="vertical">
 
             <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="@dimen/spacing_xs"
-                android:text="Preguntas y respuestas"
-                android:textAppearance="@style/TextAppearance.Material3.TitleSmall"
-                android:textColor="?attr/colorOnSurface" />
+                style="@style/Widget.Ronda.Text.SectionTitle"
+                android:layout_marginBottom="@dimen/spacing_sm"
+                android:text="Preguntas y respuestas" />
 
             <LinearLayout
                 android:id="@+id/containerPreguntasComprador"
@@ -293,19 +258,16 @@
                 android:orientation="vertical" />
 
             <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                style="@style/Widget.Ronda.Text.SectionTitle"
                 android:layout_marginBottom="@dimen/spacing_sm"
-                android:text="Acciones disponibles"
-                android:textAppearance="@style/TextAppearance.Material3.TitleSmall"
-                android:textColor="?attr/colorOnSurface" />
+                android:text="Acciones disponibles" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/buttonPreguntar"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:icon="@drawable/ic_chat"
-                android:text="Preguntar al vendedor" />
+                android:text="Preguntar al vendedor"
+                app:icon="@drawable/ic_chat" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/buttonOfertar"
@@ -313,80 +275,75 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/spacing_xs"
-                app:icon="@drawable/ic_local_offer"
-                android:text="Hacer una oferta de precio" />
+                android:text="Hacer una oferta de precio"
+                app:icon="@drawable/ic_local_offer" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/buttonGuardar"
-                style="@style/Widget.Ronda.Button.Text"
+                style="@style/Widget.Ronda.Button.Outlined"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/spacing_xs"
-                app:icon="@drawable/ic_star"
-                android:text="Guardar en favoritos" />
+                android:text="Guardar en favoritos"
+                app:icon="@drawable/ic_favorite_border" />
 
         </LinearLayout>
 
         <!-- SECCIÓN: Acciones para el propio Vendedor -->
-        <LinearLayout
+        <com.google.android.material.card.MaterialCardView
             android:id="@+id/containerAccionesVendedor"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/spacing_lg"
             android:layout_marginBottom="@dimen/spacing_lg"
-            android:background="@drawable/bg_rounded_primary_container"
-            android:orientation="vertical"
-            android:padding="@dimen/spacing_md"
             android:visibility="gone">
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Gestión de tu publicación"
-                android:textAppearance="@style/TextAppearance.Material3.TitleSmall"
-                android:textColor="?attr/colorOnPrimaryContainer" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/spacing_xs"
-                android:text="Como sos el autor de esta publicación, podés administrarla:"
-                android:textAppearance="@style/TextAppearance.Material3.BodySmall"
-                android:textColor="?attr/colorOnPrimaryContainer" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/spacing_md"
-                android:text="Preguntas recibidas"
-                android:textAppearance="@style/TextAppearance.Material3.TitleSmall"
-                android:textColor="?attr/colorOnPrimaryContainer" />
-
             <LinearLayout
-                android:id="@+id/containerPreguntasRecibidas"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/spacing_xs"
-                android:orientation="vertical" />
+                android:orientation="vertical">
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/buttonModificar"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/spacing_sm"
-                app:icon="@drawable/ic_edit"
-                android:text="Modificar publicación" />
+                <TextView
+                    style="@style/Widget.Ronda.Text.SectionTitle"
+                    android:text="Gestión de tu publicación" />
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/buttonPausar"
-                style="@style/Widget.Ronda.Button.Outlined"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/spacing_xs"
-                app:icon="@drawable/ic_pause"
-                android:text="Pausar publicación" />
+                <TextView
+                    style="@style/Widget.Ronda.Text.Meta"
+                    android:layout_marginTop="@dimen/spacing_xs"
+                    android:text="Como sos el autor de esta publicación, podés administrarla." />
 
-        </LinearLayout>
+                <TextView
+                    style="@style/Widget.Ronda.Text.SectionTitle"
+                    android:layout_marginTop="@dimen/spacing_md"
+                    android:text="Preguntas recibidas" />
+
+                <LinearLayout
+                    android:id="@+id/containerPreguntasRecibidas"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_sm"
+                    android:orientation="vertical" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/buttonModificar"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_sm"
+                    android:text="Modificar publicación"
+                    app:icon="@drawable/ic_edit" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/buttonPausar"
+                    style="@style/Widget.Ronda.Button.Outlined"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_xs"
+                    android:text="Pausar publicación"
+                    app:icon="@drawable/ic_pause" />
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
 
     </LinearLayout>
 

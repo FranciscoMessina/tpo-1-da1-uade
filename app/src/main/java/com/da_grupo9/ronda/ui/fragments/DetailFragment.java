@@ -1,6 +1,7 @@
 package com.da_grupo9.ronda.ui.fragments;
 
 import com.da_grupo9.ronda.R;
+import com.da_grupo9.ronda.ui.components.EmptyStateView;
 import com.da_grupo9.ronda.data.repository.RepositoryResult;
 import com.da_grupo9.ronda.data.model.Publicacion;
 import com.da_grupo9.ronda.data.repository.PublicacionRepository;
@@ -82,7 +83,7 @@ public class DetailFragment extends Fragment {
     private Button buttonVerPerfilVendedor;
 
     private LinearLayout containerAccionesComprador;
-    private LinearLayout containerAccionesVendedor;
+    private View containerAccionesVendedor;
     private LinearLayout containerPreguntasComprador;
     private LinearLayout containerPreguntasRecibidas;
 
@@ -500,81 +501,55 @@ public class DetailFragment extends Fragment {
     }
 
     private void poblarPreguntasRecibidas(List<Publicacion.Question> preguntas) {
-        containerPreguntasRecibidas.removeAllViews();
-        if (preguntas.isEmpty()) {
-            TextView vacio = crearTexto("Todavía no recibiste preguntas");
-            containerPreguntasRecibidas.addView(vacio);
-            return;
-        }
-
-        for (Publicacion.Question pregunta : preguntas) {
-            LinearLayout bloque = new LinearLayout(requireContext());
-            bloque.setOrientation(LinearLayout.VERTICAL);
-            int padding = dp(12);
-            bloque.setPadding(padding, padding, padding, padding);
-            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-            params.bottomMargin = dp(8);
-            bloque.setLayoutParams(params);
-            bloque.setBackgroundResource(R.drawable.bg_rounded_primary_container);
-
-            bloque.addView(crearTexto("Pregunta: " + valorOBlanco(pregunta.getText())));
-            if (pregunta.getAnswer() == null) {
-                MaterialButton responder = new MaterialButton(requireContext(), null,
-                        com.google.android.material.R.attr.materialButtonOutlinedStyle);
-                responder.setText("Responder");
-                responder.setEnabled(publicacionRepository.isOnline());
-                responder.setOnClickListener(v -> abrirDialogoRespuesta(pregunta));
-                bloque.addView(responder);
-            } else {
-                TextView respuesta = crearTexto("Respuesta: " + pregunta.getAnswer());
-                respuesta.setPadding(0, dp(8), 0, 0);
-                bloque.addView(respuesta);
-                String fecha = pregunta.getAnsweredAt();
-                if (fecha != null) {
-                    TextView fechaRespuesta = crearTexto("Respondida: " + fecha);
-                    fechaRespuesta.setPadding(0, dp(4), 0, 0);
-                    bloque.addView(fechaRespuesta);
-                }
-            }
-            containerPreguntasRecibidas.addView(bloque);
-        }
+        poblarPreguntas(containerPreguntasRecibidas, preguntas,
+                "Todavía no recibiste preguntas", true);
     }
 
     private void poblarPreguntasComprador(List<Publicacion.Question> preguntas) {
-        containerPreguntasComprador.removeAllViews();
+        poblarPreguntas(containerPreguntasComprador, preguntas,
+                "Todavía no hay preguntas", false);
+    }
+
+    /**
+     * Comprador y vendedor ven la misma tarjeta de pregunta; lo único que cambia
+     * es si aparece el botón de responder.
+     */
+    private void poblarPreguntas(LinearLayout container, List<Publicacion.Question> preguntas,
+                                 String mensajeVacio, boolean puedeResponder) {
+        container.removeAllViews();
+        LayoutInflater inflater = getLayoutInflater();
+
         if (preguntas.isEmpty()) {
-            containerPreguntasComprador.addView(crearTextoSuperficie("Todavía no hay preguntas"));
+            container.addView(EmptyStateView.create(inflater, container, mensajeVacio));
             return;
         }
 
         for (Publicacion.Question pregunta : preguntas) {
-            LinearLayout bloque = new LinearLayout(requireContext());
-            bloque.setOrientation(LinearLayout.VERTICAL);
-            int padding = dp(12);
-            bloque.setPadding(padding, padding, padding, padding);
-            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-            params.bottomMargin = dp(8);
-            bloque.setLayoutParams(params);
-            bloque.setBackgroundResource(R.drawable.bg_rounded_primary_container);
+            View bloque = inflater.inflate(R.layout.item_question, container, false);
 
-            bloque.addView(crearTextoSuperficie("Pregunta: " + valorOBlanco(pregunta.getText())));
-            TextView respuesta;
-            if (pregunta.getAnswer() == null) {
-                respuesta = crearTextoSuperficie("Aún no fue respondida");
-            } else {
-                respuesta = crearTextoSuperficie("Respuesta: " + pregunta.getAnswer());
-            }
-            respuesta.setPadding(0, dp(8), 0, 0);
-            bloque.addView(respuesta);
+            ((TextView) bloque.findViewById(R.id.textQuestionText))
+                    .setText("Pregunta: " + valorOBlanco(pregunta.getText()));
 
-            if (pregunta.getAnswer() != null && pregunta.getAnsweredAt() != null) {
-                TextView fecha = crearTextoSuperficie("Respondida: " + pregunta.getAnsweredAt());
-                fecha.setPadding(0, dp(4), 0, 0);
-                bloque.addView(fecha);
+            TextView respuesta = bloque.findViewById(R.id.textQuestionAnswer);
+            TextView respondida = bloque.findViewById(R.id.textQuestionAnsweredAt);
+            MaterialButton responder = bloque.findViewById(R.id.buttonAnswerQuestion);
+
+            boolean sinResponder = pregunta.getAnswer() == null;
+            respuesta.setText(sinResponder
+                    ? "Aún no fue respondida"
+                    : "Respuesta: " + pregunta.getAnswer());
+
+            boolean hayFecha = !sinResponder && pregunta.getAnsweredAt() != null;
+            respondida.setVisibility(hayFecha ? View.VISIBLE : View.GONE);
+            if (hayFecha) respondida.setText("Respondida: " + pregunta.getAnsweredAt());
+
+            if (sinResponder && puedeResponder) {
+                responder.setVisibility(View.VISIBLE);
+                responder.setEnabled(publicacionRepository.isOnline());
+                responder.setOnClickListener(v -> abrirDialogoRespuesta(pregunta));
             }
-            containerPreguntasComprador.addView(bloque);
+
+            container.addView(bloque);
         }
     }
 
@@ -630,22 +605,6 @@ public class DetailFragment extends Fragment {
                         Toast.makeText(requireContext(), mensaje, Toast.LENGTH_LONG).show();
                     }
                 });
-    }
-
-    private TextView crearTexto(String contenido) {
-        TextView textView = new TextView(requireContext());
-        textView.setText(contenido);
-        textView.setTextColor(com.google.android.material.color.MaterialColors.getColor(
-                textView, com.google.android.material.R.attr.colorOnPrimaryContainer));
-        return textView;
-    }
-
-    private TextView crearTextoSuperficie(String contenido) {
-        TextView textView = new TextView(requireContext());
-        textView.setText(contenido);
-        textView.setTextColor(com.google.android.material.color.MaterialColors.getColor(
-                textView, com.google.android.material.R.attr.colorOnPrimaryContainer));
-        return textView;
     }
 
     private String valorOBlanco(String valor) {

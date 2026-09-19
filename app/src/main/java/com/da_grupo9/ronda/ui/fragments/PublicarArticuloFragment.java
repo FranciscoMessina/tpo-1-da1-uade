@@ -1,6 +1,7 @@
 package com.da_grupo9.ronda.ui.fragments;
 
 import com.da_grupo9.ronda.R;
+import com.da_grupo9.ronda.ui.components.SpinnerAdapters;
 import com.da_grupo9.ronda.data.repository.RepositoryResult;
 import com.da_grupo9.ronda.data.local.BorradorPublicacionStorage;
 import com.da_grupo9.ronda.data.local.SessionManager;
@@ -15,7 +16,6 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -203,19 +203,11 @@ public class PublicarArticuloFragment extends Fragment {
         };
 
         spinnerCategoria.setAdapter(
-                new ArrayAdapter<>(
-                        requireContext(),
-                        android.R.layout.simple_spinner_dropdown_item,
-                        categorias
-                )
+                SpinnerAdapters.create(requireContext(), categorias)
         );
 
         spinnerEstado.setAdapter(
-                new ArrayAdapter<>(
-                        requireContext(),
-                        android.R.layout.simple_spinner_dropdown_item,
-                        estados
-                )
+                SpinnerAdapters.create(requireContext(), estados)
         );
     }
 
@@ -474,8 +466,8 @@ public class PublicarArticuloFragment extends Fragment {
         int cantidadFotos = fotosExistentes.size() + fotosSeleccionadas.size();
         textCantidadFotos.setText("Fotos: " + cantidadFotos + " de 10");
 
-        int size = (int) (96 * getResources().getDisplayMetrics().density);
-        int margin = (int) (8 * getResources().getDisplayMetrics().density);
+        int size = getResources().getDimensionPixelSize(R.dimen.avatar_size);
+        int margin = getResources().getDimensionPixelSize(R.dimen.spacing_sm);
 
         for (String url : fotosExistentes) {
             agregarVistaPreviaFoto(url, false, size, margin);
@@ -492,6 +484,8 @@ public class PublicarArticuloFragment extends Fragment {
         params.setMarginEnd(margin);
         imageView.setLayoutParams(params);
         imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+        imageView.setBackgroundResource(R.drawable.bg_photo_thumbnail);
+        imageView.setClipToOutline(true);
         containerFotos.addView(imageView);
 
         Glide.with(this)

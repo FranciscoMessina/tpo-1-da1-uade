@@ -1,10 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    Tarjeta de operación. Sigue el mismo patrón que item_publication:
+    la tarjeta entera es pulsable, "Ver detalle" es una afordancia (no un botón)
+    y debajo van solo las acciones que no son "abrir el detalle".
+-->
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/cardOperation"
-    style="@style/Widget.Ronda.Card"
+    style="@style/Widget.Ronda.Card.List"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="@dimen/spacing_sm"
     android:clickable="true"
     android:focusable="true">
 
@@ -30,49 +34,32 @@
 
         <TextView
             android:id="@+id/textOperationAmount"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/spacing_xs"
-            android:textAppearance="@style/TextAppearance.Material3.TitleSmall"
-            android:textColor="?attr/colorOnSurface" />
+            style="@style/Widget.Ronda.Text.Price"
+            android:layout_marginTop="@dimen/spacing_xs" />
 
         <TextView
             android:id="@+id/textOperationCounterparty"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/spacing_xs"
-            android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
-            android:textColor="?attr/colorOnSurfaceVariant" />
+            style="@style/Widget.Ronda.Text.Meta"
+            android:layout_marginTop="@dimen/spacing_xs" />
 
         <TextView
             android:id="@+id/textOperationRating"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/spacing_xs"
-            android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
-            android:textColor="?attr/colorOnSurfaceVariant" />
+            style="@style/Widget.Ronda.Text.Meta"
+            android:layout_marginTop="@dimen/spacing_xs" />
 
-        <LinearLayout
+        <TextView
+            android:id="@+id/textOperationDetailHint"
+            style="@style/Widget.Ronda.Text.Link"
+            android:layout_marginTop="@dimen/spacing_sm"
+            android:text="@string/action_detail" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/buttonOperationRate"
+            style="@style/Widget.Ronda.Button.Outlined"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/spacing_sm"
-            android:gravity="end"
-            android:orientation="horizontal">
+            android:text="Calificar" />
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/buttonOperationDetail"
-                style="@style/Widget.Ronda.Button.Text"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Ver detalle" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/buttonOperationRate"
-                style="@style/Widget.Ronda.Button.Outlined"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Calificar" />
-
-        </LinearLayout>
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>
