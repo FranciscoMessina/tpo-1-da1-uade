@@ -29,11 +29,22 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import android.app.AlertDialog;
+import android.widget.Toast;
+
+import com.da_grupo9.ronda.data.model.SavedSearchRequest;
+import com.da_grupo9.ronda.data.model.SavedSearchItem;
+import com.da_grupo9.ronda.data.remote.SavedSearchesApi;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
 @AndroidEntryPoint
 public class HomeFragment extends Fragment {
 
     @Inject PublicacionRepository publicacionRepository;
-
+    @Inject SavedSearchesApi savedSearchesApi;
     private LinearLayout publicacionesContainer;
 
     private EditText buscador;
@@ -61,6 +72,7 @@ public class HomeFragment extends Fragment {
     private final int publicacionesPorPagina = 3;
 
     private String usuarioActualEmail = "";
+    private boolean aplicarBusquedaGuardada = false;
 
     public HomeFragment() {
     }
@@ -117,10 +129,22 @@ public class HomeFragment extends Fragment {
         textoPagina = view.findViewById(R.id.textoPagina);
 
         Button botonFavoritos = view.findViewById(R.id.botonFavoritos);
+        Button botonGuardarBusqueda = view.findViewById(R.id.botonGuardarBusqueda);
+        Button botonBusquedasGuardadas =view.findViewById(R.id.botonBusquedasGuardadas);
 
         botonFavoritos.setOnClickListener(v ->
                 Navigation.findNavController(v).navigate(
                         R.id.action_homeFragment_to_favoritesFragment
+                )
+        );
+
+        botonGuardarBusqueda.setOnClickListener(
+                v -> mostrarDialogoGuardarBusqueda()
+        );
+
+        botonBusquedasGuardadas.setOnClickListener(v ->
+                Navigation.findNavController(v).navigate(
+                        R.id.action_homeFragment_to_savedSearchesFragment
                 )
         );
 
@@ -133,6 +157,8 @@ public class HomeFragment extends Fragment {
         }
 
         configurarSpinners();
+        cargarBusquedaGuardada();
+
         publicaciones = new ArrayList<>();
         publicacionesFiltradas = new ArrayList<>();
         cargarDatos();
@@ -166,32 +192,50 @@ public class HomeFragment extends Fragment {
 
     private void cargarDatos() {
         actualizarEstadoConexion(publicacionRepository.isOnline());
-        publicacionRepository.getPublicaciones(new PublicacionRepository.Resultado<List<Publicacion>>() {
-            @Override
-            public void onSuccess(List<Publicacion> data) {
-                if (!isAdded()) return;
-                actualizarEstadoConexion(publicacionRepository.isOnline());
-                publicaciones.clear();
-                for (Publicacion publicacion : data) {
-                    if (publicacion.isVisibleInPublicFeed()) {
-                        publicaciones.add(publicacion);
-                    }
-                }
-                publicacionesFiltradas = new ArrayList<>(publicaciones);
-                paginaActual = 1;
-                mostrarPagina();
-            }
 
-            @Override
-            public void onError(String mensaje) {
-                if (isAdded()) {
-                    android.widget.Toast.makeText(requireContext(), mensaje, android.widget.Toast.LENGTH_LONG).show();
-                    if (!publicacionRepository.isOnline()) {
-                        actualizarEstadoConexion(false);
+        publicacionRepository.getPublicaciones(
+                new PublicacionRepository.Resultado<List<Publicacion>>() {
+
+                    @Override
+                    public void onSuccess(List<Publicacion> data) {
+                        if (!isAdded()) return;
+
+                        actualizarEstadoConexion(publicacionRepository.isOnline());
+
+                        publicaciones.clear();
+
+                        for (Publicacion publicacion : data) {
+                            if (publicacion.isVisibleInPublicFeed()) {
+                                publicaciones.add(publicacion);
+                            }
+                        }
+
+                        publicacionesFiltradas = new ArrayList<>(publicaciones);
+                        paginaActual = 1;
+
+                        if (aplicarBusquedaGuardada) {
+                            aplicarBusquedaGuardada = false;
+                            aplicarFiltros();
+                        } else {
+                            mostrarPagina();
+                        }
                     }
-                }
-            }
-        });
+
+                    @Override
+                    public void onError(String mensaje) {
+                        if (isAdded()) {
+                            android.widget.Toast.makeText(
+                                    requireContext(),
+                                    mensaje,
+                                    android.widget.Toast.LENGTH_LONG
+                            ).show();
+
+                            if (!publicacionRepository.isOnline()) {
+                                actualizarEstadoConexion(false);
+                            }
+                        }
+                    }
+                });
     }
 
     private void configurarSpinners() {
@@ -259,6 +303,302 @@ public class HomeFragment extends Fragment {
         );
     }
 
+    private void mostrarDialogoGuardarBusqueda() {
+
+        EditText inputNombre = new EditText(requireContext());
+        inputNombre.setHint("Ej: Notebooks baratas");
+
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Guardar búsqueda")
+                .setMessage("Ingresá un nombre para identificar esta búsqueda")
+                .setView(inputNombre)
+                .setPositiveButton("Guardar", (dialog, which) -> {
+
+                    String nombre =
+                            inputNombre.getText().toString().trim();
+
+                    if (nombre.isEmpty()) {
+                        Toast.makeText(
+                                requireContext(),
+                                "Ingresá un nombre para la búsqueda",
+                                Toast.LENGTH_SHORT
+                        ).show();
+
+                        return;
+                    }
+
+                    guardarBusqueda(nombre);
+                })
+                .setNegativeButton("Cancelar", null)
+                .show();
+    }
+
+    private void guardarBusqueda(String nombre) {
+
+        String query = buscador.getText().toString().trim();
+
+        String categoria =
+                spinnerCategoria.getSelectedItem().toString();
+
+        String estado =
+                spinnerEstado.getSelectedItem().toString();
+
+        String cercania =
+                spinnerCercania.getSelectedItem().toString();
+
+        String orden =
+                spinnerOrden.getSelectedItem().toString();
+
+        String textoMin =
+                precioMinimo.getText().toString().trim();
+
+        String textoMax =
+                precioMaximo.getText().toString().trim();
+
+        Double minPrice =
+                textoMin.isEmpty() ? null : Double.parseDouble(textoMin);
+
+        Double maxPrice =
+                textoMax.isEmpty() ? null : Double.parseDouble(textoMax);
+
+        if (query.isEmpty()) {
+            query = null;
+        }
+
+        if (categoria.equals("Todas")) {
+            categoria = null;
+        } else if (categoria.equals("Tecnología")) {
+            categoria = "electronics";
+        } else if (categoria.equals("Hogar")) {
+            categoria = "home";
+        } else if (categoria.equals("Ropa y moda")) {
+            categoria = "fashion";
+        } else if (categoria.equals("Deportes")) {
+            categoria = "sports";
+        } else if (categoria.equals("Vehículos")) {
+            categoria = "vehicles";
+        } else if (categoria.equals("Libros")) {
+            categoria = "books";
+        } else if (categoria.equals("Juguetes")) {
+            categoria = "toys";
+        } else if (categoria.equals("Otros")) {
+            categoria = "other";
+        }
+
+        if (estado.equals("Todos")) {
+            estado = null;
+        } else if (estado.equals("Nuevo")) {
+            estado = "new";
+        } else if (estado.equals("Como nuevo")) {
+            estado = "like_new";
+        } else if (estado.equals("Usado")) {
+            estado = "used";
+        }
+
+        if (cercania.equals("Todas las zonas")) {
+            cercania = null;
+        } else if (cercania.equals("Cerca de mí")) {
+            cercania = "Palermo";
+        }
+
+        if (orden.equals("Más recientes")) {
+            orden = "recent";
+        } else if (orden.equals("Menor precio")) {
+            orden = "price_asc";
+        } else if (orden.equals("Mayor precio")) {
+            orden = "price_desc";
+        }
+
+        SavedSearchRequest request =
+                new SavedSearchRequest(
+                        nombre,
+                        query,
+                        categoria,
+                        minPrice,
+                        maxPrice,
+                        estado,
+                        cercania,
+                        orden
+                );
+
+        savedSearchesApi.createSavedSearch(request)
+                .enqueue(new Callback<SavedSearchItem>() {
+
+                    @Override
+                    public void onResponse(
+                            Call<SavedSearchItem> call,
+                            Response<SavedSearchItem> response) {
+
+                        if (!isAdded()) {
+                            return;
+                        }
+
+                        if (response.isSuccessful()) {
+                            Toast.makeText(
+                                    requireContext(),
+                                    "Búsqueda guardada correctamente",
+                                    Toast.LENGTH_SHORT
+                            ).show();
+                        } else {
+                            Toast.makeText(
+                                    requireContext(),
+                                    "Error al guardar: " + response.code(),
+                                    Toast.LENGTH_LONG
+                            ).show();
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(
+                            Call<SavedSearchItem> call,
+                            Throwable t) {
+
+                        if (!isAdded()) {
+                            return;
+                        }
+
+                        Toast.makeText(
+                                requireContext(),
+                                "Error de conexión",
+                                Toast.LENGTH_SHORT
+                        ).show();
+                    }
+                });
+    }
+
+    private void cargarBusquedaGuardada() {
+
+        Bundle args = getArguments();
+
+        if (args == null) {
+            return;
+        }
+        aplicarBusquedaGuardada = true;
+        String query = args.getString("query");
+        String category = args.getString("category");
+        String condition = args.getString("condition");
+        String zone = args.getString("zone");
+        String sort = args.getString("sort");
+
+        if (query != null) {
+            buscador.setText(query);
+        }
+
+        if (args.containsKey("minPrice")) {
+            precioMinimo.setText(
+                    String.valueOf(args.getDouble("minPrice"))
+            );
+        }
+
+        if (args.containsKey("maxPrice")) {
+            precioMaximo.setText(
+                    String.valueOf(args.getDouble("maxPrice"))
+            );
+        }
+
+        seleccionarCategoriaGuardada(category);
+        seleccionarEstadoGuardado(condition);
+        seleccionarCercaniaGuardada(zone);
+        seleccionarOrdenGuardado(sort);
+    }
+
+    private void seleccionarCategoriaGuardada(String category) {
+
+        if (category == null) {
+            spinnerCategoria.setSelection(0);
+            return;
+        }
+
+        switch (category) {
+            case "electronics":
+                spinnerCategoria.setSelection(1);
+                break;
+            case "home":
+                spinnerCategoria.setSelection(2);
+                break;
+            case "sports":
+                spinnerCategoria.setSelection(3);
+                break;
+            case "fashion":
+                spinnerCategoria.setSelection(4);
+                break;
+            case "vehicles":
+                spinnerCategoria.setSelection(5);
+                break;
+            case "books":
+                spinnerCategoria.setSelection(6);
+                break;
+            case "toys":
+                spinnerCategoria.setSelection(7);
+                break;
+            case "other":
+                spinnerCategoria.setSelection(8);
+                break;
+            default:
+                spinnerCategoria.setSelection(0);
+                break;
+        }
+    }
+
+    private void seleccionarEstadoGuardado(String condition) {
+
+        if (condition == null) {
+            spinnerEstado.setSelection(0);
+            return;
+        }
+
+        switch (condition) {
+            case "new":
+                spinnerEstado.setSelection(1);
+                break;
+            case "like_new":
+                spinnerEstado.setSelection(2);
+                break;
+            case "used":
+                spinnerEstado.setSelection(3);
+                break;
+            default:
+                spinnerEstado.setSelection(0);
+                break;
+        }
+    }
+
+    private void seleccionarCercaniaGuardada(String zone) {
+
+        if (zone == null) {
+            spinnerCercania.setSelection(0);
+            return;
+        }
+
+        if (zone.equals("Palermo")) {
+            spinnerCercania.setSelection(1);
+        } else {
+            spinnerCercania.setSelection(0);
+        }
+    }
+
+    private void seleccionarOrdenGuardado(String sort) {
+
+        if (sort == null) {
+            spinnerOrden.setSelection(0);
+            return;
+        }
+
+        switch (sort) {
+            case "recent":
+                spinnerOrden.setSelection(0);
+                break;
+            case "price_asc":
+                spinnerOrden.setSelection(1);
+                break;
+            case "price_desc":
+                spinnerOrden.setSelection(2);
+                break;
+            default:
+                spinnerOrden.setSelection(0);
+                break;
+        }
+    }
     private void aplicarFiltros() {
 
         String texto =
