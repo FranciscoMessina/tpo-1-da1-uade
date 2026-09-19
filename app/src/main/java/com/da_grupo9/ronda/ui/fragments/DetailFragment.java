@@ -1,6 +1,7 @@
 package com.da_grupo9.ronda.ui.fragments;
 
 import com.da_grupo9.ronda.R;
+import com.da_grupo9.ronda.data.repository.RepositoryResult;
 import com.da_grupo9.ronda.data.model.Publicacion;
 import com.da_grupo9.ronda.data.repository.PublicacionRepository;
 import com.da_grupo9.ronda.util.NetworkMonitor;
@@ -221,7 +222,7 @@ public class DetailFragment extends Fragment {
     private void cargarDatosPublicacion(boolean recargaSilenciosa) {
         if (publicacionId.isEmpty()) return;
 
-        publicacionRepository.getPublicacionById(publicacionId, new PublicacionRepository.Resultado<Publicacion>() {
+        publicacionRepository.getPublicacionById(publicacionId, new RepositoryResult<Publicacion>() {
             @Override
             public void onSuccess(Publicacion data) {
                 onSuccess(data, false);
@@ -469,7 +470,7 @@ public class DetailFragment extends Fragment {
             publicacionRepository.cambiarEstadoPublicacion(
                     publicacionCargada.getId(),
                     nuevoEstado,
-                    new PublicacionRepository.Resultado<Publicacion>() {
+                    new RepositoryResult<Publicacion>() {
                         @Override public void onSuccess(Publicacion data) {
                             if (!isAdded()) return;
                             publicacionCargada = data;
@@ -615,7 +616,7 @@ public class DetailFragment extends Fragment {
         inputLayout.setError(null);
         dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
         publicacionRepository.responderPregunta(pregunta.getId(), respuesta,
-                new PublicacionRepository.Resultado<Publicacion.Question>() {
+                new RepositoryResult<Publicacion.Question>() {
                     @Override public void onSuccess(Publicacion.Question data) {
                         if (!isAdded()) return;
                         dialog.dismiss();

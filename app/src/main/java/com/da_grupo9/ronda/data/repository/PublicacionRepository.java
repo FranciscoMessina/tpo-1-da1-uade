@@ -42,14 +42,6 @@ import retrofit2.Response;
 @Singleton
 public class PublicacionRepository {
 
-    public interface Resultado<T> {
-        void onSuccess(T data);
-        /** Permite a las pantallas advertir cuando el dato no fue confirmado por el servidor. */
-        default void onSuccess(T data, boolean desdeCache) { onSuccess(data); }
-        void onError(String mensaje);
-        default void onError(ApiError error) { onError(error.getMessage()); }
-    }
-
     public interface ResultadoPagina {
         void onSuccess(List<Publicacion> items, int page, int totalPages, int total);
         /** Permite a Home advertir cuando la página procede de la caché local. */
@@ -148,21 +140,21 @@ public class PublicacionRepository {
         });
     }
 
-    public void getCategories(Resultado<List<String>> resultado) {
-        ejecutar(api.getCategories(), new Resultado<CategoriesResponse>() {
+    public void getCategories(RepositoryResult<List<String>> resultado) {
+        ejecutar(api.getCategories(), new RepositoryResult<CategoriesResponse>() {
             @Override public void onSuccess(CategoriesResponse data) { resultado.onSuccess(data.getItems()); }
             @Override public void onError(String mensaje) { resultado.onError(mensaje); }
         });
     }
 
-    public void getZones(Resultado<List<String>> resultado) {
-        ejecutar(api.getZones(), new Resultado<ZonesResponse>() {
+    public void getZones(RepositoryResult<List<String>> resultado) {
+        ejecutar(api.getZones(), new RepositoryResult<ZonesResponse>() {
             @Override public void onSuccess(ZonesResponse data) { resultado.onSuccess(data.getItems()); }
             @Override public void onError(String mensaje) { resultado.onError(mensaje); }
         });
     }
 
-    public void getPublicacionById(String id, Resultado<Publicacion> resultado) {
+    public void getPublicacionById(String id, RepositoryResult<Publicacion> resultado) {
         if (!networkMonitor.isOnline()) {
             obtenerPublicacionDeCache(id, resultado, "Sin conexión a internet y esta publicación no está guardada");
             return;
@@ -193,7 +185,7 @@ public class PublicacionRepository {
         });
     }
 
-    public void getUltimasConsultadas(int limit, Resultado<List<Publicacion>> resultado) {
+    public void getUltimasConsultadas(int limit, RepositoryResult<List<Publicacion>> resultado) {
         String cuenta = cuentaActual();
         dbExecutor.execute(() -> {
             List<PublicacionEntity> entities = publicacionDao.getUltimasConsultadas(cuenta, limit);
@@ -313,7 +305,7 @@ public class PublicacionRepository {
                 && (maxPrice == null || publicacion.getPrecio() <= maxPrice);
     }
 
-    private void obtenerPublicacionDeCache(String id, Resultado<Publicacion> resultado, String fallbackError) {
+    private void obtenerPublicacionDeCache(String id, RepositoryResult<Publicacion> resultado, String fallbackError) {
         String cuenta = cuentaActual();
         dbExecutor.execute(() -> {
             PublicacionEntity entity = publicacionDao.getById(cuenta, id);
@@ -332,15 +324,15 @@ public class PublicacionRepository {
         });
     }
 
-    public void getUsuario(String id, Resultado<PublicUser> resultado) {
+    public void getUsuario(String id, RepositoryResult<PublicUser> resultado) {
         ejecutar(api.getUsuario(id), resultado);
     }
 
-    public void getResenasUsuario(String id, int page, int pageSize, Resultado<ReviewsResponse> resultado) {
+    public void getResenasUsuario(String id, int page, int pageSize, RepositoryResult<ReviewsResponse> resultado) {
         ejecutar(api.getResenasUsuario(id, page, pageSize), resultado);
     }
 
-    public void getMisPublicaciones(Resultado<List<Publicacion>> resultado) {
+    public void getMisPublicaciones(RepositoryResult<List<Publicacion>> resultado) {
         api.getPublicacionesPropias().enqueue(new Callback<PublicacionesResponse>() {
             @Override public void onResponse(Call<PublicacionesResponse> call, Response<PublicacionesResponse> response) {
                 if (response.isSuccessful() && response.body() != null) resultado.onSuccess(response.body().getItems());
@@ -353,7 +345,7 @@ public class PublicacionRepository {
     }
 
     public void agregarPublicacion(PublicationRequest publicacion, List<String> rutasImagenes,
-                                   Resultado<Publicacion> resultado) {
+                                   RepositoryResult<Publicacion> resultado) {
         if (!networkMonitor.isOnline()) {
             resultado.onError("Se necesita conexión a internet para publicar un artículo");
             return;
@@ -370,7 +362,7 @@ public class PublicacionRepository {
         });
     }
 
-    public void cambiarEstadoPublicacion(String id, String estado, Resultado<Publicacion> resultado) {
+    public void cambiarEstadoPublicacion(String id, String estado, RepositoryResult<Publicacion> resultado) {
         if (!networkMonitor.isOnline()) {
             resultado.onError("Se necesita conexión a internet para modificar el estado");
             return;
@@ -381,7 +373,7 @@ public class PublicacionRepository {
     public void actualizarPublicacion(String id, PublicationRequest publicacion,
                                       List<String> rutasImagenesNuevas,
                                       List<String> imagenesConservadas,
-                                      Resultado<Publicacion> resultado) {
+                                      RepositoryResult<Publicacion> resultado) {
         if (!networkMonitor.isOnline()) {
             resultado.onError("Se necesita conexión a internet para actualizar la publicación");
             return;
@@ -406,7 +398,7 @@ public class PublicacionRepository {
     }
 
     public void crearPregunta(String publicacionId, String texto,
-                              Resultado<Publicacion.Question> resultado) {
+                              RepositoryResult<Publicacion.Question> resultado) {
         if (!networkMonitor.isOnline()) {
             resultado.onError("Se necesita conexión a internet para enviar una pregunta");
             return;
@@ -415,7 +407,7 @@ public class PublicacionRepository {
     }
 
     public void responderPregunta(String preguntaId, String respuesta,
-                                  Resultado<Publicacion.Question> resultado) {
+                                  RepositoryResult<Publicacion.Question> resultado) {
         if (!networkMonitor.isOnline()) {
             resultado.onError("Se necesita conexión a internet para responder la pregunta");
             return;
@@ -423,7 +415,7 @@ public class PublicacionRepository {
         ejecutar(api.responderPregunta(preguntaId, new AnswerQuestionRequest(respuesta)), resultado);
     }
 
-    private <T> void ejecutar(Call<T> call, Resultado<T> resultado) {
+    private <T> void ejecutar(Call<T> call, RepositoryResult<T> resultado) {
         call.enqueue(new Callback<T>() {
             @Override
             public void onResponse(Call<T> call, Response<T> response) {

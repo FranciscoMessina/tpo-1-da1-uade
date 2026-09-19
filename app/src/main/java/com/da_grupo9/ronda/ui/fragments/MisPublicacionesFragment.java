@@ -1,6 +1,7 @@
 package com.da_grupo9.ronda.ui.fragments;
 
 import com.da_grupo9.ronda.R;
+import com.da_grupo9.ronda.data.repository.RepositoryResult;
 import com.da_grupo9.ronda.data.model.Publicacion;
 import com.da_grupo9.ronda.data.repository.PublicacionRepository;
 import com.da_grupo9.ronda.util.MoneyFormat;
@@ -76,7 +77,7 @@ public class MisPublicacionesFragment extends Fragment {
     private void mostrarPublicaciones() {
         publicacionesContainer.removeAllViews();
 
-        publicacionRepository.getMisPublicaciones(new PublicacionRepository.Resultado<List<Publicacion>>() {
+        publicacionRepository.getMisPublicaciones(new RepositoryResult<List<Publicacion>>() {
             @Override public void onSuccess(List<Publicacion> publicaciones) {
                 if (!isAdded()) return;
                 renderizarPublicaciones(publicaciones);
@@ -253,8 +254,8 @@ public class MisPublicacionesFragment extends Fragment {
         return Math.round(dp * getResources().getDisplayMetrics().density);
     }
 
-    private PublicacionRepository.Resultado<Publicacion> recargarAlFinalizar() {
-        return new PublicacionRepository.Resultado<Publicacion>() {
+    private RepositoryResult<Publicacion> recargarAlFinalizar() {
+        return new RepositoryResult<Publicacion>() {
             @Override public void onSuccess(Publicacion data) { mostrarPublicaciones(); }
             @Override public void onError(String mensaje) {
                 if (isAdded()) android.widget.Toast.makeText(requireContext(), mensaje, android.widget.Toast.LENGTH_LONG).show();

@@ -3,6 +3,7 @@ package com.da_grupo9.ronda.ui.fragments;
 import com.da_grupo9.ronda.R;
 import com.da_grupo9.ronda.data.local.SessionManager;
 import com.da_grupo9.ronda.data.repository.AuthRepository;
+import com.da_grupo9.ronda.ui.components.BiometricActivationHelper;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -14,7 +15,6 @@ import android.widget.Toast;
 
 import androidx.fragment.app.Fragment;
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AlertDialog;
 import androidx.biometric.BiometricManager;
 import androidx.biometric.BiometricManager.Authenticators;
 import androidx.biometric.BiometricPrompt;
@@ -141,23 +141,7 @@ public class LoginFragment extends Fragment {
     }
 
     private void ofrecerBiometria(View view, String email) {
-        if (sessionManager.isBiometricEnabled()
-                || BiometricManager.from(requireContext()).canAuthenticate(AUTHENTICATORS)
-                != BiometricManager.BIOMETRIC_SUCCESS) {
-            irAlHome(view, email);
-            return;
-        }
-
-        new AlertDialog.Builder(requireContext())
-                .setTitle("Activar acceso biométrico")
-                .setMessage("¿Querés usar la biometría la próxima vez que ingreses?")
-                .setPositiveButton("Activar", (dialog, which) -> {
-                    sessionManager.setBiometricEnabled(true);
-                    irAlHome(view, email);
-                })
-                .setNegativeButton("Ahora no", (dialog, which) ->
-                        irAlHome(view, email))
-                .show();
+        BiometricActivationHelper.offer(this, sessionManager, () -> irAlHome(view, email));
     }
 
     private void mostrarBiometria(View view) {

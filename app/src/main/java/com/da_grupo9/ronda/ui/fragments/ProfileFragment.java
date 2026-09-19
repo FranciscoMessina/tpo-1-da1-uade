@@ -1,6 +1,7 @@
 package com.da_grupo9.ronda.ui.fragments;
 
 import com.da_grupo9.ronda.R;
+import com.da_grupo9.ronda.data.repository.RepositoryResult;
 import com.da_grupo9.ronda.data.repository.ProfileRepository;
 import com.da_grupo9.ronda.data.repository.PublicacionRepository;
 import com.da_grupo9.ronda.data.repository.AuthRepository;
@@ -115,7 +116,7 @@ public class ProfileFragment extends Fragment {
                 Navigation.findNavController(v).navigate(
                         R.id.action_profileFragment_to_operationsHistoryFragment));
 
-        profileRepository.getMe(new PublicacionRepository.Resultado<Perfil>() {
+        profileRepository.getMe(new RepositoryResult<Perfil>() {
             @Override public void onSuccess(Perfil perfil) {
                 if (!isAdded()) return;
                 editNombre.setText(perfil.getNombre());
@@ -149,7 +150,7 @@ public class ProfileFragment extends Fragment {
             @Override public void onError(String mensaje) { mostrarError(mensaje); }
         });
 
-        publicacionRepository.getMisPublicaciones(new PublicacionRepository.Resultado<List<Publicacion>>() {
+        publicacionRepository.getMisPublicaciones(new RepositoryResult<List<Publicacion>>() {
             @Override public void onSuccess(List<Publicacion> publicaciones) {
                 if (!isAdded()) return;
                 long activas = publicaciones.stream().filter(Publicacion::isVisibleInPublicFeed).count();
@@ -211,7 +212,7 @@ public class ProfileFragment extends Fragment {
             } else {
 
                 Perfil perfil = new Perfil(nombre, email, telefono, zona, avatarUrlActual);
-                profileRepository.updateMe(perfil, new PublicacionRepository.Resultado<Perfil>() {
+                profileRepository.updateMe(perfil, new RepositoryResult<Perfil>() {
                     @Override public void onSuccess(Perfil data) {
                         if (isAdded()) Toast.makeText(requireContext(), "Perfil actualizado", Toast.LENGTH_SHORT).show();
                     }
@@ -284,7 +285,7 @@ public class ProfileFragment extends Fragment {
 
     private void guardarAvatar(String url) {
         profileRepository.updateMe(new Perfil(null, null, null, null, url),
-                new PublicacionRepository.Resultado<Perfil>() {
+                new RepositoryResult<Perfil>() {
                     @Override public void onSuccess(Perfil perfil) {
                         if (!isAdded()) return;
                         avatarUrlActual = perfil.getAvatarUrl() != null ? perfil.getAvatarUrl() : url;

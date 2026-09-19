@@ -1,10 +1,10 @@
 package com.da_grupo9.ronda.ui.fragments;
 
 import com.da_grupo9.ronda.R;
+import com.da_grupo9.ronda.data.repository.RepositoryResult;
 import com.da_grupo9.ronda.data.model.Publicacion;
 import com.da_grupo9.ronda.data.model.FiltrosPublicaciones;
 import com.da_grupo9.ronda.data.repository.PublicacionRepository;
-import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.color.MaterialColors;
 
 import android.graphics.Color;
@@ -43,6 +43,7 @@ import com.da_grupo9.ronda.data.remote.FavoritesApi;
 import com.da_grupo9.ronda.data.remote.SavedSearchesApi;
 import com.da_grupo9.ronda.util.ApiErrorMessage;
 import com.da_grupo9.ronda.util.MoneyFormat;
+import com.da_grupo9.ronda.ui.components.PublicationCardBinder;
 
 import android.widget.ImageButton;
 import java.util.HashMap;
@@ -294,7 +295,7 @@ public class HomeFragment extends Fragment {
     }
 
     private void cargarCategorias() {
-        publicacionRepository.getCategories(new PublicacionRepository.Resultado<List<String>>() {
+        publicacionRepository.getCategories(new RepositoryResult<List<String>>() {
             @Override public void onSuccess(List<String> data) {
                 if (!isAdded() || data.isEmpty()) return;
                 String selected = categoriaSeleccionadaApi();
@@ -319,7 +320,7 @@ public class HomeFragment extends Fragment {
     }
 
     private void cargarZonas() {
-        publicacionRepository.getZones(new PublicacionRepository.Resultado<List<String>>() {
+        publicacionRepository.getZones(new RepositoryResult<List<String>>() {
             @Override public void onSuccess(List<String> data) {
                 if (!isAdded()) return;
                 String selected = zonaSeleccionadaApi();
@@ -690,164 +691,41 @@ public class HomeFragment extends Fragment {
         }
     }
 
-    private void agregarPublicacion(
-            Publicacion publicacion) {
-
-        MaterialCardView tarjeta = crearTarjeta();
-
-        LinearLayout contenido =
-                new LinearLayout(requireContext());
-
-        contenido.setOrientation(LinearLayout.VERTICAL);
-        tarjeta.addView(contenido);
-
-        int colorOnSurface = MaterialColors.getColor(requireContext(), com.google.android.material.R.attr.colorOnSurface, Color.BLACK);
-        int colorOnSurfaceVariant = MaterialColors.getColor(requireContext(), com.google.android.material.R.attr.colorOnSurfaceVariant, Color.DKGRAY);
-        int colorPrice = androidx.core.content.ContextCompat.getColor(requireContext(), R.color.price);
-        int colorPrimary = MaterialColors.getColor(requireContext(), android.R.attr.colorPrimary, Color.BLUE);
-
-        TextView titulo =
-                new TextView(requireContext());
-
-        titulo.setText(
-                publicacion.getTitulo()
+    private void agregarPublicacion(Publicacion publicacion) {
+        View tarjeta = PublicationCardBinder.inflate(getLayoutInflater(), publicacionesContainer);
+        PublicationCardBinder.bind(
+                tarjeta,
+                publicacion.getTitulo(),
+                publicacion.getDescripcion(),
+                MoneyFormat.amount(publicacion.getPrecio()),
+                publicacion.getEstado(),
+                publicacion.getCategoria(),
+                publicacion.getZona(),
+                null
         );
 
-        titulo.setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_TitleMedium);
-        titulo.setTextColor(colorOnSurface);
-
-        TextView descripcion =
-                new TextView(requireContext());
-
-        descripcion.setText(
-                publicacion.getDescripcion()
-        );
-
-        descripcion.setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_BodyMedium);
-        descripcion.setTextColor(colorOnSurfaceVariant);
-        descripcion.setPaddingRelative(0, dpToPx(4), 0, 0);
-
-        TextView precio =
-                new TextView(requireContext());
-
-        precio.setText(
-                "Precio: " + MoneyFormat.amount(publicacion.getPrecio())
-        );
-
-        precio.setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_TitleSmall);
-        precio.setTextColor(colorPrice);
-        precio.setPaddingRelative(0, dpToPx(8), 0, 0);
-
-        TextView estado =
-                new TextView(requireContext());
-
-        estado.setText(
-                "Estado: "
-                        + publicacion.getEstado()
-        );
-
-        estado.setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_BodyMedium);
-        estado.setTextColor(colorOnSurfaceVariant);
-        estado.setPaddingRelative(0, dpToPx(4), 0, 0);
-
-        TextView categoria =
-                new TextView(requireContext());
-
-        categoria.setText(
-                "Categoría: "
-                        + publicacion.getCategoria()
-        );
-
-        categoria.setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_BodyMedium);
-        categoria.setTextColor(colorOnSurfaceVariant);
-
-        TextView zona =
-                new TextView(requireContext());
-
-        zona.setText(
-                "Zona: "
-                        + publicacion.getZona()
-        );
-
-        zona.setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_BodyMedium);
-        zona.setTextColor(colorOnSurfaceVariant);
-
-        TextView verDetalle =
-                new TextView(requireContext());
-
-        verDetalle.setText(
-                "Ver detalle"
-        );
-
-        verDetalle.setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_LabelLarge);
-        verDetalle.setTextColor(colorPrimary);
-        verDetalle.setPaddingRelative(
-                0,
-                dpToPx(12),
-                0,
-                0
-        );
-
-        LinearLayout filaTitulo = new LinearLayout(requireContext());
-        filaTitulo.setOrientation(LinearLayout.HORIZONTAL);
-        filaTitulo.setGravity(Gravity.CENTER_VERTICAL);
-        filaTitulo.addView(titulo, new LinearLayout.LayoutParams(
-                0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+        ImageButton botonFavorito = PublicationCardBinder.favoriteButton(tarjeta);
         if (publicacion.getActions() == null || publicacion.getActions().canFavorite()) {
-            filaTitulo.addView(crearBotonFavorito(publicacion));
+            configurarBotonFavorito(publicacion, botonFavorito);
+        } else {
+            botonFavorito.setVisibility(View.GONE);
         }
 
-        contenido.addView(filaTitulo);
-        contenido.addView(descripcion);
-        contenido.addView(precio);
-        contenido.addView(estado);
-        contenido.addView(categoria);
-        contenido.addView(zona);
-        contenido.addView(verDetalle);
-
         tarjeta.setOnClickListener(v -> {
-
-            Bundle bundle =
-                    new Bundle();
-
-            bundle.putString(
-                    "publicacionId",
-                    publicacion.getId()
-            );
-
-            bundle.putString(
-                    "usuarioActualEmail",
-                    usuarioActualEmail
-            );
-
-            Navigation.findNavController(v)
-                    .navigate(
-                            R.id.action_homeFragment_to_detailFragment,
-                            bundle
-                    );
+            Bundle bundle = new Bundle();
+            bundle.putString("publicacionId", publicacion.getId());
+            bundle.putString("usuarioActualEmail", usuarioActualEmail);
+            Navigation.findNavController(v).navigate(
+                    R.id.action_homeFragment_to_detailFragment, bundle);
         });
 
-        publicacionesContainer.addView(
-                tarjeta
-        );
+        publicacionesContainer.addView(tarjeta);
     }
 
-    private ImageButton crearBotonFavorito(Publicacion publicacion) {
-        ImageButton boton = new ImageButton(requireContext());
-        int lado = dpToPx(40);
-        boton.setLayoutParams(new LinearLayout.LayoutParams(lado, lado));
-
-        android.util.TypedValue fondo = new android.util.TypedValue();
-        requireContext().getTheme().resolveAttribute(
-                android.R.attr.selectableItemBackgroundBorderless, fondo, true);
-        boton.setBackgroundResource(fondo.resourceId);
-        boton.setScaleType(ImageButton.ScaleType.CENTER);
-
+    private void configurarBotonFavorito(Publicacion publicacion, ImageButton boton) {
         boton.setOnClickListener(v -> alternarFavorito(publicacion));
-
         botonesFavorito.put(publicacion.getId(), boton);
         actualizarBotonFavorito(publicacion.getId());
-        return boton;
     }
 
     private Publicacion buscarPublicacion(String id) {
@@ -929,33 +807,6 @@ public class HomeFragment extends Fragment {
         if (error != null) {
             Toast.makeText(requireContext(), error, Toast.LENGTH_SHORT).show();
         }
-    }
-
-    private MaterialCardView crearTarjeta() {
-        MaterialCardView tarjeta = new MaterialCardView(requireContext());
-
-        tarjeta.setRadius(
-                getResources().getDimension(R.dimen.corner_radius_card)
-        );
-
-        tarjeta.setCardElevation(
-                getResources().getDimension(R.dimen.card_elevation)
-        );
-
-        tarjeta.setContentPadding(
-                dpToPx(16), dpToPx(16), dpToPx(16), dpToPx(16)
-        );
-
-        LinearLayout.LayoutParams parametros =
-                new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT
-                );
-
-        parametros.setMargins(0, 0, 0, dpToPx(12));
-        tarjeta.setLayoutParams(parametros);
-
-        return tarjeta;
     }
 
     private TextView crearMensajeVacio(String texto) {

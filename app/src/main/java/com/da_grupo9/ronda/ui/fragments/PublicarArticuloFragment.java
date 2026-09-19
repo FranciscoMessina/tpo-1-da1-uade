@@ -1,6 +1,7 @@
 package com.da_grupo9.ronda.ui.fragments;
 
 import com.da_grupo9.ronda.R;
+import com.da_grupo9.ronda.data.repository.RepositoryResult;
 import com.da_grupo9.ronda.data.local.BorradorPublicacionStorage;
 import com.da_grupo9.ronda.data.local.SessionManager;
 import com.da_grupo9.ronda.data.model.Publicacion;
@@ -352,7 +353,7 @@ public class PublicarArticuloFragment extends Fragment {
     }
 
     private void cargarDatosParaEditar(String id) {
-        publicacionRepository.getPublicacionById(id, new PublicacionRepository.Resultado<Publicacion>() {
+        publicacionRepository.getPublicacionById(id, new RepositoryResult<Publicacion>() {
             @Override public void onSuccess(Publicacion p) {
                 if (!isAdded()) return;
 
@@ -409,7 +410,7 @@ public class PublicarArticuloFragment extends Fragment {
         if (esEdicion) {
             publicacionRepository.actualizarPublicacion(
                     publicacionId, publicacion, fotosSeleccionadas, fotosExistentes,
-                    new PublicacionRepository.Resultado<Publicacion>() {
+                    new RepositoryResult<Publicacion>() {
                 @Override public void onSuccess(Publicacion data) {
                     if (!isAdded()) return;
                     Toast.makeText(requireContext(), "Publicación modificada con éxito", Toast.LENGTH_SHORT).show();
@@ -422,7 +423,7 @@ public class PublicarArticuloFragment extends Fragment {
             return;
         }
 
-        publicacionRepository.agregarPublicacion(publicacion, fotosSeleccionadas, new PublicacionRepository.Resultado<Publicacion>() {
+        publicacionRepository.agregarPublicacion(publicacion, fotosSeleccionadas, new RepositoryResult<Publicacion>() {
             @Override public void onSuccess(Publicacion data) {
                 if (!isAdded()) return;
                 publicacionCreada = true;

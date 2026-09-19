@@ -14,6 +14,7 @@ import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 
 import com.da_grupo9.ronda.R;
+import com.da_grupo9.ronda.data.repository.RepositoryResult;
 import com.da_grupo9.ronda.data.model.Operation;
 import com.da_grupo9.ronda.data.model.OperationsResponse;
 import com.da_grupo9.ronda.data.repository.ProfileRepository;
@@ -167,7 +168,7 @@ public class OperationsHistoryFragment extends Fragment {
         String to = toDate == null ? null : DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(toDate.atTime(23, 59, 59).atZone(zone));
 
         profileRepository.getOperations(TYPES[selectedTab], from, to,
-                new PublicacionRepository.Resultado<OperationsResponse>() {
+                new RepositoryResult<OperationsResponse>() {
                     @Override public void onSuccess(OperationsResponse response) {
                         // Se descartan respuestas de una pestaña o filtro que ya cambió.
                         if (!isAdded() || getView() == null || currentRequest != requestId) return;

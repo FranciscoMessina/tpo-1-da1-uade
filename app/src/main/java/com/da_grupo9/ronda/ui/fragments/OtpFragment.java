@@ -3,6 +3,7 @@ package com.da_grupo9.ronda.ui.fragments;
 import com.da_grupo9.ronda.R;
 import com.da_grupo9.ronda.data.local.SessionManager;
 import com.da_grupo9.ronda.data.repository.AuthRepository;
+import com.da_grupo9.ronda.ui.components.BiometricActivationHelper;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -14,18 +15,12 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.fragment.app.Fragment;
-import androidx.appcompat.app.AlertDialog;
-import androidx.biometric.BiometricManager;
-import androidx.biometric.BiometricManager.Authenticators;
 import androidx.navigation.Navigation;
 import javax.inject.Inject;
 import dagger.hilt.android.AndroidEntryPoint;
 
 @AndroidEntryPoint
 public class OtpFragment extends Fragment {
-    private static final int AUTHENTICATORS =
-            Authenticators.BIOMETRIC_STRONG | Authenticators.DEVICE_CREDENTIAL;
-
     @Inject AuthRepository authRepository;
     @Inject SessionManager sessionManager;
 
@@ -135,22 +130,7 @@ public class OtpFragment extends Fragment {
     }
 
     private void ofrecerBiometria(View view, String email) {
-        if (sessionManager.isBiometricEnabled()
-                || BiometricManager.from(requireContext()).canAuthenticate(AUTHENTICATORS)
-                != BiometricManager.BIOMETRIC_SUCCESS) {
-            navegarAlHome(view, email);
-            return;
-        }
-
-        new AlertDialog.Builder(requireContext())
-                .setTitle("Activar acceso biométrico")
-                .setMessage("¿Querés usar la biometría la próxima vez que ingreses?")
-                .setPositiveButton("Activar", (dialog, which) -> {
-                    sessionManager.setBiometricEnabled(true);
-                    navegarAlHome(view, email);
-                })
-                .setNegativeButton("Ahora no", (dialog, which) -> navegarAlHome(view, email))
-                .show();
+        BiometricActivationHelper.offer(this, sessionManager, () -> navegarAlHome(view, email));
     }
 
     private void navegarAlHome(View view, String email) {

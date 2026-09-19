@@ -1,6 +1,7 @@
 package com.da_grupo9.ronda.ui.fragments;
 
 import com.da_grupo9.ronda.R;
+import com.da_grupo9.ronda.data.repository.RepositoryResult;
 import com.da_grupo9.ronda.data.model.Publicacion;
 import com.da_grupo9.ronda.data.model.PublicUser;
 import com.da_grupo9.ronda.data.model.PublicacionesResponse;
@@ -126,7 +127,7 @@ public class PublicProfileFragment extends Fragment {
         buttonMasCalificaciones.setEnabled(false);
         int pagina = paginaResenas + 1;
         publicacionRepository.getResenasUsuario(usuarioId, pagina, PAGE_SIZE_RESENAS,
-                new PublicacionRepository.Resultado<ReviewsResponse>() {
+                new RepositoryResult<ReviewsResponse>() {
             @Override public void onSuccess(ReviewsResponse respuesta) {
                 if (!isAdded() || getView() == null) return;
                 cargandoResenas = false;
@@ -189,7 +190,7 @@ public class PublicProfileFragment extends Fragment {
     private void cargarPerfil(String vendedorId, TextView nombre, TextView zona, TextView reputacion,
                               TextView antiguedad, TextView operaciones, ImageView avatar,
                               LinearLayout container) {
-        publicacionRepository.getUsuario(vendedorId, new PublicacionRepository.Resultado<PublicUser>() {
+        publicacionRepository.getUsuario(vendedorId, new RepositoryResult<PublicUser>() {
             @Override public void onSuccess(PublicUser usuario) {
                 if (!isAdded()) return;
                 nombre.setText(usuario.getName());

@@ -11,6 +11,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.da_grupo9.ronda.R;
+import com.da_grupo9.ronda.data.repository.RepositoryResult;
 import com.da_grupo9.ronda.data.repository.ProfileRepository;
 import com.da_grupo9.ronda.data.repository.PublicacionRepository;
 import com.da_grupo9.ronda.util.ApiError;
@@ -89,7 +90,7 @@ public class RatingBottomSheet extends BottomSheetDialogFragment {
 
         setLoading(true);
         profileRepository.createReview(operationId, rating, comment.isEmpty() ? null : comment,
-                new PublicacionRepository.Resultado<Void>() {
+                new RepositoryResult<Void>() {
                     @Override public void onSuccess(Void data) {
                         if (!isAdded()) return;
                         Bundle result = new Bundle();

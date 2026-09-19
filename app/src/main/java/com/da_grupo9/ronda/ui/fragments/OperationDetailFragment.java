@@ -17,6 +17,7 @@ import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 
 import com.da_grupo9.ronda.R;
+import com.da_grupo9.ronda.data.repository.RepositoryResult;
 import com.da_grupo9.ronda.data.model.Operation;
 import com.da_grupo9.ronda.data.model.PublicUser;
 import com.da_grupo9.ronda.data.repository.ProfileRepository;
@@ -121,7 +122,7 @@ public class OperationDetailFragment extends Fragment {
 
     /** Sincroniza con el servidor la calificación recién enviada; si falla queda la actualización local. */
     private void refrescarOperacion() {
-        profileRepository.getOperation(operation.getId(), new PublicacionRepository.Resultado<Operation>() {
+        profileRepository.getOperation(operation.getId(), new RepositoryResult<Operation>() {
             @Override public void onSuccess(Operation fresh) {
                 if (!isAdded() || getView() == null) return;
                 operation = fresh;
@@ -147,7 +148,7 @@ public class OperationDetailFragment extends Fragment {
     private void cargarContraparte() {
         String id = operation.getCounterpartyId();
         if (id == null || id.isEmpty()) return;
-        publicacionRepository.getUsuario(id, new PublicacionRepository.Resultado<PublicUser>() {
+        publicacionRepository.getUsuario(id, new RepositoryResult<PublicUser>() {
             @Override public void onSuccess(PublicUser user) {
                 if (!isAdded() || getView() == null) return;
                 counterpartyReputation = String.format(Locale.getDefault(), "%.1f (%d calificaciones)",
