@@ -21,7 +21,6 @@ import com.da_grupo9.ronda.data.remote.PublicacionApi;
 import com.da_grupo9.ronda.util.ImageStorageManager;
 import com.da_grupo9.ronda.util.ImageUploadManager;
 import com.da_grupo9.ronda.util.NetworkMonitor;
-import com.da_grupo9.ronda.util.ApiErrorMessage;
 import com.da_grupo9.ronda.util.ApiError;
 
 import java.io.IOException;
@@ -45,12 +44,19 @@ public class PublicacionRepository {
 
     public interface Resultado<T> {
         void onSuccess(T data);
+        /** Permite a las pantallas advertir cuando el dato no fue confirmado por el servidor. */
+        default void onSuccess(T data, boolean desdeCache) { onSuccess(data); }
         void onError(String mensaje);
         default void onError(ApiError error) { onError(error.getMessage()); }
     }
 
     public interface ResultadoPagina {
         void onSuccess(List<Publicacion> items, int page, int totalPages, int total);
+        /** Permite a Home advertir cuando la página procede de la caché local. */
+        default void onSuccess(List<Publicacion> items, int page, int totalPages, int total,
+                               boolean desdeCache) {
+            onSuccess(items, page, totalPages, total);
+        }
         void onError(String mensaje);
         default void onError(ApiError error) { onError(error.getMessage()); }
     }
@@ -125,7 +131,8 @@ public class PublicacionRepository {
                     int responsePage = pagination != null ? pagination.getPage() : page;
                     int totalPages = pagination != null ? pagination.getTotalPages() : 1;
                     int total = pagination != null ? pagination.getTotal() : items.size();
-                    mainHandler.post(() -> resultado.onSuccess(items, responsePage, totalPages, total));
+                    mainHandler.post(() -> resultado.onSuccess(
+                            items, responsePage, totalPages, total, false));
                 } else {
                     resultado.onError(ApiError.from(response, "El servidor respondió con código " + response.code()));
                 }
@@ -168,9 +175,11 @@ public class PublicacionRepository {
                 if (response.isSuccessful() && response.body() != null) {
                     Publicacion publicacion = response.body();
                     guardarConsultaDetalle(cuenta, publicacion);
-                    mainHandler.post(() -> resultado.onSuccess(publicacion));
+                    mainHandler.post(() -> resultado.onSuccess(publicacion, false));
                 } else {
-                    obtenerPublicacionDeCache(id, resultado, ApiErrorMessage.from(response,
+                    // Un rechazo vigente (sesión, permisos o publicación inexistente) no debe
+                    // quedar oculto detrás de una copia local anterior.
+                    resultado.onError(ApiError.from(response,
                             "El servidor respondió con código " + response.code()));
                 }
             }
@@ -282,7 +291,8 @@ public class PublicacionRepository {
                 int from = Math.min((safePage - 1) * pageSize, total);
                 int to = Math.min(from + pageSize, total);
                 List<Publicacion> pagina = new ArrayList<>(modelos.subList(from, to));
-                mainHandler.post(() -> resultado.onSuccess(pagina, safePage, totalPages, total));
+                mainHandler.post(() -> resultado.onSuccess(
+                        pagina, safePage, totalPages, total, true));
             } else {
                 mainHandler.post(() -> resultado.onError(fallbackError));
             }
@@ -311,7 +321,11 @@ public class PublicacionRepository {
                 // Registrar consulta
                 publicacionDao.actualizarUltimaConsulta(cuenta, id, System.currentTimeMillis());
                 Publicacion pub = PublicacionMapper.toModel(entity, imageStorageManager);
-                mainHandler.post(() -> resultado.onSuccess(pub));
+                if (pub != null) {
+                    mainHandler.post(() -> resultado.onSuccess(pub, true));
+                } else {
+                    mainHandler.post(() -> resultado.onError(fallbackError));
+                }
             } else {
                 mainHandler.post(() -> resultado.onError(fallbackError));
             }

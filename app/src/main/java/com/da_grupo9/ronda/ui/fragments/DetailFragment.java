@@ -6,6 +6,7 @@ import com.da_grupo9.ronda.data.repository.PublicacionRepository;
 import com.da_grupo9.ronda.util.NetworkMonitor;
 import com.da_grupo9.ronda.util.MoneyFormat;
 import com.da_grupo9.ronda.data.remote.FavoritesApi;
+import com.da_grupo9.ronda.util.ApiError;
 import com.da_grupo9.ronda.util.ApiErrorMessage;
 
 import retrofit2.Call;
@@ -59,6 +60,8 @@ public class DetailFragment extends Fragment {
 
     // Vistas
     private View bannerDetailOffline;
+    private TextView textBannerDetailOffline;
+    private boolean mostrandoCache;
     private ImageView imageFotoViewer;
     private TextView textFotoIndicador;
     private Button buttonFotoAnterior;
@@ -118,6 +121,7 @@ public class DetailFragment extends Fragment {
         // Vistas generales
         Button buttonBack = view.findViewById(R.id.buttonBack);
         bannerDetailOffline = view.findViewById(R.id.bannerDetailOffline);
+        textBannerDetailOffline = view.findViewById(R.id.textBannerDetailOffline);
 
         // Galería
         imageFotoViewer = view.findViewById(R.id.imageFotoViewer);
@@ -189,7 +193,12 @@ public class DetailFragment extends Fragment {
 
     private void actualizarEstadoConexion(boolean isOnline) {
         if (bannerDetailOffline != null) {
-            bannerDetailOffline.setVisibility(isOnline ? View.GONE : View.VISIBLE);
+            bannerDetailOffline.setVisibility(isOnline && !mostrandoCache ? View.GONE : View.VISIBLE);
+        }
+        if (textBannerDetailOffline != null) {
+            textBannerDetailOffline.setText(isOnline
+                    ? "No se pudo consultar el servidor: mostrando una copia guardada. La información podría no estar actualizada."
+                    : "Modo sin conexión: mostrando una copia guardada. Las acciones están deshabilitadas.");
         }
         if (buttonPreguntar != null) {
             boolean puedePreguntar = publicacionCargada == null
@@ -215,7 +224,13 @@ public class DetailFragment extends Fragment {
         publicacionRepository.getPublicacionById(publicacionId, new PublicacionRepository.Resultado<Publicacion>() {
             @Override
             public void onSuccess(Publicacion data) {
+                onSuccess(data, false);
+            }
+
+            @Override
+            public void onSuccess(Publicacion data, boolean desdeCache) {
                 if (!isAdded()) return;
+                mostrandoCache = desdeCache;
                 publicacionCargada = data;
                 poblarDatos(data);
                 actualizarEstadoConexion(publicacionRepository.isOnline());
@@ -225,13 +240,25 @@ public class DetailFragment extends Fragment {
             public void onError(String mensaje) {
                 if (!isAdded()) return;
                 if (!recargaSilenciosa) {
-                    Toast.makeText(requireContext(), mensaje, Toast.LENGTH_LONG).show();
-                    if (publicacionCargada == null && getView() != null) {
-                        Navigation.findNavController(getView()).popBackStack();
-                    }
+                    mostrarErrorDetalle(mensaje);
                 }
             }
+
+            @Override
+            public void onError(ApiError error) {
+                if (!isAdded()) return;
+                // Los rechazos HTTP siempre se presentan, incluso durante la recarga automática:
+                // la copia local ya no es válida para representar este detalle.
+                mostrarErrorDetalle(error.getMessage());
+            }
         });
+    }
+
+    private void mostrarErrorDetalle(String mensaje) {
+        Toast.makeText(requireContext(), mensaje, Toast.LENGTH_LONG).show();
+        if (getView() != null) {
+            Navigation.findNavController(getView()).popBackStack();
+        }
     }
 
     private void poblarDatos(Publicacion publicacion) {

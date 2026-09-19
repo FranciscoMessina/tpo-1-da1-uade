@@ -82,6 +82,8 @@ public class HomeFragment extends Fragment {
     private TextView textoPagina;
     private TextView textoResultados;
     private View bannerOffline;
+    private TextView textBannerOffline;
+    private boolean mostrandoCache;
     private com.da_grupo9.ronda.util.NetworkMonitor.NetworkStatusListener networkListener;
     private boolean previouslyOffline = false;
 
@@ -121,6 +123,7 @@ public class HomeFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         bannerOffline = view.findViewById(R.id.bannerOffline);
+        textBannerOffline = view.findViewById(R.id.textBannerOffline);
         actualizarEstadoConexion(publicacionRepository.isOnline());
 
         networkListener = isOnline -> {
@@ -200,7 +203,12 @@ public class HomeFragment extends Fragment {
 
     private void actualizarEstadoConexion(boolean isOnline) {
         if (bannerOffline != null) {
-            bannerOffline.setVisibility(isOnline ? View.GONE : View.VISIBLE);
+            bannerOffline.setVisibility(isOnline && !mostrandoCache ? View.GONE : View.VISIBLE);
+        }
+        if (textBannerOffline != null) {
+            textBannerOffline.setText(isOnline
+                    ? "No se pudo consultar el servidor: mostrando publicaciones guardadas. La información podría no estar actualizada."
+                    : "Modo sin conexión: mostrando publicaciones guardadas. La información podría no estar actualizada.");
         }
         for (String id : botonesFavorito.keySet()) {
             actualizarBotonFavorito(id);
@@ -215,8 +223,15 @@ public class HomeFragment extends Fragment {
 
                     @Override
                     public void onSuccess(List<Publicacion> data, int page, int pages, int total) {
+                        onSuccess(data, page, pages, total, false);
+                    }
+
+                    @Override
+                    public void onSuccess(List<Publicacion> data, int page, int pages, int total,
+                                          boolean desdeCache) {
                         if (!isAdded()) return;
 
+                        mostrandoCache = desdeCache;
                         actualizarEstadoConexion(publicacionRepository.isOnline());
                         publicacionesFiltradas = new ArrayList<>(data);
                         paginaActual = page;
