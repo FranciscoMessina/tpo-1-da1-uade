@@ -266,34 +266,76 @@ public class DetailFragment extends Fragment {
     private void poblarDatos(Publicacion publicacion) {
         textDetailTitulo.setText(publicacion.getTitulo());
         textDetailPrecio.setText("Precio: " + MoneyFormat.amount(publicacion.getPrecio()));
-        textDetailEstado.setText("Estado: " + publicacion.getEstado());
+
+        boolean estaPausada =
+                "paused".equalsIgnoreCase(publicacion.getEstadoPublicacion());
+
+        if (estaPausada) {
+            textDetailEstado.setText(
+                    "Estado: " + publicacion.getEstado() + " · PUBLICACIÓN PAUSADA"
+            );
+        } else {
+            textDetailEstado.setText(
+                    "Estado: " + publicacion.getEstado()
+            );
+        }
+
         textDetailCategoria.setText("Categoría: " + publicacion.getCategoria());
         textDetailZona.setText("Zona de entrega: " + publicacion.getZona());
-        boolean mostrarDireccion = publicacion.getAddress() != null && !publicacion.isAddressLocked();
-        textDetailDireccion.setVisibility(mostrarDireccion ? View.VISIBLE : View.GONE);
+
+        boolean mostrarDireccion =
+                publicacion.getAddress() != null
+                        && !publicacion.isAddressLocked();
+
+        textDetailDireccion.setVisibility(
+                mostrarDireccion ? View.VISIBLE : View.GONE
+        );
+
         if (mostrarDireccion) {
-            textDetailDireccion.setText("Dirección: " + publicacion.getAddress());
+            textDetailDireccion.setText(
+                    "Dirección: " + publicacion.getAddress()
+            );
         }
-        textDetailFecha.setText("Fecha de publicación: " + publicacion.getFechaPublicacion());
+
+        textDetailFecha.setText(
+                "Fecha de publicación: " + publicacion.getFechaPublicacion()
+        );
+
         textDetailDescripcion.setText(publicacion.getDescripcion());
 
-        textVendedorNombre.setText("Vendedor: " + publicacion.getVendedorNombre());
-        textVendedorReputacion.setText("Reputación: " + publicacion.getVendedorReputacion());
+        textVendedorNombre.setText(
+                "Vendedor: " + publicacion.getVendedorNombre()
+        );
+
+        textVendedorReputacion.setText(
+                "Reputación: " + publicacion.getVendedorReputacion()
+        );
 
         listaFotos = publicacion.getImagenes();
         fotoActualIndex = 0;
         actualizarGaleria();
 
-        boolean esVendedor = publicacion.getActions() != null
-                && publicacion.getActions().canManage();
+        boolean esVendedor =
+                publicacion.getActions() != null
+                        && publicacion.getActions().canManage();
 
         if (esVendedor) {
+
             containerAccionesComprador.setVisibility(View.GONE);
             containerAccionesVendedor.setVisibility(View.VISIBLE);
+
             poblarPreguntasRecibidas(publicacion.getQuestions());
+
         } else {
-            containerAccionesComprador.setVisibility(View.VISIBLE);
+
             containerAccionesVendedor.setVisibility(View.GONE);
+
+            if (estaPausada) {
+                containerAccionesComprador.setVisibility(View.GONE);
+            } else {
+                containerAccionesComprador.setVisibility(View.VISIBLE);
+            }
+
             poblarPreguntasComprador(publicacion.getQuestions());
         }
 
@@ -472,18 +514,33 @@ public class DetailFragment extends Fragment {
                     publicacionCargada.getId(),
                     nuevoEstado,
                     new RepositoryResult<Publicacion>() {
-                        @Override public void onSuccess(Publicacion data) {
+
+                        @Override
+                        public void onSuccess(Publicacion data) {
                             if (!isAdded()) return;
+
                             publicacionCargada = data;
-                            actualizarBotonPausar(buttonPausar, data);
+
+                            // Actualiza todo el detalle con el nuevo estado
+                            poblarDatos(data);
+
                             Toast.makeText(
                                     requireContext(),
-                                    "La publicación ahora está " + data.getEstadoPublicacionVisible().toLowerCase(),
+                                    "La publicación ahora está "
+                                            + data.getEstadoPublicacionVisible().toLowerCase(),
                                     Toast.LENGTH_SHORT
                             ).show();
                         }
-                        @Override public void onError(String mensaje) {
-                            if (isAdded()) Toast.makeText(requireContext(), mensaje, Toast.LENGTH_LONG).show();
+
+                        @Override
+                        public void onError(String mensaje) {
+                            if (!isAdded()) return;
+
+                            Toast.makeText(
+                                    requireContext(),
+                                    mensaje,
+                                    Toast.LENGTH_LONG
+                            ).show();
                         }
                     }
             );
