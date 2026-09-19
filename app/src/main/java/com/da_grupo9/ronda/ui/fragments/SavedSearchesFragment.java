@@ -63,14 +63,6 @@ public class SavedSearchesFragment extends Fragment {
         textoSinBusquedas =
                 view.findViewById(R.id.textoSinBusquedas);
 
-        Button botonVolver =
-                view.findViewById(R.id.botonVolver);
-
-        botonVolver.setOnClickListener(v ->
-                androidx.navigation.Navigation
-                        .findNavController(v)
-                        .popBackStack()
-        );
         cargarBusquedas();
     }
 
@@ -242,7 +234,7 @@ public class SavedSearchesFragment extends Fragment {
         androidx.navigation.Navigation
                 .findNavController(requireView())
                 .navigate(
-                        R.id.action_savedSearchesFragment_to_homeFragment,
+                        R.id.homeFragment,
                         bundle
                 );
     }

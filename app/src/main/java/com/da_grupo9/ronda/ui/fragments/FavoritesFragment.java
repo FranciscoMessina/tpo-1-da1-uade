@@ -65,11 +65,6 @@ public class FavoritesFragment extends Fragment {
         favoritesContainer = view.findViewById(R.id.favoritesContainer);
         textFavoritesEmpty = view.findViewById(R.id.textFavoritesEmpty);
 
-        view.findViewById(R.id.buttonBackFavorites)
-                .setOnClickListener(v ->
-                        Navigation.findNavController(v).popBackStack()
-                );
-
         cargarFavoritos();
     }
 
@@ -240,7 +235,7 @@ public class FavoritesFragment extends Fragment {
             bundle.putString("publicacionId", favorito.getId());
 
             Navigation.findNavController(v).navigate(
-                    R.id.action_favoritesFragment_to_detailFragment,
+                    R.id.detailFragment,
                     bundle
             );
         });
