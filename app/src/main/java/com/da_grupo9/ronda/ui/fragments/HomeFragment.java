@@ -116,6 +116,14 @@ public class HomeFragment extends Fragment {
 
         textoPagina = view.findViewById(R.id.textoPagina);
 
+        Button botonFavoritos = view.findViewById(R.id.botonFavoritos);
+
+        botonFavoritos.setOnClickListener(v ->
+                Navigation.findNavController(v).navigate(
+                        R.id.action_homeFragment_to_favoritesFragment
+                )
+        );
+
         publicacionesContainer =
                 view.findViewById(R.id.publicacionesContainer);
 

@@ -5,6 +5,7 @@ import com.da_grupo9.ronda.data.remote.PublicacionApi;
 import com.da_grupo9.ronda.data.remote.AuthApi;
 import com.da_grupo9.ronda.data.remote.ProfileApi;
 import com.da_grupo9.ronda.data.remote.AuthInterceptor;
+import com.da_grupo9.ronda.data.remote.FavoritesApi;
 
 import javax.inject.Singleton;
 
@@ -73,5 +74,11 @@ public final class NetworkModule {
 
     @Provides @Singleton static ProfileApi provideProfileApi(Retrofit retrofit) {
         return retrofit.create(ProfileApi.class);
+    }
+
+    @Provides
+    @Singleton
+    public static FavoritesApi provideFavoritesApi(Retrofit retrofit) {
+        return retrofit.create(FavoritesApi.class);
     }
 }
