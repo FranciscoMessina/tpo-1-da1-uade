@@ -73,7 +73,7 @@ public class PublicProfileFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         TextView textNombre = view.findViewById(R.id.textPerfilPublicoNombre);
-        TextView textEmail = view.findViewById(R.id.textPerfilPublicoEmail);
+        TextView textZona = view.findViewById(R.id.textPerfilPublicoZona);
         TextView textReputacion = view.findViewById(R.id.textPerfilPublicoReputacion);
         TextView textAntiguedad = view.findViewById(R.id.textPerfilPublicoAntiguedad);
         TextView textOperaciones = view.findViewById(R.id.textPerfilPublicoOperaciones);
@@ -86,30 +86,28 @@ public class PublicProfileFragment extends Fragment {
                 view.findViewById(R.id.buttonVolverPerfilPublico);
 
         String vendedorNombre = "";
-        String vendedorId = "";
         String vendedorReputacion = "";
 
         if (getArguments() != null) {
             vendedorNombre = getArguments().getString("vendedorNombre", "");
-            vendedorId = getArguments().getString("vendedorEmail", "");
+            usuarioId = getArguments().getString("usuarioId", "");
             vendedorReputacion = getArguments().getString("vendedorReputacion", "");
         }
 
         textNombre.setText(vendedorNombre);
-        textEmail.setText("Cargando zona…");
+        textZona.setText("Cargando zona…");
         textReputacion.setText("Reputación: " + vendedorReputacion);
 
         textAntiguedad.setText("Cargando…");
         textOperaciones.setText("Cargando…");
 
-        cargarPerfil(vendedorId, textNombre, textEmail, textReputacion, textAntiguedad,
+        cargarPerfil(usuarioId, textNombre, textZona, textReputacion, textAntiguedad,
                 textOperaciones, imageAvatar, containerPublicaciones);
 
         buttonVolver.setOnClickListener(v ->
                 Navigation.findNavController(v).popBackStack()
         );
 
-        usuarioId = vendedorId;
         paginaResenas = 0;
         totalPaginasResenas = 1;
         cargandoResenas = false;

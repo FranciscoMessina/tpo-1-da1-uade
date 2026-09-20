@@ -89,7 +89,7 @@ public class LoginFragment extends Fragment {
             } else {
                 authRepository.login(email, password, new AuthRepository.Resultado() {
                     @Override public void onSuccess() {
-                        ofrecerBiometria(v, email);
+                        ofrecerBiometria(v);
                     }
 
                     @Override public void onError(String mensaje) {
@@ -140,8 +140,8 @@ public class LoginFragment extends Fragment {
         }
     }
 
-    private void ofrecerBiometria(View view, String email) {
-        BiometricActivationHelper.offer(this, sessionManager, () -> irAlHome(view, email));
+    private void ofrecerBiometria(View view) {
+        BiometricActivationHelper.offer(this, sessionManager, () -> irAlHome(view));
     }
 
     private void mostrarBiometria(View view) {
@@ -163,7 +163,7 @@ public class LoginFragment extends Fragment {
                     public void onAuthenticationSucceeded(
                             @NonNull BiometricPrompt.AuthenticationResult result) {
                         super.onAuthenticationSucceeded(result);
-                        authRepository.validarSesionGuardada(navegarAlHome(view, ""));
+                        authRepository.validarSesionGuardada(navegarAlHome(view));
                     }
 
                     @Override
@@ -183,21 +183,19 @@ public class LoginFragment extends Fragment {
         prompt.authenticate(promptInfo);
     }
 
-    private AuthRepository.Resultado navegarAlHome(View view, String email) {
+    private AuthRepository.Resultado navegarAlHome(View view) {
         return new AuthRepository.Resultado() {
             @Override public void onSuccess() {
-                irAlHome(view, email);
+                irAlHome(view);
             }
             @Override public void onError(String mensaje) { mostrarError(mensaje); }
         };
     }
 
-    private void irAlHome(View view, String email) {
+    private void irAlHome(View view) {
         if (!isAdded()) return;
-        Bundle bundle = new Bundle();
-        bundle.putString("email", email);
         Navigation.findNavController(view)
-                .navigate(R.id.action_loginFragment_to_homeFragment, bundle);
+                .navigate(R.id.action_loginFragment_to_homeFragment);
     }
 
     private void mostrarError(String mensaje) {

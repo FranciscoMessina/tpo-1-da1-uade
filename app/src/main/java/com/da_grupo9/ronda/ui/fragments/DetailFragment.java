@@ -59,8 +59,6 @@ public class DetailFragment extends Fragment {
     private List<String> listaFotos;
 
     private String publicacionId = "";
-    private String usuarioActualEmail = "";
-
     // Vistas
     private View bannerDetailOffline;
     private TextView textBannerDetailOffline;
@@ -166,7 +164,6 @@ public class DetailFragment extends Fragment {
 
         if (getArguments() != null) {
             publicacionId = getArguments().getString("publicacionId", "");
-            usuarioActualEmail = getArguments().getString("usuarioActualEmail", "");
         }
 
         buttonBack.setOnClickListener(v -> Navigation.findNavController(v).popBackStack());
@@ -486,7 +483,7 @@ public class DetailFragment extends Fragment {
             if (publicacionCargada == null) return;
             Bundle bundle = new Bundle();
             bundle.putString("vendedorNombre", publicacionCargada.getVendedorNombre());
-            bundle.putString("vendedorEmail", publicacionCargada.getSeller() != null ? publicacionCargada.getSeller().getId() : "");
+            bundle.putString("usuarioId", publicacionCargada.getSeller() != null ? publicacionCargada.getSeller().getId() : "");
             bundle.putString("vendedorReputacion", publicacionCargada.getVendedorReputacion());
 
             Navigation.findNavController(v).navigate(R.id.action_detailFragment_to_publicProfileFragment, bundle);
@@ -499,7 +496,6 @@ public class DetailFragment extends Fragment {
             }
             if (publicacionCargada == null) return;
             Bundle bundle = new Bundle();
-            bundle.putString("email", usuarioActualEmail);
             bundle.putString("publicacionId", publicacionCargada.getId());
 
             Navigation.findNavController(v).navigate(R.id.action_detailFragment_to_publicarArticuloFragment, bundle);

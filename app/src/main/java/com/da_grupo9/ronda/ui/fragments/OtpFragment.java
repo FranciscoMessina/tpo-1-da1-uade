@@ -108,7 +108,7 @@ public class OtpFragment extends Fragment {
                 AuthRepository.Resultado resultado = new AuthRepository.Resultado() {
                     @Override public void onSuccess() {
                         if (!isAdded()) return;
-                        ofrecerBiometria(v, finalEmail);
+                        ofrecerBiometria(v);
                     }
                     @Override public void onError(String mensaje) { mostrarError(mensaje); }
                 };
@@ -129,15 +129,13 @@ public class OtpFragment extends Fragment {
         }));
     }
 
-    private void ofrecerBiometria(View view, String email) {
-        BiometricActivationHelper.offer(this, sessionManager, () -> navegarAlHome(view, email));
+    private void ofrecerBiometria(View view) {
+        BiometricActivationHelper.offer(this, sessionManager, () -> navegarAlHome(view));
     }
 
-    private void navegarAlHome(View view, String email) {
-        Bundle bundle = new Bundle();
-        bundle.putString("email", email);
+    private void navegarAlHome(View view) {
         Navigation.findNavController(view)
-                .navigate(R.id.action_otpFragment_to_homeFragment, bundle);
+                .navigate(R.id.action_otpFragment_to_homeFragment);
     }
 
     private void mostrarError(String mensaje) {

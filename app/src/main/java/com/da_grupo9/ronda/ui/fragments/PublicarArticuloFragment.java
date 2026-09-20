@@ -70,7 +70,6 @@ public class PublicarArticuloFragment extends Fragment {
     private Button buttonSiguiente;
 
     private int pasoActual = 1;
-    private String email = "";
     private String publicacionId;
     private BorradorPublicacionStorage borradorStorage;
     private final List<String> fotosSeleccionadas = new ArrayList<>();
@@ -138,14 +137,11 @@ public class PublicarArticuloFragment extends Fragment {
         Button buttonDescartarBorrador = view.findViewById(R.id.buttonDescartarBorrador);
 
         if (getArguments() != null) {
-            email = getArguments().getString("email", "");
             publicacionId = getArguments().getString("publicacionId", null);
         }
 
-        String usuarioBorrador = email.trim().isEmpty()
-                ? sessionManager.getUserId()
-                : email;
-        borradorStorage = new BorradorPublicacionStorage(requireContext(), usuarioBorrador);
+        borradorStorage = new BorradorPublicacionStorage(
+                requireContext(), sessionManager.getUserId());
 
         configurarSpinners();
 

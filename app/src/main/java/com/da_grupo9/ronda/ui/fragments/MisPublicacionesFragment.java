@@ -28,8 +28,6 @@ public class MisPublicacionesFragment extends Fragment {
     @Inject PublicacionRepository publicacionRepository;
 
     private LinearLayout publicacionesContainer;
-    private String email = "";
-
     public MisPublicacionesFragment() {
     }
 
@@ -55,10 +53,6 @@ public class MisPublicacionesFragment extends Fragment {
 
         publicacionesContainer =
                 view.findViewById(R.id.misPublicacionesContainer);
-
-        if (getArguments() != null) {
-            email = getArguments().getString("email", "");
-        }
 
     }
 
@@ -117,7 +111,6 @@ public class MisPublicacionesFragment extends Fragment {
         tarjeta.setOnClickListener(v -> {
             Bundle args = new Bundle();
             args.putString("publicacionId", publicacion.getId());
-            args.putString("usuarioActualEmail", email);
             Navigation.findNavController(v).navigate(
                     R.id.action_misPublicacionesFragment_to_detailFragment, args);
         });
@@ -133,7 +126,6 @@ public class MisPublicacionesFragment extends Fragment {
         if (!"sold".equals(estadoPublicacion)) {
             PublicationCardBinder.addAction(tarjeta, "Editar", R.drawable.ic_edit, v -> {
                 Bundle args = new Bundle();
-                args.putString("email", email);
                 args.putString("publicacionId", publicacion.getId());
                 Navigation.findNavController(v).navigate(
                         R.id.action_misPublicacionesFragment_to_publicarArticuloFragment, args);

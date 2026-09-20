@@ -141,11 +141,6 @@
         android:name="com.da_grupo9.ronda.ui.fragments.HomeFragment"
         android:label="Home">
 
-        <argument
-            android:name="email"
-            android:defaultValue=""
-            app:argType="string" />
-
         <action
             android:id="@+id/action_homeFragment_to_detailFragment"
             app:destination="@id/detailFragment" />
@@ -175,11 +170,6 @@
         android:label="Publicar artículo">
 
         <argument
-            android:name="email"
-            android:defaultValue=""
-            app:argType="string" />
-
-        <argument
             android:name="publicacionId"
             app:argType="string"
             app:nullable="true"
@@ -191,11 +181,6 @@
         android:id="@+id/misPublicacionesFragment"
         android:name="com.da_grupo9.ronda.ui.fragments.MisPublicacionesFragment"
         android:label="Mis publicaciones">
-
-        <argument
-            android:name="email"
-            android:defaultValue=""
-            app:argType="string" />
 
         <action
             android:id="@+id/action_misPublicacionesFragment_to_publicarArticuloFragment"
@@ -214,11 +199,6 @@
 
         <argument
             android:name="publicacionId"
-            android:defaultValue=""
-            app:argType="string" />
-
-        <argument
-            android:name="usuarioActualEmail"
             android:defaultValue=""
             app:argType="string" />
 
@@ -307,7 +287,7 @@
             app:argType="string" />
 
         <argument
-            android:name="vendedorEmail"
+            android:name="usuarioId"
             android:defaultValue=""
             app:argType="string" />
 
