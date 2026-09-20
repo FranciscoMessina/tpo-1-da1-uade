@@ -61,7 +61,7 @@
             app:argType="string" />
 
         <argument
-            android:name="returnToProfile"
+            android:name="volverAlPerfil"
             android:defaultValue="false"
             app:argType="boolean" />
 
@@ -89,7 +89,7 @@
             app:argType="string" />
 
         <argument
-            android:name="purpose"
+            android:name="proposito"
             android:defaultValue="login"
             app:argType="string" />
 
@@ -127,7 +127,7 @@
         android:name="com.da_grupo9.ronda.ui.fragments.OperationDetailFragment"
         android:label="Detalle de operación">
         <argument
-            android:name="operation"
+            android:name="operacion"
             app:argType="com.da_grupo9.ronda.data.model.Operation"
             app:nullable="true"
             android:defaultValue="@null" />
@@ -226,21 +226,21 @@
         android:label="Hacer una oferta">
 
         <argument
-            android:name="publicationId"
+            android:name="publicacionId"
             android:defaultValue=""
             app:argType="string" />
 
         <argument
-            android:name="publicationTitle"
+            android:name="publicacionTitulo"
             android:defaultValue=""
             app:argType="string" />
 
         <argument
-            android:name="publicationPrice"
+            android:name="publicacionPrecio"
             android:defaultValue="0.0"
             app:argType="float" />
         <argument
-            android:name="sellerName"
+            android:name="vendedorNombre"
             android:defaultValue=""
             app:argType="string" />
     </fragment>
@@ -250,7 +250,7 @@
         android:name="com.da_grupo9.ronda.ui.fragments.OffersFragment"
         android:label="Mis ofertas">
         <argument
-            android:name="selectedRole"
+            android:name="rolSeleccionado"
             android:defaultValue="buyer"
             app:argType="string" />
     </fragment>

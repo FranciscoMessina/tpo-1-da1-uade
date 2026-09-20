@@ -48,7 +48,7 @@ public class ResetPasswordFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         String email = requireArguments().getString("email", "");
-        boolean returnToProfile = requireArguments().getBoolean("returnToProfile", false);
+        boolean returnToProfile = requireArguments().getBoolean("volverAlPerfil", false);
 
         TextView textEmail = view.findViewById(R.id.textResetEmail);
         EditText editCode = view.findViewById(R.id.editResetCode);

@@ -71,7 +71,7 @@ public class RegisterFragment extends Fragment {
                     if (!isAdded()) return;
                     Bundle args = new Bundle();
                     args.putString("email", emailValue);
-                    args.putString("purpose", "registration");
+                    args.putString("proposito", "registration");
                     args.putString("name", nameValue);
                     args.putString("username", usernameValue);
                     args.putString("phone", phoneValue);

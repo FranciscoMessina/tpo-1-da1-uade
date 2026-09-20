@@ -60,7 +60,7 @@ public class OperationDetailFragment extends Fragment {
                 v -> Navigation.findNavController(v).popBackStack());
 
         operation = getArguments() == null ? null
-                : BundleCompat.getSerializable(getArguments(), "operation", Operation.class);
+                : BundleCompat.getSerializable(getArguments(), "operacion", Operation.class);
         if (operation == null) {
             Toast.makeText(requireContext(), "No se pudo cargar la operación", Toast.LENGTH_LONG).show();
             Navigation.findNavController(view).popBackStack();

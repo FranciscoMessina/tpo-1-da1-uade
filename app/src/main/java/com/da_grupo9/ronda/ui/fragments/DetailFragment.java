@@ -390,10 +390,10 @@ public class DetailFragment extends Fragment {
                     return;
                 }
                 Bundle bundle = new Bundle();
-                bundle.putString("publicationId", publicacionCargada.getId());
-                bundle.putString("publicationTitle", publicacionCargada.getTitulo());
-                bundle.putFloat("publicationPrice", (float) publicacionCargada.getPrecio());
-                bundle.putString("sellerName", publicacionCargada.getVendedorNombre());
+                bundle.putString("publicacionId", publicacionCargada.getId());
+                bundle.putString("publicacionTitulo", publicacionCargada.getTitulo());
+                bundle.putFloat("publicacionPrecio", (float) publicacionCargada.getPrecio());
+                bundle.putString("vendedorNombre", publicacionCargada.getVendedorNombre());
                 Navigation.findNavController(v).navigate(
                         R.id.action_detailFragment_to_createOfferFragment,
                         bundle
