@@ -53,11 +53,11 @@ public class CreateOfferFragment extends Fragment {
         publicationId = args == null ? "" : args.getString("publicationId", "");
         String titulo = args == null ? "" : args.getString("publicationTitle", "");
         String vendedor = args == null ? "" : args.getString("sellerName", "");
-        double precio = args == null ? 0d : args.getDouble("publicationPrice", 0d);
+        double precio = args == null ? 0d : args.getFloat("publicationPrice", 0f);
 
         ((TextView) view.findViewById(R.id.textOfferPublication)).setText(titulo);
         ((TextView) view.findViewById(R.id.textOfferPublishedPrice))
-                .setText("Precio publicado: " + MoneyFormat.amount(precio));
+                .setText(String.format("Precio publicado: %s", MoneyFormat.amount(precio)));
         ((TextView) view.findViewById(R.id.textOfferSeller))
                 .setText(vendedor.isEmpty() ? "" : "Vendedor: " + vendedor);
         priceLayout = view.findViewById(R.id.inputOfferPriceLayout);
