@@ -16,6 +16,7 @@ import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 
 import com.da_grupo9.ronda.R;
+import com.da_grupo9.ronda.util.DateTimeFormat;
 import com.da_grupo9.ronda.data.model.Offer;
 import com.da_grupo9.ronda.data.model.OfferActionResponse;
 import com.da_grupo9.ronda.data.repository.OffersRepository;
@@ -31,8 +32,6 @@ import com.google.android.material.textfield.TextInputLayout;
 
 import java.time.Duration;
 import java.time.OffsetDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.format.FormatStyle;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -122,13 +121,13 @@ public class OffersFragment extends Fragment {
         View card = getLayoutInflater().inflate(R.layout.item_offer, container, false);
 
         text(card, R.id.textOfferTitle, safe(offer.getTitle(), "Artículo"));
-        text(card, R.id.textOfferAmount, "Oferta: " + money(offer.getAmount()));
+        text(card, R.id.textOfferAmount, "Oferta: " + MoneyFormat.amount(offer.getAmount()));
         text(card, R.id.textOfferStatus, "Estado: " + etiquetaEstado(offer.getStatus()));
-        text(card, R.id.textOfferCreatedAt, "Creada: " + formatDate(offer.getCreatedAt()));
+        text(card, R.id.textOfferCreatedAt, "Creada: " + DateTimeFormat.shortDateTime(offer.getCreatedAt()));
         text(card, R.id.textOfferExpiresAt, textoVencimiento(offer.getExpiresAt()));
 
         textoOpcional(card, R.id.textOfferCounterAmount, offer.getCounterAmount() == null
-                ? null : "Contraoferta: " + money(offer.getCounterAmount()));
+                ? null : "Contraoferta: " + MoneyFormat.amount(offer.getCounterAmount()));
         textoOpcional(card, R.id.textOfferMessage,
                 offer.getMessage() == null || offer.getMessage().trim().isEmpty()
                         ? null : "Mensaje: " + offer.getMessage());
@@ -243,7 +242,6 @@ public class OffersFragment extends Fragment {
         if (value != null) view.setText(value);
     }
 
-    private String money(double value) { return MoneyFormat.amount(value); }
     private String safe(String value, String fallback) { return value == null || value.isEmpty() ? fallback : value; }
 
     private String etiquetaEstado(String status) {
@@ -259,12 +257,6 @@ public class OffersFragment extends Fragment {
         }
     }
 
-    private String formatDate(String raw) {
-        if (raw == null || raw.isEmpty()) return "sin datos";
-        try { return OffsetDateTime.parse(raw).format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT)); }
-        catch (RuntimeException ignored) { return raw; }
-    }
-
     private String textoVencimiento(String raw) {
         if (raw == null || raw.isEmpty()) return "Vencimiento: sin datos";
         try {
@@ -275,5 +267,4 @@ public class OffersFragment extends Fragment {
             return "Vence en: " + (days > 0 ? days + " d " : "") + hours + " h";
         } catch (RuntimeException ignored) { return "Vencimiento: " + raw; }
     }
-
 }

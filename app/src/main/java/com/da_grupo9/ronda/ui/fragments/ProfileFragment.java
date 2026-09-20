@@ -1,6 +1,7 @@
 package com.da_grupo9.ronda.ui.fragments;
 
 import com.da_grupo9.ronda.R;
+import com.da_grupo9.ronda.util.DateTimeFormat;
 import com.da_grupo9.ronda.data.repository.RepositoryResult;
 import com.da_grupo9.ronda.data.repository.ProfileRepository;
 import com.da_grupo9.ronda.data.repository.PublicacionRepository;
@@ -29,9 +30,6 @@ import com.da_grupo9.ronda.data.model.Perfil;
 import com.da_grupo9.ronda.data.model.PublicUser;
 import com.da_grupo9.ronda.data.model.Publicacion;
 import com.bumptech.glide.Glide;
-import java.time.OffsetDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.format.FormatStyle;
 import java.util.List;
 import java.util.Locale;
 import javax.inject.Inject;
@@ -55,9 +53,6 @@ public class ProfileFragment extends Fragment {
             new ActivityResultContracts.GetContent(), uri -> {
                 if (uri != null) subirAvatar(uri);
             });
-
-    public ProfileFragment() {
-    }
 
     @Override
     public View onCreateView(
@@ -139,12 +134,12 @@ public class ProfileFragment extends Fragment {
                     int ventas = reputacion.getSalesCompleted();
                     textOperaciones.setText((compras + ventas) + " operaciones concretadas");
                     textCompradorVendedor.setText(compras + " como comprador · " + ventas + " como vendedor");
-                    textAntiguedad.setText("Miembro desde: " + formatearFecha(reputacion.getMemberSince()));
+                    textAntiguedad.setText("Miembro desde: " + DateTimeFormat.mediumDate(reputacion.getMemberSince()));
                 } else {
                     textReputacion.setText("Sin calificaciones");
                     textOperaciones.setText("0 operaciones concretadas");
                     textCompradorVendedor.setText("0 como comprador · 0 como vendedor");
-                    textAntiguedad.setText("Miembro desde: " + formatearFecha(perfil.getCreatedAt()));
+                    textAntiguedad.setText("Miembro desde: " + DateTimeFormat.mediumDate(perfil.getCreatedAt()));
                 }
             }
             @Override public void onError(String mensaje) { mostrarError(mensaje); }
@@ -303,14 +298,5 @@ public class ProfileFragment extends Fragment {
     private void mostrarAvatar(String url) {
         if (!isAdded() || imageAvatar == null || url == null || url.isEmpty()) return;
         Glide.with(this).load(url).placeholder(R.drawable.ic_photo_camera).error(R.drawable.ic_photo_camera).into(imageAvatar);
-    }
-
-    private String formatearFecha(String fecha) {
-        if (fecha == null || fecha.isEmpty()) return "sin datos";
-        try {
-            return OffsetDateTime.parse(fecha).format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM));
-        } catch (RuntimeException ignored) {
-            return fecha;
-        }
     }
 }

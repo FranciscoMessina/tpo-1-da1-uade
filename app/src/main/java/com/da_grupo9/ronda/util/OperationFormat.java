@@ -2,21 +2,12 @@ package com.da_grupo9.ronda.util;
 
 import com.da_grupo9.ronda.data.model.Operation;
 
-import java.time.OffsetDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.format.FormatStyle;
-
 /** Textos compartidos por el historial, el detalle y la calificación de operaciones. */
 public final class OperationFormat {
     private OperationFormat() {}
 
     public static String date(String iso) {
-        if (iso == null || iso.isEmpty()) return "sin datos";
-        try {
-            return OffsetDateTime.parse(iso).format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM));
-        } catch (RuntimeException ignored) {
-            return iso;
-        }
+        return DateTimeFormat.mediumDate(iso);
     }
 
     public static String amount(double amount) {

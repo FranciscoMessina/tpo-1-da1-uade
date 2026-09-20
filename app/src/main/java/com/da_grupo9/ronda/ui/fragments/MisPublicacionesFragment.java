@@ -28,9 +28,6 @@ public class MisPublicacionesFragment extends Fragment {
     @Inject PublicacionRepository publicacionRepository;
 
     private LinearLayout publicacionesContainer;
-    public MisPublicacionesFragment() {
-    }
-
     @Override
     public View onCreateView(
             LayoutInflater inflater,

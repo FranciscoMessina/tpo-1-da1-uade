@@ -20,7 +20,6 @@ public class PublicacionesResponse {
         private int totalPages;
 
         public int getPage() { return page; }
-        public int getPageSize() { return pageSize; }
         public int getTotal() { return total; }
         public int getTotalPages() { return totalPages; }
     }

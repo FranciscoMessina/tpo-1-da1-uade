@@ -30,9 +30,6 @@ public class LoginFragment extends Fragment {
     @Inject AuthRepository authRepository;
     @Inject SessionManager sessionManager;
 
-    public LoginFragment() {
-    }
-
     @Override
     public View onCreateView(
             LayoutInflater inflater,

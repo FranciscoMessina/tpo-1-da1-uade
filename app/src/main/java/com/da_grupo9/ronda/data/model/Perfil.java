@@ -18,7 +18,6 @@ public class Perfil {
     public String getId() { return id; }
     public String getNombre() { return name; }
     public String getEmail() { return email; }
-    public String getUsername() { return username; }
     public String getTelefono() { return phone; }
     public String getZona() { return zone; }
     public String getAvatarUrl() { return avatarUrl; }

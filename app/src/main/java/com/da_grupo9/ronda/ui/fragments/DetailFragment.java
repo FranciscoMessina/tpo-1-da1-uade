@@ -95,9 +95,6 @@ public class DetailFragment extends Fragment {
     private NetworkMonitor.NetworkStatusListener networkListener;
     private boolean previouslyOffline = false;
 
-    public DetailFragment() {
-    }
-
     @Override
     public View onCreateView(
             LayoutInflater inflater,

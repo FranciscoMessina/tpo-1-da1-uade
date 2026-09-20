@@ -22,9 +22,6 @@ import dagger.hilt.android.AndroidEntryPoint;
 public class ForgotPasswordFragment extends Fragment {
     @Inject AuthRepository authRepository;
 
-    public ForgotPasswordFragment() {
-    }
-
     @Nullable
     @Override
     public View onCreateView(

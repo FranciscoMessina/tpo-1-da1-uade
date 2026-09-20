@@ -37,9 +37,6 @@ public class FavoritesFragment extends Fragment {
     private LinearLayout favoritesContainer;
     private TextView textFavoritesEmpty;
 
-    public FavoritesFragment() {
-    }
-
     @Override
     public View onCreateView(
             LayoutInflater inflater,

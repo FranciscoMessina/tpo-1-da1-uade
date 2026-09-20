@@ -86,9 +86,6 @@ public class PublicarArticuloFragment extends Fragment {
                     }
             );
 
-    public PublicarArticuloFragment() {
-    }
-
     @Override
     public View onCreateView(
             LayoutInflater inflater,

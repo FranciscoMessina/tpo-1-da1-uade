@@ -31,9 +31,6 @@ public class SavedSearchesFragment extends Fragment {
     private LinearLayout busquedasContainer;
     private TextView textoSinBusquedas;
 
-    public SavedSearchesFragment() {
-    }
-
     @Override
     public View onCreateView(
             LayoutInflater inflater,

@@ -21,7 +21,6 @@ public class Publicacion implements Serializable {
     private String address;
     private Boolean addressLocked;
     private String status;
-    private int draftStep;
     private String publishedAt;
     private String createdAt;
     private String updatedAt;
@@ -37,14 +36,13 @@ public class Publicacion implements Serializable {
     }
 
     public Publicacion(String title, String description, double price,
-                       String condition, String category, String zone, int draftStep) {
+                       String condition, String category, String zone) {
         this.title = title;
         this.description = description;
         this.price = price;
         this.condition = condition;
         this.category = category;
         this.zone = zone;
-        this.draftStep = draftStep;
     }
 
     public void setCoverImage(String coverImage) { this.coverImage = coverImage; }
@@ -117,7 +115,6 @@ public class Publicacion implements Serializable {
     }
     public String getFechaPublicacion() { return publishedAt; }
     public String getCoverImage() { return coverImage; }
-    public int getDraftStep() { return draftStep; }
     public double getPrecio() { return price != null ? price : priceCents != null ? priceCents / 100.0 : 0; }
     public int getFecha() {
         if (publishedAt == null) return 0;
@@ -148,8 +145,6 @@ public class Publicacion implements Serializable {
         public String getAnswer() { return answer; }
         public String getCreatedAt() { return createdAt; }
         public String getAnsweredAt() { return answeredAt; }
-        public String getAskerId() { return askerId; }
-        public String getAskerName() { return askerName; }
     }
 
     public static class Actions implements Serializable {

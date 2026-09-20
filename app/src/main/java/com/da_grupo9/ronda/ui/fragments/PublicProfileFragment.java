@@ -1,6 +1,7 @@
 package com.da_grupo9.ronda.ui.fragments;
 
 import com.da_grupo9.ronda.R;
+import com.da_grupo9.ronda.util.DateTimeFormat;
 import com.da_grupo9.ronda.ui.components.EmptyStateView;
 import com.da_grupo9.ronda.ui.components.PublicationCardBinder;
 import com.da_grupo9.ronda.data.repository.RepositoryResult;
@@ -22,9 +23,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ImageView;
 import com.bumptech.glide.Glide;
-import java.time.OffsetDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.format.FormatStyle;
 import java.util.Locale;
 
 import androidx.fragment.app.Fragment;
@@ -48,9 +46,6 @@ public class PublicProfileFragment extends Fragment {
     private boolean cargandoResenas;
     private LinearLayout containerCalificaciones;
     private Button buttonMasCalificaciones;
-
-    public PublicProfileFragment() {
-    }
 
     @Override
     public View onCreateView(
@@ -178,7 +173,7 @@ public class PublicProfileFragment extends Fragment {
             }
 
             ((TextView) item.findViewById(R.id.textReviewMeta)).setText(
-                    resena.getReviewerName() + " · " + formatearFecha(resena.getCreatedAt()));
+                    resena.getReviewerName() + " · " + DateTimeFormat.mediumDate(resena.getCreatedAt()));
             containerCalificaciones.addView(item);
         }
     }
@@ -192,7 +187,7 @@ public class PublicProfileFragment extends Fragment {
                 nombre.setText(usuario.getName());
                 zona.setText(usuario.getZone() != null ? usuario.getZone() : "Zona no informada");
                 reputacion.setText("Reputación: " + String.format(Locale.getDefault(), "%.1f (%d calificaciones)", usuario.getRatingAverage(), usuario.getRatingCount()));
-                antiguedad.setText("Miembro desde: " + formatearFecha(usuario.getMemberSince()));
+                antiguedad.setText("Miembro desde: " + DateTimeFormat.mediumDate(usuario.getMemberSince()));
                 operaciones.setText(usuario.getPurchasesCompleted() + " compras · "
                         + usuario.getSalesCompleted() + " ventas");
                 if (usuario.getAvatarUrl() != null && !usuario.getAvatarUrl().isEmpty()) {
@@ -249,15 +244,5 @@ public class PublicProfileFragment extends Fragment {
 
     private View crearMensajeVacio(LinearLayout container, String texto) {
         return EmptyStateView.create(getLayoutInflater(), container, texto);
-    }
-
-
-    private String formatearFecha(String fecha) {
-        if (fecha == null || fecha.isEmpty()) return "sin datos";
-        try {
-            return OffsetDateTime.parse(fecha).format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM));
-        } catch (RuntimeException ignored) {
-            return fecha;
-        }
     }
 }

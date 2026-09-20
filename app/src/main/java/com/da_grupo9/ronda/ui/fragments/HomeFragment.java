@@ -101,9 +101,6 @@ public class HomeFragment extends Fragment {
     private String zonaBusquedaGuardada;
     private String zonaUsuario;
 
-    public HomeFragment() {
-    }
-
     @Override
     public View onCreateView(
             LayoutInflater inflater,
