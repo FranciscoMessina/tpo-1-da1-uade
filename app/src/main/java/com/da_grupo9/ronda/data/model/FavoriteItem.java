@@ -3,6 +3,7 @@ package com.da_grupo9.ronda.data.model;
 public class FavoriteItem {
 
     private String id;
+    private String publicationId;
     private String title;
     private double price;
     private String itemCondition;
@@ -15,6 +16,10 @@ public class FavoriteItem {
 
     public String getId() {
         return id;
+    }
+
+    public String getPublicationId() {
+        return publicationId != null && !publicationId.isEmpty() ? publicationId : id;
     }
 
     public String getTitle() {
