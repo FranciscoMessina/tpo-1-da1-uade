@@ -105,7 +105,6 @@ public class HomeFragment extends Fragment {
     private String zonaBusquedaGuardada;
     private String zonaUsuario;
 
-    private String usuarioActualEmail = "";
     public HomeFragment() {
     }
 
@@ -170,11 +169,6 @@ public class HomeFragment extends Fragment {
 
         publicacionesContainer =
                 view.findViewById(R.id.publicacionesContainer);
-
-        if (getArguments() != null) {
-            usuarioActualEmail =
-                    getArguments().getString("email", "");
-        }
 
         configurarSpinners();
         cargarCategorias();
@@ -751,7 +745,6 @@ public class HomeFragment extends Fragment {
         tarjeta.setOnClickListener(v -> {
             Bundle bundle = new Bundle();
             bundle.putString("publicacionId", publicacion.getId());
-            bundle.putString("usuarioActualEmail", usuarioActualEmail);
             Navigation.findNavController(v).navigate(
                     R.id.action_homeFragment_to_detailFragment, bundle);
         });

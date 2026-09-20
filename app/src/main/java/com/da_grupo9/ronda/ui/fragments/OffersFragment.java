@@ -19,6 +19,7 @@ import com.da_grupo9.ronda.R;
 import com.da_grupo9.ronda.data.model.Offer;
 import com.da_grupo9.ronda.data.model.OfferActionResponse;
 import com.da_grupo9.ronda.data.repository.OffersRepository;
+import com.da_grupo9.ronda.data.repository.RepositoryResult;
 import com.da_grupo9.ronda.util.ApiError;
 import com.da_grupo9.ronda.util.MoneyFormat;
 import com.google.android.material.button.MaterialButton;
@@ -87,7 +88,7 @@ public class OffersFragment extends Fragment {
     private void loadOffers() {
         if (loading) return;
         setLoading(true);
-        repository.getMyOffers(new OffersRepository.Result<List<Offer>>() {
+        repository.getMyOffers(new RepositoryResult<List<Offer>>() {
             @Override public void onSuccess(List<Offer> data) {
                 if (!isAdded()) return;
                 offers.clear();
@@ -192,8 +193,8 @@ public class OffersFragment extends Fragment {
         repository.cancel(offer.getId(), actionResult());
     }
 
-    private OffersRepository.Result<OfferActionResponse> actionResult() {
-        return new OffersRepository.Result<OfferActionResponse>() {
+    private RepositoryResult<OfferActionResponse> actionResult() {
+        return new RepositoryResult<OfferActionResponse>() {
             @Override public void onSuccess(OfferActionResponse data) {
                 if (!isAdded()) return;
                 Toast.makeText(requireContext(), "Oferta actualizada", Toast.LENGTH_SHORT).show();

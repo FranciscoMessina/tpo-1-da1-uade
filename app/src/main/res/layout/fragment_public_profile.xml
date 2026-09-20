@@ -37,7 +37,7 @@
             android:text="Perfil del vendedor" />
 
         <TextView
-            android:id="@+id/textPerfilPublicoEmail"
+            android:id="@+id/textPerfilPublicoZona"
             style="@style/Widget.Ronda.Text.Meta"
             android:layout_marginTop="@dimen/spacing_xs"
             android:gravity="center"

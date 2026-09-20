@@ -51,6 +51,23 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/bannerPublicationUnavailable"
+            style="@style/Widget.Ronda.Card.Banner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/spacing_sm"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/textPublicationUnavailable"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
+                android:textColor="?attr/colorOnErrorContainer" />
+        </com.google.android.material.card.MaterialCardView>
+
         <!-- Galería de fotos -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"

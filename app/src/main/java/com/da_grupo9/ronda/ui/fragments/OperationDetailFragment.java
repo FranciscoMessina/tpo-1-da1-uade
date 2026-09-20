@@ -96,7 +96,7 @@ public class OperationDetailFragment extends Fragment {
         buttonProfile.setOnClickListener(v -> {
             Bundle args = new Bundle();
             args.putString("vendedorNombre", counterpartyName);
-            args.putString("vendedorEmail", counterpartyId);
+            args.putString("usuarioId", counterpartyId);
             args.putString("vendedorReputacion", counterpartyReputation);
             Navigation.findNavController(v).navigate(
                     R.id.action_operationDetailFragment_to_publicProfileFragment, args);

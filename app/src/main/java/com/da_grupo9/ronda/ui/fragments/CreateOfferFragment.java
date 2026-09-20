@@ -16,6 +16,7 @@ import androidx.navigation.Navigation;
 import com.da_grupo9.ronda.R;
 import com.da_grupo9.ronda.data.model.OfferActionResponse;
 import com.da_grupo9.ronda.data.repository.OffersRepository;
+import com.da_grupo9.ronda.data.repository.RepositoryResult;
 import com.da_grupo9.ronda.util.MoneyFormat;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.progressindicator.CircularProgressIndicator;
@@ -53,11 +54,11 @@ public class CreateOfferFragment extends Fragment {
         publicationId = args == null ? "" : args.getString("publicationId", "");
         String titulo = args == null ? "" : args.getString("publicationTitle", "");
         String vendedor = args == null ? "" : args.getString("sellerName", "");
-        double precio = args == null ? 0d : args.getDouble("publicationPrice", 0d);
+        double precio = args == null ? 0d : args.getFloat("publicationPrice", 0f);
 
         ((TextView) view.findViewById(R.id.textOfferPublication)).setText(titulo);
         ((TextView) view.findViewById(R.id.textOfferPublishedPrice))
-                .setText("Precio publicado: " + MoneyFormat.amount(precio));
+                .setText(String.format("Precio publicado: %s", MoneyFormat.amount(precio)));
         ((TextView) view.findViewById(R.id.textOfferSeller))
                 .setText(vendedor.isEmpty() ? "" : "Vendedor: " + vendedor);
         priceLayout = view.findViewById(R.id.inputOfferPriceLayout);
@@ -108,7 +109,7 @@ public class CreateOfferFragment extends Fragment {
         }
         setLoading(true);
         offersRepository.createOffer(publicationId, monto, mensaje,
-                new OffersRepository.Result<OfferActionResponse>() {
+                new RepositoryResult<OfferActionResponse>() {
                     @Override public void onSuccess(OfferActionResponse data) {
                         if (!isAdded()) return;
                         Toast.makeText(requireContext(), "Oferta enviada", Toast.LENGTH_SHORT).show();

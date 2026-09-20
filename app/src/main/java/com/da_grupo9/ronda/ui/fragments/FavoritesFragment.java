@@ -166,7 +166,7 @@ public class FavoritesFragment extends Fragment {
 
         tarjeta.setOnClickListener(v -> {
             Bundle bundle = new Bundle();
-            bundle.putString("publicacionId", favorito.getId());
+            bundle.putString("publicacionId", favorito.getPublicationId());
             Navigation.findNavController(v).navigate(R.id.detailFragment, bundle);
         });
 

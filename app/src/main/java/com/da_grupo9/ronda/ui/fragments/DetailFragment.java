@@ -5,6 +5,7 @@ import com.da_grupo9.ronda.ui.components.EmptyStateView;
 import com.da_grupo9.ronda.data.repository.RepositoryResult;
 import com.da_grupo9.ronda.data.model.Publicacion;
 import com.da_grupo9.ronda.data.repository.PublicacionRepository;
+import com.da_grupo9.ronda.ui.PublicationAvailability;
 import com.da_grupo9.ronda.util.NetworkMonitor;
 import com.da_grupo9.ronda.util.MoneyFormat;
 import com.da_grupo9.ronda.data.remote.FavoritesApi;
@@ -58,11 +59,11 @@ public class DetailFragment extends Fragment {
     private List<String> listaFotos;
 
     private String publicacionId = "";
-    private String usuarioActualEmail = "";
-
     // Vistas
     private View bannerDetailOffline;
     private TextView textBannerDetailOffline;
+    private View bannerPublicationUnavailable;
+    private TextView textPublicationUnavailable;
     private boolean mostrandoCache;
     private ImageView imageFotoViewer;
     private TextView textFotoIndicador;
@@ -124,6 +125,8 @@ public class DetailFragment extends Fragment {
         Button buttonBack = view.findViewById(R.id.buttonBack);
         bannerDetailOffline = view.findViewById(R.id.bannerDetailOffline);
         textBannerDetailOffline = view.findViewById(R.id.textBannerDetailOffline);
+        bannerPublicationUnavailable = view.findViewById(R.id.bannerPublicationUnavailable);
+        textPublicationUnavailable = view.findViewById(R.id.textPublicationUnavailable);
 
         // Galería
         imageFotoViewer = view.findViewById(R.id.imageFotoViewer);
@@ -161,7 +164,6 @@ public class DetailFragment extends Fragment {
 
         if (getArguments() != null) {
             publicacionId = getArguments().getString("publicacionId", "");
-            usuarioActualEmail = getArguments().getString("usuarioActualEmail", "");
         }
 
         buttonBack.setOnClickListener(v -> Navigation.findNavController(v).popBackStack());
@@ -267,18 +269,8 @@ public class DetailFragment extends Fragment {
         textDetailTitulo.setText(publicacion.getTitulo());
         textDetailPrecio.setText("Precio: " + MoneyFormat.amount(publicacion.getPrecio()));
 
-        boolean estaPausada =
-                "paused".equalsIgnoreCase(publicacion.getEstadoPublicacion());
-
-        if (estaPausada) {
-            textDetailEstado.setText(
-                    "Estado: " + publicacion.getEstado() + " · PUBLICACIÓN PAUSADA"
-            );
-        } else {
-            textDetailEstado.setText(
-                    "Estado: " + publicacion.getEstado()
-            );
-        }
+        boolean noDisponible = mostrarEstadoDisponibilidad(publicacion.getEstadoPublicacion());
+        textDetailEstado.setText("Estado: " + publicacion.getEstado());
 
         textDetailCategoria.setText("Categoría: " + publicacion.getCategoria());
         textDetailZona.setText("Zona de entrega: " + publicacion.getZona());
@@ -330,7 +322,7 @@ public class DetailFragment extends Fragment {
 
             containerAccionesVendedor.setVisibility(View.GONE);
 
-            if (estaPausada) {
+            if (noDisponible) {
                 containerAccionesComprador.setVisibility(View.GONE);
             } else {
                 containerAccionesComprador.setVisibility(View.VISIBLE);
@@ -342,6 +334,15 @@ public class DetailFragment extends Fragment {
         actualizarBotonFavorito(publicacion);
         actualizarBotonPausar(buttonPausar, publicacion);
     }
+
+    private boolean mostrarEstadoDisponibilidad(String status) {
+        String label = PublicationAvailability.unavailableLabel(status);
+        boolean noDisponible = label != null;
+        bannerPublicationUnavailable.setVisibility(noDisponible ? View.VISIBLE : View.GONE);
+        if (noDisponible) textPublicationUnavailable.setText(label);
+        return noDisponible;
+    }
+
 
     private void configurarListenersBotones() {
         buttonFotoAnterior.setOnClickListener(v -> {
@@ -394,7 +395,7 @@ public class DetailFragment extends Fragment {
                 Bundle bundle = new Bundle();
                 bundle.putString("publicationId", publicacionCargada.getId());
                 bundle.putString("publicationTitle", publicacionCargada.getTitulo());
-                bundle.putDouble("publicationPrice", publicacionCargada.getPrecio());
+                bundle.putFloat("publicationPrice", (float) publicacionCargada.getPrecio());
                 bundle.putString("sellerName", publicacionCargada.getVendedorNombre());
                 Navigation.findNavController(v).navigate(
                         R.id.action_detailFragment_to_createOfferFragment,
@@ -482,7 +483,7 @@ public class DetailFragment extends Fragment {
             if (publicacionCargada == null) return;
             Bundle bundle = new Bundle();
             bundle.putString("vendedorNombre", publicacionCargada.getVendedorNombre());
-            bundle.putString("vendedorEmail", publicacionCargada.getSeller() != null ? publicacionCargada.getSeller().getId() : "");
+            bundle.putString("usuarioId", publicacionCargada.getSeller() != null ? publicacionCargada.getSeller().getId() : "");
             bundle.putString("vendedorReputacion", publicacionCargada.getVendedorReputacion());
 
             Navigation.findNavController(v).navigate(R.id.action_detailFragment_to_publicProfileFragment, bundle);
@@ -495,7 +496,6 @@ public class DetailFragment extends Fragment {
             }
             if (publicacionCargada == null) return;
             Bundle bundle = new Bundle();
-            bundle.putString("email", usuarioActualEmail);
             bundle.putString("publicacionId", publicacionCargada.getId());
 
             Navigation.findNavController(v).navigate(R.id.action_detailFragment_to_publicarArticuloFragment, bundle);
