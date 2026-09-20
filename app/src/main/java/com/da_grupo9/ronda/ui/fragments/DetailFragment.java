@@ -484,15 +484,15 @@ public class DetailFragment extends Fragment {
                         public void onSuccess(Publicacion data) {
                             if (!isAdded()) return;
 
-                            publicacionCargada = data;
-
-                            // Actualiza todo el detalle con el nuevo estado
-                            poblarDatos(data);
+                            // La respuesta del cambio de estado es parcial: se fusiona con el
+                            // detalle ya cargado para no perder galería, vendedor ni permisos.
+                            publicacionCargada.actualizarDesdeResumen(data);
+                            poblarDatos(publicacionCargada);
 
                             Toast.makeText(
                                     requireContext(),
                                     "La publicación ahora está "
-                                            + data.getEstadoPublicacionVisible().toLowerCase(),
+                                            + publicacionCargada.getEstadoPublicacionVisible().toLowerCase(),
                                     Toast.LENGTH_SHORT
                             ).show();
                         }
