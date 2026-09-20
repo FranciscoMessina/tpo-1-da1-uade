@@ -47,17 +47,17 @@ public class SavedItemsFragment extends Fragment {
         tabs.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
-                showTab(tab.getPosition());
+                mostrarPestana(tab.getPosition());
             }
 
             @Override public void onTabUnselected(TabLayout.Tab tab) { }
             @Override public void onTabReselected(TabLayout.Tab tab) { }
         });
 
-        showTab(selectedTab);
+        mostrarPestana(selectedTab);
     }
 
-    private void showTab(int position) {
+    private void mostrarPestana(int position) {
         selectedTab = position;
         Fragment fragment = position == 0
                 ? new FavoritesFragment()

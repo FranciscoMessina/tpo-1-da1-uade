@@ -38,7 +38,7 @@ public class CreateOfferFragment extends Fragment {
     private TextInputEditText inputMessage;
     private MaterialButton buttonSend;
     private CircularProgressIndicator progress;
-    private String publicationId;
+    private String publicacionId;
     private boolean sending;
 
     @Override
@@ -51,7 +51,7 @@ public class CreateOfferFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         Bundle args = getArguments();
-        publicationId = args == null ? "" : args.getString("publicacionId", "");
+        publicacionId = args == null ? "" : args.getString("publicacionId", "");
         String titulo = args == null ? "" : args.getString("publicacionTitulo", "");
         String vendedor = args == null ? "" : args.getString("vendedorNombre", "");
         double precio = args == null ? 0d : args.getFloat("publicacionPrecio", 0f);
@@ -90,7 +90,7 @@ public class CreateOfferFragment extends Fragment {
             priceLayout.setError("El importe debe estar entre 0,01 y 999.999.999");
             return;
         }
-        if (publicationId.isEmpty()) {
+        if (publicacionId.isEmpty()) {
             Toast.makeText(requireContext(), "No se pudo identificar la publicación",
                     Toast.LENGTH_LONG).show();
             return;
@@ -107,8 +107,8 @@ public class CreateOfferFragment extends Fragment {
                     Toast.LENGTH_LONG).show();
             return;
         }
-        setLoading(true);
-        offersRepository.createOffer(publicationId, monto, mensaje,
+        establecerCarga(true);
+        offersRepository.createOffer(publicacionId, monto, mensaje,
                 new RepositoryResult<OfferActionResponse>() {
                     @Override public void onSuccess(OfferActionResponse data) {
                         if (!isAdded()) return;
@@ -124,13 +124,13 @@ public class CreateOfferFragment extends Fragment {
 
                     @Override public void onError(String mensajeError) {
                         if (!isAdded()) return;
-                        setLoading(false);
+                        establecerCarga(false);
                         Toast.makeText(requireContext(), mensajeError, Toast.LENGTH_LONG).show();
                     }
                 });
     }
 
-    private void setLoading(boolean loading) {
+    private void establecerCarga(boolean loading) {
         sending = loading;
         inputPrice.setEnabled(!loading);
         inputMessage.setEnabled(!loading);

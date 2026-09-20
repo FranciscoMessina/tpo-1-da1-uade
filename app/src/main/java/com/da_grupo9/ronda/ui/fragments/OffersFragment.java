@@ -49,10 +49,10 @@ public class OffersFragment extends Fragment {
     private TextView emptyView;
     private LinearProgressIndicator progress;
     private MaterialButton refreshButton;
-    private final List<Offer> offers = new ArrayList<>();
-    private String selectedRole = "buyer";
-    private boolean loading;
-    private boolean firstResume = true;
+    private final List<Offer> ofertas = new ArrayList<>();
+    private String rolSeleccionado = "buyer";
+    private boolean cargando;
+    private boolean primerResume = true;
 
     @Override public View onCreateView(LayoutInflater inflater, ViewGroup parent, Bundle state) {
         return inflater.inflate(R.layout.fragment_offers, parent, false);
@@ -61,95 +61,95 @@ public class OffersFragment extends Fragment {
     @Override public void onViewCreated(@NonNull View view, @Nullable Bundle state) {
         super.onViewCreated(view, state);
         Bundle args = getArguments();
-        if (args != null) selectedRole = args.getString("rolSeleccionado", "buyer");
+        if (args != null) rolSeleccionado = args.getString("rolSeleccionado", "buyer");
         container = view.findViewById(R.id.containerOffers);
         emptyView = view.findViewById(R.id.textOffersEmpty);
         progress = view.findViewById(R.id.progressOffers);
         refreshButton = view.findViewById(R.id.buttonRefreshOffers);
         MaterialButtonToggleGroup toggle = view.findViewById(R.id.toggleOfferRole);
-        toggle.check("seller".equals(selectedRole) ? R.id.buttonOffersReceived : R.id.buttonOffersSent);
+        toggle.check("seller".equals(rolSeleccionado) ? R.id.buttonOffersReceived : R.id.buttonOffersSent);
         toggle.addOnButtonCheckedListener((group, checkedId, checked) -> {
             if (!checked) return;
-            selectedRole = checkedId == R.id.buttonOffersReceived ? "seller" : "buyer";
-            renderOffers();
+            rolSeleccionado = checkedId == R.id.buttonOffersReceived ? "seller" : "buyer";
+            renderizarOfertas();
         });
         view.findViewById(R.id.buttonOffersBack).setOnClickListener(v ->
                 Navigation.findNavController(v).popBackStack());
-        refreshButton.setOnClickListener(v -> loadOffers());
-        loadOffers();
+        refreshButton.setOnClickListener(v -> cargarOfertas());
+        cargarOfertas();
     }
 
     @Override public void onResume() {
         super.onResume();
-        if (firstResume) firstResume = false;
-        else if (container != null) loadOffers();
+        if (primerResume) primerResume = false;
+        else if (container != null) cargarOfertas();
     }
 
-    private void loadOffers() {
-        if (loading) return;
-        setLoading(true);
+    private void cargarOfertas() {
+        if (cargando) return;
+        establecerCarga(true);
         repository.getMyOffers(new RepositoryResult<List<Offer>>() {
             @Override public void onSuccess(List<Offer> data) {
                 if (!isAdded()) return;
-                offers.clear();
-                offers.addAll(data);
-                setLoading(false);
-                renderOffers();
+                ofertas.clear();
+                ofertas.addAll(data);
+                establecerCarga(false);
+                renderizarOfertas();
             }
             @Override public void onError(String message) {
                 if (!isAdded()) return;
-                setLoading(false);
+                establecerCarga(false);
                 Toast.makeText(requireContext(), message, Toast.LENGTH_LONG).show();
-                renderOffers();
+                renderizarOfertas();
             }
         });
     }
 
-    private void renderOffers() {
+    private void renderizarOfertas() {
         if (container == null) return;
         container.removeAllViews();
         int count = 0;
-        for (Offer offer : offers) {
-            if (!selectedRole.equals(offer.getRole())) continue;
-            container.addView(createCard(offer));
+        for (Offer offer : ofertas) {
+            if (!rolSeleccionado.equals(offer.getRole())) continue;
+            container.addView(crearTarjeta(offer));
             count++;
         }
-        emptyView.setVisibility(count == 0 && !loading ? View.VISIBLE : View.GONE);
+        emptyView.setVisibility(count == 0 && !cargando ? View.VISIBLE : View.GONE);
     }
 
     /** Infla item_offer y solo decide qué datos y qué acciones quedan visibles. */
-    private View createCard(Offer offer) {
+    private View crearTarjeta(Offer offer) {
         View card = getLayoutInflater().inflate(R.layout.item_offer, container, false);
 
         text(card, R.id.textOfferTitle, safe(offer.getTitle(), "Artículo"));
         text(card, R.id.textOfferAmount, "Oferta: " + money(offer.getAmount()));
-        text(card, R.id.textOfferStatus, "Estado: " + statusLabel(offer.getStatus()));
+        text(card, R.id.textOfferStatus, "Estado: " + etiquetaEstado(offer.getStatus()));
         text(card, R.id.textOfferCreatedAt, "Creada: " + formatDate(offer.getCreatedAt()));
-        text(card, R.id.textOfferExpiresAt, expiryText(offer.getExpiresAt()));
+        text(card, R.id.textOfferExpiresAt, textoVencimiento(offer.getExpiresAt()));
 
-        optionalText(card, R.id.textOfferCounterAmount, offer.getCounterAmount() == null
+        textoOpcional(card, R.id.textOfferCounterAmount, offer.getCounterAmount() == null
                 ? null : "Contraoferta: " + money(offer.getCounterAmount()));
-        optionalText(card, R.id.textOfferMessage,
+        textoOpcional(card, R.id.textOfferMessage,
                 offer.getMessage() == null || offer.getMessage().trim().isEmpty()
                         ? null : "Mensaje: " + offer.getMessage());
 
         LinearLayout actions = card.findViewById(R.id.containerOfferActions);
         if ("seller".equals(offer.getRole()) && "pending".equals(offer.getStatus())) {
-            addAction(actions, "Aceptar", () -> sellerAction(offer, "accept", null));
-            addAction(actions, "Rechazar", () -> sellerAction(offer, "reject", null));
-            addAction(actions, "Contraofertar", () -> showCounterDialog(offer));
+            agregarAccion(actions, "Aceptar", () -> accionVendedor(offer, "accept", null));
+            agregarAccion(actions, "Rechazar", () -> accionVendedor(offer, "reject", null));
+            agregarAccion(actions, "Contraofertar", () -> mostrarDialogoContraoferta(offer));
         } else if ("buyer".equals(offer.getRole()) && "countered".equals(offer.getStatus())) {
-            addAction(actions, "Aceptar", () -> counterAction(offer, "accept"));
-            addAction(actions, "Rechazar", () -> counterAction(offer, "reject"));
+            agregarAccion(actions, "Aceptar", () -> accionContraoferta(offer, "accept"));
+            agregarAccion(actions, "Rechazar", () -> accionContraoferta(offer, "reject"));
         } else if ("buyer".equals(offer.getRole()) && "pending".equals(offer.getStatus())) {
-            addAction(actions, "Cancelar", () -> cancelOffer(offer));
+            agregarAccion(actions, "Cancelar", () -> cancelarOferta(offer));
         }
         actions.setVisibility(actions.getChildCount() == 0 ? View.GONE : View.VISIBLE);
 
         return card;
     }
 
-    private void showCounterDialog(Offer offer) {
+    private void mostrarDialogoContraoferta(Offer offer) {
         TextInputLayout layout = new TextInputLayout(requireContext());
         layout.setHint("Importe de la contraoferta");
         int padding = getResources().getDimensionPixelSize(R.dimen.spacing_lg);
@@ -170,7 +170,7 @@ public class OffersFragment extends Fragment {
                             double amount = Double.parseDouble(raw);
                             if (!Double.isFinite(amount) || amount < 0.01 || amount > 999999999d) throw new NumberFormatException();
                             dialog.dismiss();
-                            sellerAction(offer, "counter", amount);
+                            accionVendedor(offer, "counter", amount);
                         } catch (NumberFormatException error) {
                             layout.setError("Ingresá un importe entre 0,01 y 999.999.999");
                         }
@@ -178,48 +178,48 @@ public class OffersFragment extends Fragment {
         dialog.show();
     }
 
-    private void sellerAction(Offer offer, String action, Double amount) {
-        setLoading(true);
-        repository.respond(offer.getId(), action, amount, actionResult());
+    private void accionVendedor(Offer offer, String action, Double amount) {
+        establecerCarga(true);
+        repository.respond(offer.getId(), action, amount, resultadoAccion());
     }
 
-    private void counterAction(Offer offer, String action) {
-        setLoading(true);
-        repository.respondToCounter(offer.getId(), action, actionResult());
+    private void accionContraoferta(Offer offer, String action) {
+        establecerCarga(true);
+        repository.respondToCounter(offer.getId(), action, resultadoAccion());
     }
 
-    private void cancelOffer(Offer offer) {
-        setLoading(true);
-        repository.cancel(offer.getId(), actionResult());
+    private void cancelarOferta(Offer offer) {
+        establecerCarga(true);
+        repository.cancel(offer.getId(), resultadoAccion());
     }
 
-    private RepositoryResult<OfferActionResponse> actionResult() {
+    private RepositoryResult<OfferActionResponse> resultadoAccion() {
         return new RepositoryResult<OfferActionResponse>() {
             @Override public void onSuccess(OfferActionResponse data) {
                 if (!isAdded()) return;
                 Toast.makeText(requireContext(), "Oferta actualizada", Toast.LENGTH_SHORT).show();
-                setLoading(false);
-                loadOffers();
+                establecerCarga(false);
+                cargarOfertas();
             }
             @Override public void onError(String message) {
                 if (!isAdded()) return;
-                setLoading(false);
+                establecerCarga(false);
                 Toast.makeText(requireContext(), message, Toast.LENGTH_LONG).show();
             }
             @Override public void onError(ApiError error) {
                 onError(error.getMessage());
-                if (error.isOfferNoLongerActionable()) loadOffers();
+                if (error.isOfferNoLongerActionable()) cargarOfertas();
             }
         };
     }
 
-    private void setLoading(boolean value) {
-        loading = value;
+    private void establecerCarga(boolean value) {
+        cargando = value;
         if (progress != null) progress.setVisibility(value ? View.VISIBLE : View.GONE);
         if (refreshButton != null) refreshButton.setEnabled(!value);
     }
 
-    private void addAction(LinearLayout parent, String label, Runnable action) {
+    private void agregarAccion(LinearLayout parent, String label, Runnable action) {
         MaterialButton button = new MaterialButton(parent.getContext(), null,
                 com.google.android.material.R.attr.materialButtonOutlinedStyle);
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(0,
@@ -229,7 +229,7 @@ public class OffersFragment extends Fragment {
         }
         button.setLayoutParams(params);
         button.setText(label);
-        button.setOnClickListener(v -> { if (!loading) action.run(); });
+        button.setOnClickListener(v -> { if (!cargando) action.run(); });
         parent.addView(button);
     }
 
@@ -237,7 +237,7 @@ public class OffersFragment extends Fragment {
         ((TextView) card.findViewById(id)).setText(value);
     }
 
-    private void optionalText(View card, int id, String value) {
+    private void textoOpcional(View card, int id, String value) {
         TextView view = card.findViewById(id);
         view.setVisibility(value == null ? View.GONE : View.VISIBLE);
         if (value != null) view.setText(value);
@@ -246,7 +246,7 @@ public class OffersFragment extends Fragment {
     private String money(double value) { return MoneyFormat.amount(value); }
     private String safe(String value, String fallback) { return value == null || value.isEmpty() ? fallback : value; }
 
-    private String statusLabel(String status) {
+    private String etiquetaEstado(String status) {
         if (status == null) return "Sin estado";
         switch (status) {
             case "pending": return "Pendiente";
@@ -265,7 +265,7 @@ public class OffersFragment extends Fragment {
         catch (RuntimeException ignored) { return raw; }
     }
 
-    private String expiryText(String raw) {
+    private String textoVencimiento(String raw) {
         if (raw == null || raw.isEmpty()) return "Vencimiento: sin datos";
         try {
             Duration remaining = Duration.between(OffsetDateTime.now(), OffsetDateTime.parse(raw));

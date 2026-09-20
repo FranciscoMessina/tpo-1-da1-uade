@@ -88,7 +88,7 @@ public class RatingBottomSheet extends BottomSheetDialogFragment {
         }
         String comment = inputComment.getText() == null ? "" : inputComment.getText().toString().trim();
 
-        setLoading(true);
+        establecerCarga(true);
         profileRepository.createReview(operationId, rating, comment.isEmpty() ? null : comment,
                 new RepositoryResult<Void>() {
                     @Override public void onSuccess(Void data) {
@@ -102,7 +102,7 @@ public class RatingBottomSheet extends BottomSheetDialogFragment {
 
                     @Override public void onError(String mensaje) {
                         if (!isAdded()) return;
-                        setLoading(false);
+                        establecerCarga(false);
                         mostrarError(mensaje);
                     }
 
@@ -121,7 +121,7 @@ public class RatingBottomSheet extends BottomSheetDialogFragment {
                 });
     }
 
-    private void setLoading(boolean loading) {
+    private void establecerCarga(boolean loading) {
         setCancelable(!loading);
         buttonSend.setEnabled(!loading);
         ratingBar.setIsIndicator(loading);
