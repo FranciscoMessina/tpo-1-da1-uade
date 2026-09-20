@@ -17,8 +17,8 @@ import com.da_grupo9.ronda.R;
 import com.da_grupo9.ronda.data.model.FavoriteItem;
 import com.da_grupo9.ronda.data.model.FavoritesResponse;
 import com.da_grupo9.ronda.data.model.FavoritesReadResponse;
-import com.da_grupo9.ronda.data.remote.FavoritesApi;
-import com.da_grupo9.ronda.util.ApiErrorMessage;
+import com.da_grupo9.ronda.data.repository.FavoritesRepository;
+import com.da_grupo9.ronda.data.repository.RepositoryResult;
 import com.da_grupo9.ronda.util.MoneyFormat;
 import com.da_grupo9.ronda.ui.components.PublicationCardBinder;
 
@@ -27,15 +27,12 @@ import java.util.List;
 import javax.inject.Inject;
 
 import dagger.hilt.android.AndroidEntryPoint;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 
 @AndroidEntryPoint
 public class FavoritesFragment extends Fragment {
 
     @Inject
-    FavoritesApi favoritesApi;
+    FavoritesRepository favoritesRepository;
 
     private LinearLayout favoritesContainer;
     private TextView textFavoritesEmpty;
@@ -71,43 +68,27 @@ public class FavoritesFragment extends Fragment {
 
     private void cargarFavoritos() {
 
-        favoritesApi.getFavorites().enqueue(new Callback<>() {
+        favoritesRepository.getFavorites(new RepositoryResult<FavoritesResponse>() {
 
             @Override
-            public void onResponse(
-                    @NonNull Call<FavoritesResponse> call,
-                    @NonNull Response<FavoritesResponse> response) {
+            public void onSuccess(FavoritesResponse favorites) {
 
                 if (!isAdded()) return;
 
-                if (response.isSuccessful() && response.body() != null) {
-
-                    FavoritesResponse favorites = response.body();
-                    mostrarFavoritos(favorites.getItems());
-                    if (favorites.getUnreadCount() > 0) {
-                        marcarFavoritosComoLeidos();
-                    }
-
-                } else {
-
-                    Toast.makeText(
-                            requireContext(),
-                            ApiErrorMessage.from(response, "No se pudieron cargar los favoritos"),
-                            Toast.LENGTH_SHORT
-                    ).show();
+                mostrarFavoritos(favorites.getItems());
+                if (favorites.getUnreadCount() > 0) {
+                    marcarFavoritosComoLeidos();
                 }
             }
 
             @Override
-            public void onFailure(
-                    @NonNull Call<FavoritesResponse> call,
-                    @NonNull Throwable t) {
+            public void onError(String mensaje) {
 
                 if (!isAdded()) return;
 
                 Toast.makeText(
                         requireContext(),
-                        "Error de conexión",
+                        mensaje,
                         Toast.LENGTH_SHORT
                 ).show();
             }
@@ -115,21 +96,16 @@ public class FavoritesFragment extends Fragment {
     }
 
     private void marcarFavoritosComoLeidos() {
-        favoritesApi.markFavoritesAsRead().enqueue(new Callback<>() {
+        favoritesRepository.markAsRead(new RepositoryResult<FavoritesReadResponse>() {
             @Override
-            public void onResponse(@NonNull Call<FavoritesReadResponse> call,
-                                   @NonNull Response<FavoritesReadResponse> response) {
-                if (!response.isSuccessful() && isAdded()) {
-                    Toast.makeText(requireContext(),
-                            ApiErrorMessage.from(response, "No se pudieron marcar los favoritos como leídos"),
-                            Toast.LENGTH_SHORT).show();
-                }
+            public void onSuccess(FavoritesReadResponse data) {
             }
 
             @Override
-            public void onFailure(@NonNull Call<FavoritesReadResponse> call,
-                                  @NonNull Throwable error) {
-                // No se ocultan las novedades ni se interrumpe la pantalla si falla el acuse de lectura.
+            public void onError(String mensaje) {
+                if (isAdded()) {
+                    Toast.makeText(requireContext(), mensaje, Toast.LENGTH_SHORT).show();
+                }
             }
         });
     }

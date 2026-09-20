@@ -8,13 +8,10 @@ import com.da_grupo9.ronda.data.repository.PublicacionRepository;
 import com.da_grupo9.ronda.ui.PublicationAvailability;
 import com.da_grupo9.ronda.util.NetworkMonitor;
 import com.da_grupo9.ronda.util.MoneyFormat;
-import com.da_grupo9.ronda.data.remote.FavoritesApi;
+import com.da_grupo9.ronda.data.model.FavoriteResponse;
+import com.da_grupo9.ronda.data.repository.FavoritesRepository;
 import com.da_grupo9.ronda.util.ApiError;
-import com.da_grupo9.ronda.util.ApiErrorMessage;
 
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 
 import android.os.Bundle;
 import android.text.InputFilter;
@@ -51,7 +48,7 @@ import java.util.List;
 public class DetailFragment extends Fragment {
 
     @Inject
-    FavoritesApi favoritesApi;
+    FavoritesRepository favoritesRepository;
     @Inject PublicacionRepository publicacionRepository;
     private Publicacion publicacionCargada;
 
@@ -420,57 +417,28 @@ public class DetailFragment extends Fragment {
 
             boolean esFavorito = publicacionCargada.isFavorite();
 
-            Call<com.da_grupo9.ronda.data.model.FavoriteResponse> llamada;
-
-            if (esFavorito) {
-                llamada = favoritesApi.removeFavorite(publicacionCargada.getId());
-            } else {
-                llamada = favoritesApi.addFavorite(publicacionCargada.getId());
-            }
-
-            llamada.enqueue(new Callback<>() {
+            favoritesRepository.setFavorite(publicacionCargada.getId(), !esFavorito,
+                    new RepositoryResult<FavoriteResponse>() {
                 @Override
-                public void onResponse(
-                        @NonNull Call<com.da_grupo9.ronda.data.model.FavoriteResponse> call,
-                        @NonNull Response<com.da_grupo9.ronda.data.model.FavoriteResponse> response) {
-
-                    if (!isAdded()) return;
-
-                    if (response.isSuccessful() && response.body() != null) {
-
-                        Toast.makeText(
-                                requireContext(),
-                                esFavorito
-                                        ? "Publicación quitada de favoritos"
-                                        : "¡Publicación guardada en tus favoritos!",
-                                Toast.LENGTH_SHORT
-                        ).show();
-
-                        cargarDatosPublicacion(true);
-
-                    } else {
-                        Toast.makeText(
-                                requireContext(),
-                                ApiErrorMessage.from(response, esFavorito
-                                        ? "No se pudo quitar de favoritos"
-                                        : "No se pudo guardar la publicación"),
-                                Toast.LENGTH_SHORT
-                        ).show();
-                    }
-                }
-
-                @Override
-                public void onFailure(
-                        @NonNull Call<com.da_grupo9.ronda.data.model.FavoriteResponse> call,
-                        @NonNull Throwable t) {
-
+                public void onSuccess(FavoriteResponse data) {
                     if (!isAdded()) return;
 
                     Toast.makeText(
                             requireContext(),
-                            "Error de conexión",
+                            esFavorito
+                                    ? "Publicación quitada de favoritos"
+                                    : "¡Publicación guardada en tus favoritos!",
                             Toast.LENGTH_SHORT
                     ).show();
+
+                    cargarDatosPublicacion(true);
+                }
+
+                @Override
+                public void onError(String mensaje) {
+                    if (!isAdded()) return;
+
+                    Toast.makeText(requireContext(), mensaje, Toast.LENGTH_SHORT).show();
                 }
             });
         });

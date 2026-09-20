@@ -15,21 +15,18 @@ import androidx.fragment.app.Fragment;
 import com.da_grupo9.ronda.R;
 import com.da_grupo9.ronda.data.model.SavedSearchItem;
 import com.da_grupo9.ronda.data.model.SavedSearchesResponse;
-import com.da_grupo9.ronda.data.remote.SavedSearchesApi;
-import com.da_grupo9.ronda.util.ApiErrorMessage;
+import com.da_grupo9.ronda.data.repository.RepositoryResult;
+import com.da_grupo9.ronda.data.repository.SavedSearchesRepository;
 
 import javax.inject.Inject;
 
 import dagger.hilt.android.AndroidEntryPoint;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 
 @AndroidEntryPoint
 public class SavedSearchesFragment extends Fragment {
 
     @Inject
-    SavedSearchesApi savedSearchesApi;
+    SavedSearchesRepository savedSearchesRepository;
 
     private LinearLayout busquedasContainer;
     private TextView textoSinBusquedas;
@@ -68,49 +65,23 @@ public class SavedSearchesFragment extends Fragment {
 
     private void cargarBusquedas() {
 
-        savedSearchesApi.getSavedSearches()
-                .enqueue(new Callback<SavedSearchesResponse>() {
+        savedSearchesRepository.getAll(new RepositoryResult<SavedSearchesResponse>() {
 
-                    @Override
-                    public void onResponse(
-                            Call<SavedSearchesResponse> call,
-                            Response<SavedSearchesResponse> response) {
+            @Override
+            public void onSuccess(SavedSearchesResponse response) {
 
-                        if (!isAdded()) {
-                            return;
-                        }
+                if (!isAdded()) {
+                    return;
+                }
 
-                        if (response.isSuccessful()
-                                && response.body() != null) {
+                mostrarBusquedas(response);
+            }
 
-                            mostrarBusquedas(response.body());
-
-                        } else {
-
-                            Toast.makeText(
-                                    requireContext(),
-                                    ApiErrorMessage.from(response, "No se pudieron cargar las búsquedas"),
-                                    Toast.LENGTH_SHORT
-                            ).show();
-                        }
-                    }
-
-                    @Override
-                    public void onFailure(
-                            Call<SavedSearchesResponse> call,
-                            Throwable t) {
-
-                        if (!isAdded()) {
-                            return;
-                        }
-
-                        Toast.makeText(
-                                requireContext(),
-                                "Error de conexión",
-                                Toast.LENGTH_SHORT
-                        ).show();
-                    }
-                });
+            @Override
+            public void onError(String mensaje) {
+                mostrarError(mensaje);
+            }
+        });
     }
 
     private void mostrarBusquedas(
@@ -150,45 +121,23 @@ public class SavedSearchesFragment extends Fragment {
 
     private void usarBusqueda(SavedSearchItem busqueda) {
 
-        savedSearchesApi.markAsRead(busqueda.getId())
-                .enqueue(new Callback<Void>() {
+        savedSearchesRepository.markAsRead(busqueda.getId(), new RepositoryResult<Void>() {
 
-                    @Override
-                    public void onResponse(
-                            Call<Void> call,
-                            Response<Void> response) {
+            @Override
+            public void onSuccess(Void data) {
 
-                        if (!isAdded()) {
-                            return;
-                        }
+                if (!isAdded()) {
+                    return;
+                }
 
-                        if (response.isSuccessful()) {
-                            abrirBusquedaEnHome(busqueda);
-                        } else {
-                            Toast.makeText(
-                                    requireContext(),
-                                    ApiErrorMessage.from(response, "No se pudo abrir la búsqueda"),
-                                    Toast.LENGTH_SHORT
-                            ).show();
-                        }
-                    }
+                abrirBusquedaEnHome(busqueda);
+            }
 
-                    @Override
-                    public void onFailure(
-                            Call<Void> call,
-                            Throwable t) {
-
-                        if (!isAdded()) {
-                            return;
-                        }
-
-                        Toast.makeText(
-                                requireContext(),
-                                "Error de conexión",
-                                Toast.LENGTH_SHORT
-                        ).show();
-                    }
-                });
+            @Override
+            public void onError(String mensaje) {
+                mostrarError(mensaje);
+            }
+        });
     }
 
     private void abrirBusquedaEnHome(SavedSearchItem busqueda) {
@@ -218,53 +167,41 @@ public class SavedSearchesFragment extends Fragment {
     }
     private void eliminarBusqueda(String id) {
 
-        savedSearchesApi.deleteSavedSearch(id)
-                .enqueue(new Callback<Void>() {
+        savedSearchesRepository.delete(id, new RepositoryResult<Void>() {
 
-                    @Override
-                    public void onResponse(
-                            Call<Void> call,
-                            Response<Void> response) {
+            @Override
+            public void onSuccess(Void data) {
 
-                        if (!isAdded()) {
-                            return;
-                        }
+                if (!isAdded()) {
+                    return;
+                }
 
-                        if (response.isSuccessful()) {
+                Toast.makeText(
+                        requireContext(),
+                        "Búsqueda eliminada",
+                        Toast.LENGTH_SHORT
+                ).show();
 
-                            Toast.makeText(
-                                    requireContext(),
-                                    "Búsqueda eliminada",
-                                    Toast.LENGTH_SHORT
-                            ).show();
+                cargarBusquedas();
+            }
 
-                            cargarBusquedas();
+            @Override
+            public void onError(String mensaje) {
+                mostrarError(mensaje);
+            }
+        });
+    }
 
-                        } else {
+    private void mostrarError(String mensaje) {
 
-                            Toast.makeText(
-                                    requireContext(),
-                                    ApiErrorMessage.from(response, "No se pudo eliminar la búsqueda"),
-                                    Toast.LENGTH_SHORT
-                            ).show();
-                        }
-                    }
+        if (!isAdded()) {
+            return;
+        }
 
-                    @Override
-                    public void onFailure(
-                            Call<Void> call,
-                            Throwable t) {
-
-                        if (!isAdded()) {
-                            return;
-                        }
-
-                        Toast.makeText(
-                                requireContext(),
-                                "Error de conexión",
-                                Toast.LENGTH_SHORT
-                        ).show();
-                    }
-                });
+        Toast.makeText(
+                requireContext(),
+                mensaje,
+                Toast.LENGTH_SHORT
+        ).show();
     }
 }

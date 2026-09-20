@@ -40,9 +40,8 @@ import android.widget.Toast;
 import com.da_grupo9.ronda.data.model.FavoriteResponse;
 import com.da_grupo9.ronda.data.model.SavedSearchRequest;
 import com.da_grupo9.ronda.data.model.SavedSearchItem;
-import com.da_grupo9.ronda.data.remote.FavoritesApi;
-import com.da_grupo9.ronda.data.remote.SavedSearchesApi;
-import com.da_grupo9.ronda.util.ApiErrorMessage;
+import com.da_grupo9.ronda.data.repository.FavoritesRepository;
+import com.da_grupo9.ronda.data.repository.SavedSearchesRepository;
 import com.da_grupo9.ronda.util.MoneyFormat;
 import com.da_grupo9.ronda.ui.components.EmptyStateView;
 import com.da_grupo9.ronda.ui.components.SpinnerAdapters;
@@ -52,16 +51,13 @@ import android.widget.ImageButton;
 import java.util.HashMap;
 import java.util.Map;
 
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 
 @AndroidEntryPoint
 public class HomeFragment extends Fragment {
 
     @Inject PublicacionRepository publicacionRepository;
-    @Inject SavedSearchesApi savedSearchesApi;
-    @Inject FavoritesApi favoritesApi;
+    @Inject SavedSearchesRepository savedSearchesRepository;
+    @Inject FavoritesRepository favoritesRepository;
     @Inject ProfileRepository profileRepository;
     private LinearLayout publicacionesContainer;
 
@@ -475,49 +471,20 @@ public class HomeFragment extends Fragment {
                         filtros.getSort()
                 );
 
-        savedSearchesApi.createSavedSearch(request)
-                .enqueue(new Callback<SavedSearchItem>() {
+        savedSearchesRepository.create(request, new RepositoryResult<SavedSearchItem>() {
+            @Override
+            public void onSuccess(SavedSearchItem data) {
+                if (!isAdded()) return;
+                Toast.makeText(requireContext(), "Búsqueda guardada correctamente",
+                        Toast.LENGTH_SHORT).show();
+            }
 
-                    @Override
-                    public void onResponse(
-                            Call<SavedSearchItem> call,
-                            Response<SavedSearchItem> response) {
-
-                        if (!isAdded()) {
-                            return;
-                        }
-
-                        if (response.isSuccessful()) {
-                            Toast.makeText(
-                                    requireContext(),
-                                    "Búsqueda guardada correctamente",
-                                    Toast.LENGTH_SHORT
-                            ).show();
-                        } else {
-                            Toast.makeText(
-                                    requireContext(),
-                                    ApiErrorMessage.from(response, "Error al guardar: " + response.code()),
-                                    Toast.LENGTH_LONG
-                            ).show();
-                        }
-                    }
-
-                    @Override
-                    public void onFailure(
-                            Call<SavedSearchItem> call,
-                            Throwable t) {
-
-                        if (!isAdded()) {
-                            return;
-                        }
-
-                        Toast.makeText(
-                                requireContext(),
-                                "Error de conexión",
-                                Toast.LENGTH_SHORT
-                        ).show();
-                    }
-                });
+            @Override
+            public void onError(String mensaje) {
+                if (!isAdded()) return;
+                Toast.makeText(requireContext(), mensaje, Toast.LENGTH_LONG).show();
+            }
+        });
     }
 
     private void cargarBusquedaGuardada() {
@@ -803,25 +770,15 @@ public class HomeFragment extends Fragment {
         favoritosPendientes.put(id, nuevoEstado);
         actualizarBotonFavorito(id);
 
-        Call<FavoriteResponse> llamada = nuevoEstado
-                ? favoritesApi.addFavorite(id)
-                : favoritesApi.removeFavorite(id);
-
-        llamada.enqueue(new Callback<FavoriteResponse>() {
+        favoritesRepository.setFavorite(id, nuevoEstado, new RepositoryResult<FavoriteResponse>() {
             @Override
-            public void onResponse(Call<FavoriteResponse> call, Response<FavoriteResponse> response) {
-                if (response.isSuccessful()) {
-                    resolverFavorito(id, nuevoEstado, null);
-                } else {
-                    resolverFavorito(id, !nuevoEstado, ApiErrorMessage.from(response, nuevoEstado
-                            ? "No se pudo guardar la publicación"
-                            : "No se pudo quitar de favoritos"));
-                }
+            public void onSuccess(FavoriteResponse data) {
+                resolverFavorito(id, nuevoEstado, null);
             }
 
             @Override
-            public void onFailure(Call<FavoriteResponse> call, Throwable t) {
-                resolverFavorito(id, !nuevoEstado, "Error de conexión");
+            public void onError(String mensaje) {
+                resolverFavorito(id, !nuevoEstado, mensaje);
             }
         });
     }
