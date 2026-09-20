@@ -28,13 +28,7 @@ public class PublicacionMapper {
         entity.setItemCondition(publicacion.getConditionApiValue());
         entity.setZone(publicacion.getZona());
         entity.setStatus(publicacion.getEstadoPublicacion());
-        entity.setPublishedAt(publicacion.getFechaPublicacion());
         entity.setSellerName(publicacion.getVendedorNombre());
-        entity.setSellerRating(publicacion.getVendedorReputacion());
-        entity.setCoverImage(publicacion.getCoverImage());
-        if (imageStorageManager != null && !TextUtils.isEmpty(publicacion.getCoverImage())) {
-            entity.setLocalCoverImagePath(imageStorageManager.getLocalImagePathIfExists(publicacion.getCoverImage()));
-        }
         entity.setFullJson(toJson(publicacion));
         entity.setCachedAt(System.currentTimeMillis());
         return entity;
@@ -62,8 +56,7 @@ public class PublicacionMapper {
                     entity.getPrice(),
                     entity.getItemCondition(),
                     entity.getCategory(),
-                    entity.getZone(),
-                    0
+                    entity.getZone()
             );
         }
 

@@ -15,18 +15,10 @@ public class Operation implements Serializable {
 
     public String getId() { return id; }
     public String getCompletedAt() { return completedAt; }
-    public String getPublicationId() { return publicationId; }
     public String getTitle() { return title; }
     public String getAddress() { return address; }
-    public String getSellerId() { return sellerId; }
-    public String getSellerName() { return sellerName; }
-    public String getType() { return type; }
-    public String getBuyerId() { return buyerId; }
-    public String getBuyerName() { return buyerName; }
     public String getCounterpartyId() { return counterpartyId; }
     public String getCounterpartyName() { return counterpartyName; }
-    public String getCounterpartyAvatarUrl() { return counterpartyAvatarUrl; }
-    public String getReviewDeadline() { return reviewDeadline; }
     public Integer getMyRating() { return myRating; }
     public double getAmount() { return amount; }
 

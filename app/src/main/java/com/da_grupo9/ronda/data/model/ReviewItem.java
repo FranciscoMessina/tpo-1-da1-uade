@@ -9,5 +9,4 @@ public class ReviewItem {
     public String getComment() { return comment; }
     public String getCreatedAt() { return createdAt; }
     public String getReviewerName() { return reviewerName; }
-    public String getOperationType() { return operationType; }
 }

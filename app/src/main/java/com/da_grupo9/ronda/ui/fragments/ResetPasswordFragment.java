@@ -23,9 +23,6 @@ import dagger.hilt.android.AndroidEntryPoint;
 public class ResetPasswordFragment extends Fragment {
     @Inject AuthRepository authRepository;
 
-    public ResetPasswordFragment() {
-    }
-
     @Nullable
     @Override
     public View onCreateView(

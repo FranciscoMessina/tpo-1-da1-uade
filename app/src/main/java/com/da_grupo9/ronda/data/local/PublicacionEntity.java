@@ -21,11 +21,7 @@ public class PublicacionEntity {
     private String itemCondition;
     private String zone;
     private String status;
-    private String publishedAt;
     private String sellerName;
-    private String sellerRating;
-    private String coverImage;
-    private String localCoverImagePath;
     private String fullJson;
     /** Verdadero si fullJson proviene del detalle y no sólo del resumen del feed. */
     private boolean hasDetail;
@@ -109,44 +105,12 @@ public class PublicacionEntity {
         this.status = status;
     }
 
-    public String getPublishedAt() {
-        return publishedAt;
-    }
-
-    public void setPublishedAt(String publishedAt) {
-        this.publishedAt = publishedAt;
-    }
-
     public String getSellerName() {
         return sellerName;
     }
 
     public void setSellerName(String sellerName) {
         this.sellerName = sellerName;
-    }
-
-    public String getSellerRating() {
-        return sellerRating;
-    }
-
-    public void setSellerRating(String sellerRating) {
-        this.sellerRating = sellerRating;
-    }
-
-    public String getCoverImage() {
-        return coverImage;
-    }
-
-    public void setCoverImage(String coverImage) {
-        this.coverImage = coverImage;
-    }
-
-    public String getLocalCoverImagePath() {
-        return localCoverImagePath;
-    }
-
-    public void setLocalCoverImagePath(String localCoverImagePath) {
-        this.localCoverImagePath = localCoverImagePath;
     }
 
     public String getFullJson() {

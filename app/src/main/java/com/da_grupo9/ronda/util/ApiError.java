@@ -20,7 +20,6 @@ public final class ApiError {
         this.message = message;
     }
 
-    public String getCode() { return code; }
     public String getMessage() { return message; }
 
     public static ApiError from(Response<?> response, String fallback) {

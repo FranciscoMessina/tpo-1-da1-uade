@@ -46,10 +46,6 @@ public class FavoriteItem {
         return hasUpdate;
     }
 
-    public String getFavoritedAt() {
-        return favoritedAt;
-    }
-
     public boolean hasPriceChanged() {
         return priceChanged == 1;
     }

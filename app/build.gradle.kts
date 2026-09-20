@@ -44,7 +44,6 @@ android {
 dependencies {
     implementation(libs.activity.ktx)
     implementation(libs.appcompat)
-    implementation(libs.constraintlayout)
     implementation(libs.material)
     implementation(libs.hilt.android)
     annotationProcessor(libs.hilt.compiler)
