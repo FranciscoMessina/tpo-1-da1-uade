@@ -22,12 +22,6 @@ import retrofit2.Response;
 
 @Singleton
 public class OffersRepository {
-    public interface Result<T> {
-        void onSuccess(T data);
-        void onError(String message);
-        default void onError(ApiError error) { onError(error.getMessage()); }
-    }
-
     private final OffersApi api;
     private final NetworkMonitor networkMonitor;
 
@@ -38,52 +32,52 @@ public class OffersRepository {
 
     public boolean isOnline() { return networkMonitor.isOnline(); }
 
-    public void getMyOffers(Result<List<Offer>> result) {
-        if (!requireConnection(result)) return;
+    public void getMyOffers(RepositoryResult<List<Offer>> resultado) {
+        if (!requireConnection(resultado)) return;
         api.getMyOffers().enqueue(new Callback<OffersResponse>() {
             @Override public void onResponse(Call<OffersResponse> call, Response<OffersResponse> response) {
-                if (response.isSuccessful() && response.body() != null) result.onSuccess(response.body().getItems());
-                else result.onError(ApiError.from(response, "No se pudieron cargar las ofertas"));
+                if (response.isSuccessful() && response.body() != null) resultado.onSuccess(response.body().getItems());
+                else resultado.onError(ApiError.from(response, "No se pudieron cargar las ofertas"));
             }
-            @Override public void onFailure(Call<OffersResponse> call, Throwable error) { result.onError(networkError(error)); }
+            @Override public void onFailure(Call<OffersResponse> call, Throwable error) { resultado.onError(networkError(error)); }
         });
     }
 
     public void createOffer(String publicationId, double amount, String message,
-                            Result<OfferActionResponse> result) {
-        if (!requireConnection(result)) return;
-        execute(api.createOffer(publicationId, new CreateOfferRequest(amount, message)), result);
+                            RepositoryResult<OfferActionResponse> resultado) {
+        if (!requireConnection(resultado)) return;
+        execute(api.createOffer(publicationId, new CreateOfferRequest(amount, message)), resultado);
     }
 
     public void respond(String offerId, String action, Double counterAmount,
-                        Result<OfferActionResponse> result) {
-        if (!requireConnection(result)) return;
-        execute(api.respond(offerId, new RespondOfferRequest(action, counterAmount)), result);
+                        RepositoryResult<OfferActionResponse> resultado) {
+        if (!requireConnection(resultado)) return;
+        execute(api.respond(offerId, new RespondOfferRequest(action, counterAmount)), resultado);
     }
 
-    public void respondToCounter(String offerId, String action, Result<OfferActionResponse> result) {
-        if (!requireConnection(result)) return;
-        execute(api.respondToCounter(offerId, new RespondCounterRequest(action)), result);
+    public void respondToCounter(String offerId, String action, RepositoryResult<OfferActionResponse> resultado) {
+        if (!requireConnection(resultado)) return;
+        execute(api.respondToCounter(offerId, new RespondCounterRequest(action)), resultado);
     }
 
-    public void cancel(String offerId, Result<OfferActionResponse> result) {
-        if (!requireConnection(result)) return;
-        execute(api.cancel(offerId), result);
+    public void cancel(String offerId, RepositoryResult<OfferActionResponse> resultado) {
+        if (!requireConnection(resultado)) return;
+        execute(api.cancel(offerId), resultado);
     }
 
-    private <T> boolean requireConnection(Result<T> result) {
+    private <T> boolean requireConnection(RepositoryResult<T> resultado) {
         if (networkMonitor.isOnline()) return true;
-        result.onError("Se necesita conexión a internet para gestionar ofertas");
+        resultado.onError("Se necesita conexión a internet para gestionar ofertas");
         return false;
     }
 
-    private <T> void execute(Call<T> call, Result<T> result) {
+    private <T> void execute(Call<T> call, RepositoryResult<T> resultado) {
         call.enqueue(new Callback<T>() {
             @Override public void onResponse(Call<T> call, Response<T> response) {
-                if (response.isSuccessful()) result.onSuccess(response.body());
-                else result.onError(ApiError.from(response, "No se pudo realizar la acción"));
+                if (response.isSuccessful()) resultado.onSuccess(response.body());
+                else resultado.onError(ApiError.from(response, "No se pudo realizar la acción"));
             }
-            @Override public void onFailure(Call<T> call, Throwable error) { result.onError(networkError(error)); }
+            @Override public void onFailure(Call<T> call, Throwable error) { resultado.onError(networkError(error)); }
         });
     }
 

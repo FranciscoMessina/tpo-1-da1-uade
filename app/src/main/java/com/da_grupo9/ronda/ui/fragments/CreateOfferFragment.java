@@ -16,6 +16,7 @@ import androidx.navigation.Navigation;
 import com.da_grupo9.ronda.R;
 import com.da_grupo9.ronda.data.model.OfferActionResponse;
 import com.da_grupo9.ronda.data.repository.OffersRepository;
+import com.da_grupo9.ronda.data.repository.RepositoryResult;
 import com.da_grupo9.ronda.util.MoneyFormat;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.progressindicator.CircularProgressIndicator;
@@ -108,7 +109,7 @@ public class CreateOfferFragment extends Fragment {
         }
         setLoading(true);
         offersRepository.createOffer(publicationId, monto, mensaje,
-                new OffersRepository.Result<OfferActionResponse>() {
+                new RepositoryResult<OfferActionResponse>() {
                     @Override public void onSuccess(OfferActionResponse data) {
                         if (!isAdded()) return;
                         Toast.makeText(requireContext(), "Oferta enviada", Toast.LENGTH_SHORT).show();
