@@ -89,7 +89,7 @@ public class QuestionFragment extends Fragment {
         }
 
         inputLayout.setError(null);
-        setLoading(true);
+        establecerCarga(true);
         publicacionRepository.crearPregunta(publicacionId, texto,
                 new RepositoryResult<Publicacion.Question>() {
                     @Override
@@ -103,13 +103,13 @@ public class QuestionFragment extends Fragment {
                     @Override
                     public void onError(String mensaje) {
                         if (!isAdded()) return;
-                        setLoading(false);
+                        establecerCarga(false);
                         Toast.makeText(requireContext(), mensaje, Toast.LENGTH_LONG).show();
                     }
                 });
     }
 
-    private void setLoading(boolean loading) {
+    private void establecerCarga(boolean loading) {
         inputQuestion.setEnabled(!loading);
         buttonSend.setEnabled(!loading);
         progress.setVisibility(loading ? View.VISIBLE : View.GONE);

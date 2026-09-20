@@ -38,9 +38,9 @@ public class OperationDetailFragment extends Fragment {
     @Inject PublicacionRepository publicacionRepository;
     @Inject ProfileRepository profileRepository;
 
-    private Operation operation;
-    private String counterpartyName;
-    private String counterpartyReputation = "";
+    private Operation operacion;
+    private String nombreContraparte;
+    private String reputacionContraparte = "";
 
     private TextView textCounterparty;
     private TextView textReputation;
@@ -59,9 +59,9 @@ public class OperationDetailFragment extends Fragment {
         view.findViewById(R.id.buttonDetailBack).setOnClickListener(
                 v -> Navigation.findNavController(v).popBackStack());
 
-        operation = getArguments() == null ? null
+        operacion = getArguments() == null ? null
                 : BundleCompat.getSerializable(getArguments(), "operacion", Operation.class);
-        if (operation == null) {
+        if (operacion == null) {
             Toast.makeText(requireContext(), "No se pudo cargar la operación", Toast.LENGTH_LONG).show();
             Navigation.findNavController(view).popBackStack();
             return;
@@ -75,40 +75,40 @@ public class OperationDetailFragment extends Fragment {
         MaterialButton buttonProfile = view.findViewById(R.id.buttonOpDetailProfile);
         TextView textAddress = view.findViewById(R.id.textOpDetailAddress);
 
-        ((TextView) view.findViewById(R.id.textOpDetailType)).setText(OperationFormat.typeLabel(operation));
-        ((TextView) view.findViewById(R.id.textOpDetailTitle)).setText(operation.getTitle());
-        ((TextView) view.findViewById(R.id.textOpDetailAmount)).setText(OperationFormat.amount(operation.getAmount()));
+        ((TextView) view.findViewById(R.id.textOpDetailType)).setText(OperationFormat.typeLabel(operacion));
+        ((TextView) view.findViewById(R.id.textOpDetailTitle)).setText(operacion.getTitle());
+        ((TextView) view.findViewById(R.id.textOpDetailAmount)).setText(OperationFormat.amount(operacion.getAmount()));
         ((TextView) view.findViewById(R.id.textOpDetailDate)).setText(
-                "Fecha: " + OperationFormat.date(operation.getCompletedAt()));
+                "Fecha: " + OperationFormat.date(operacion.getCompletedAt()));
 
-        boolean hasAddress = operation.getAddress() != null && !operation.getAddress().trim().isEmpty();
+        boolean hasAddress = operacion.getAddress() != null && !operacion.getAddress().trim().isEmpty();
         textAddress.setVisibility(hasAddress ? View.VISIBLE : View.GONE);
         buttonDirections.setVisibility(hasAddress ? View.VISIBLE : View.GONE);
         if (hasAddress) {
-            textAddress.setText("Dirección: " + operation.getAddress());
-            buttonDirections.setOnClickListener(v -> abrirMapa(operation.getAddress()));
+            textAddress.setText("Dirección: " + operacion.getAddress());
+            buttonDirections.setOnClickListener(v -> abrirMapa(operacion.getAddress()));
         }
 
-        counterpartyName = OperationFormat.counterpartyLabel(operation);
-        String counterpartyId = operation.getCounterpartyId();
+        nombreContraparte = OperationFormat.counterpartyLabel(operacion);
+        String counterpartyId = operacion.getCounterpartyId();
         boolean hasCounterparty = counterpartyId != null && !counterpartyId.isEmpty();
         buttonProfile.setEnabled(hasCounterparty);
         buttonProfile.setOnClickListener(v -> {
             Bundle args = new Bundle();
-            args.putString("vendedorNombre", counterpartyName);
+            args.putString("vendedorNombre", nombreContraparte);
             args.putString("usuarioId", counterpartyId);
-            args.putString("vendedorReputacion", counterpartyReputation);
+            args.putString("vendedorReputacion", reputacionContraparte);
             Navigation.findNavController(v).navigate(
                     R.id.action_operationDetailFragment_to_publicProfileFragment, args);
         });
 
         buttonRate.setOnClickListener(v -> RatingBottomSheet
-                .newInstance(operation.getId(), counterpartyName)
+                .newInstance(operacion.getId(), nombreContraparte)
                 .show(getChildFragmentManager(), RatingBottomSheet.TAG));
         getChildFragmentManager().setFragmentResultListener(RatingBottomSheet.REQUEST_KEY,
                 getViewLifecycleOwner(), (key, result) -> {
                     if (!result.getBoolean(RatingBottomSheet.RESULT_REFRESH_ONLY, false)) {
-                        operation.setMyRating(result.getInt(RatingBottomSheet.RESULT_RATING));
+                        operacion.setMyRating(result.getInt(RatingBottomSheet.RESULT_RATING));
                     }
                     mostrarCalificacion();
                     cargarContraparte();
@@ -122,10 +122,10 @@ public class OperationDetailFragment extends Fragment {
 
     /** Sincroniza con el servidor la calificación recién enviada; si falla queda la actualización local. */
     private void refrescarOperacion() {
-        profileRepository.getOperation(operation.getId(), new RepositoryResult<Operation>() {
+        profileRepository.getOperation(operacion.getId(), new RepositoryResult<Operation>() {
             @Override public void onSuccess(Operation fresh) {
                 if (!isAdded() || getView() == null) return;
-                operation = fresh;
+                operacion = fresh;
                 mostrarCalificacion();
             }
 
@@ -134,31 +134,31 @@ public class OperationDetailFragment extends Fragment {
     }
 
     private void mostrarContraparte() {
-        textCounterparty.setText(OperationFormat.counterpartyRole(operation) + ": " + counterpartyName);
-        textReputation.setText(counterpartyReputation.isEmpty() ? "Cargando reputación…"
-                : "Reputación: " + counterpartyReputation);
+        textCounterparty.setText(OperationFormat.counterpartyRole(operacion) + ": " + nombreContraparte);
+        textReputation.setText(reputacionContraparte.isEmpty() ? "Cargando reputación…"
+                : "Reputación: " + reputacionContraparte);
     }
 
     private void mostrarCalificacion() {
-        textRating.setText(OperationFormat.ratingStatus(operation));
-        buttonRate.setVisibility(operation.canRate() ? View.VISIBLE : View.GONE);
+        textRating.setText(OperationFormat.ratingStatus(operacion));
+        buttonRate.setVisibility(operacion.canRate() ? View.VISIBLE : View.GONE);
     }
 
     /** Trae el nombre y la reputación vigente de la contraparte (también luego de calificarla). */
     private void cargarContraparte() {
-        String id = operation.getCounterpartyId();
+        String id = operacion.getCounterpartyId();
         if (id == null || id.isEmpty()) return;
         publicacionRepository.getUsuario(id, new RepositoryResult<PublicUser>() {
             @Override public void onSuccess(PublicUser user) {
                 if (!isAdded() || getView() == null) return;
-                counterpartyReputation = String.format(Locale.getDefault(), "%.1f (%d calificaciones)",
+                reputacionContraparte = String.format(Locale.getDefault(), "%.1f (%d calificaciones)",
                         user.getRatingAverage(), user.getRatingCount());
                 mostrarContraparte();
             }
 
             @Override public void onError(String mensaje) {
                 if (!isAdded() || getView() == null) return;
-                if (counterpartyReputation.isEmpty()) textReputation.setText("Reputación no disponible");
+                if (reputacionContraparte.isEmpty()) textReputation.setText("Reputación no disponible");
             }
         });
     }
