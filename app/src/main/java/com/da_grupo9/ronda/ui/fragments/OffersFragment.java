@@ -61,7 +61,7 @@ public class OffersFragment extends Fragment {
     @Override public void onViewCreated(@NonNull View view, @Nullable Bundle state) {
         super.onViewCreated(view, state);
         Bundle args = getArguments();
-        if (args != null) selectedRole = args.getString("selectedRole", "buyer");
+        if (args != null) selectedRole = args.getString("rolSeleccionado", "buyer");
         container = view.findViewById(R.id.containerOffers);
         emptyView = view.findViewById(R.id.textOffersEmpty);
         progress = view.findViewById(R.id.progressOffers);

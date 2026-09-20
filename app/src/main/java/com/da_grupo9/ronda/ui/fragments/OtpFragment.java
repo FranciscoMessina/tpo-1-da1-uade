@@ -70,7 +70,7 @@ public class OtpFragment extends Fragment {
 
         if (getArguments() != null) {
             email = getArguments().getString("email", "");
-            purpose = getArguments().getString("purpose", "login");
+            purpose = getArguments().getString("proposito", "login");
             name = getArguments().getString("name", "");
             username = getArguments().getString("username", "");
             phone = getArguments().getString("phone", "");

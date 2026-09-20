@@ -51,10 +51,10 @@ public class CreateOfferFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         Bundle args = getArguments();
-        publicationId = args == null ? "" : args.getString("publicationId", "");
-        String titulo = args == null ? "" : args.getString("publicationTitle", "");
-        String vendedor = args == null ? "" : args.getString("sellerName", "");
-        double precio = args == null ? 0d : args.getFloat("publicationPrice", 0f);
+        publicationId = args == null ? "" : args.getString("publicacionId", "");
+        String titulo = args == null ? "" : args.getString("publicacionTitulo", "");
+        String vendedor = args == null ? "" : args.getString("vendedorNombre", "");
+        double precio = args == null ? 0d : args.getFloat("publicacionPrecio", 0f);
 
         ((TextView) view.findViewById(R.id.textOfferPublication)).setText(titulo);
         ((TextView) view.findViewById(R.id.textOfferPublishedPrice))
@@ -114,7 +114,7 @@ public class CreateOfferFragment extends Fragment {
                         if (!isAdded()) return;
                         Toast.makeText(requireContext(), "Oferta enviada", Toast.LENGTH_SHORT).show();
                         Bundle args = new Bundle();
-                        args.putString("selectedRole", "buyer");
+                        args.putString("rolSeleccionado", "buyer");
                         NavOptions options = new NavOptions.Builder()
                                 .setPopUpTo(R.id.createOfferFragment, true)
                                 .build();

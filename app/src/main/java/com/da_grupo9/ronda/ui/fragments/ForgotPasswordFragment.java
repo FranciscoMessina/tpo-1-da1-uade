@@ -66,7 +66,7 @@ public class ForgotPasswordFragment extends Fragment {
                     if (!isAdded()) return;
                     Bundle arguments = new Bundle();
                     arguments.putString("email", email);
-                    arguments.putBoolean("returnToProfile", false);
+                    arguments.putBoolean("volverAlPerfil", false);
                     Navigation.findNavController(v).navigate(
                             R.id.action_forgotPasswordFragment_to_resetPasswordFragment, arguments);
                 }

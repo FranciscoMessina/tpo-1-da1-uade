@@ -172,7 +172,7 @@ public class ProfileFragment extends Fragment {
                     buttonSetPassword.setEnabled(true);
                     Bundle args = new Bundle();
                     args.putString("email", currentEmail);
-                    args.putBoolean("returnToProfile", true);
+                    args.putBoolean("volverAlPerfil", true);
                     Navigation.findNavController(v).navigate(R.id.resetPasswordFragment, args);
                 }
 

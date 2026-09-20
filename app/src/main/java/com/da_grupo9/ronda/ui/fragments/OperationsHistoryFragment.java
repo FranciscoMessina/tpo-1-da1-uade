@@ -210,7 +210,7 @@ public class OperationsHistoryFragment extends Fragment {
 
             View.OnClickListener abrirDetalle = v -> {
                 Bundle args = new Bundle();
-                args.putSerializable("operation", operation);
+                args.putSerializable("operacion", operation);
                 Navigation.findNavController(v).navigate(
                         R.id.action_operationsHistoryFragment_to_operationDetailFragment, args);
             };

@@ -119,7 +119,7 @@ public class LoginFragment extends Fragment {
                         if (!isAdded()) return;
                         Bundle bundle = new Bundle();
                         bundle.putString("email", email);
-                        bundle.putString("purpose", "login");
+                        bundle.putString("proposito", "login");
                         Navigation.findNavController(v).navigate(R.id.action_loginFragment_to_otpFragment, bundle);
                     }
                     @Override public void onError(String mensaje) { mostrarError(mensaje); }
